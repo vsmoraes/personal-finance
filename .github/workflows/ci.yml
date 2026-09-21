@@ -37,8 +37,10 @@ jobs:
           restore-keys: |
             playwright-chromium-${{ runner.os }}-
       - name: Install Playwright browser
+        timeout-minutes: 5
         run: corepack pnpm exec playwright install chromium
       - name: Run desktop smoke E2E
+        timeout-minutes: 5
         run: make e2e-fast
       - uses: actions/upload-artifact@v4
         if: always()
