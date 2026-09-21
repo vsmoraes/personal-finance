@@ -22,7 +22,7 @@ jobs:
             echo "Missing RELEASE_PLEASE_TOKEN. Add a token with contents, issues, and pull requests write access." >&2
             exit 1
           }
-      - uses: googleapis/release-please-action@v4
+      - uses: googleapis/release-please-action@v5
         with:
           token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
           config-file: release-please-config.json
