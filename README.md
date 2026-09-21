@@ -201,11 +201,17 @@ Buf's dependency lock and pnpm's lockfile are checked in. `proto:check` regenera
 ## CI/CD and releases
 
 Every push and pull request runs the same complete CI workflow as separate jobs
-for contracts, formatting/lint/types, focused and complete unit tests,
+for contracts, formatting/lint/types, complete unit tests,
 integration tests, production build, desktop/mobile Playwright, dependency
 audit, and Docker persistence. The jobs start in parallel where possible and
 declare dependencies only where an artifact or generated contract is required.
 A scheduled Security workflow repeats the audit.
+
+The dependency order is contracts first; formatting/lint/types and dependency
+audit in parallel; complete unit, integration, smoke E2E, and full E2E in
+parallel; production build; then Docker persistence verification. The E2E jobs
+build their isolated test server before running so they can remain parallel with
+the post-test production build gate.
 
 Dependabot is configured for daily npm and GitHub Actions updates. Patch and
 minor Dependabot pull requests are grouped by dependency

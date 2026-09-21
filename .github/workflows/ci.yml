@@ -56,26 +56,9 @@ jobs:
       - run: corepack pnpm lint
       - run: corepack pnpm typecheck
 
-  unit:
-    name: Unit and component tests
-    needs: contracts
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v6
-        with:
-          version: ${{ env.PNPM_VERSION }}
-      - uses: actions/setup-node@v7
-        with:
-          node-version-file: .nvmrc
-          cache: pnpm
-      - run: corepack pnpm install --frozen-lockfile
-      - run: make test-fast
-
-  build:
-    name: Production build
-    needs: [contracts, lint]
+  e2e:
+    name: Smoke E2E
+    needs: [lint, audit]
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -89,34 +72,6 @@ jobs:
           cache: pnpm
       - run: corepack pnpm install --frozen-lockfile
       - run: corepack pnpm build
-      - uses: actions/upload-artifact@v4
-        with:
-          name: application-build-${{ github.run_id }}
-          path: |
-            dist/
-            apps/web/dist/
-          if-no-files-found: error
-          retention-days: 1
-
-  e2e:
-    name: Desktop smoke E2E
-    needs: build
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v6
-        with:
-          version: ${{ env.PNPM_VERSION }}
-      - uses: actions/setup-node@v7
-        with:
-          node-version-file: .nvmrc
-          cache: pnpm
-      - run: corepack pnpm install --frozen-lockfile
-      - uses: actions/download-artifact@v4
-        with:
-          name: application-build-${{ github.run_id }}
-          path: .
       - uses: actions/cache@v4
         with:
           path: ~/.cache/ms-playwright
@@ -135,7 +90,7 @@ jobs:
 
   unit-complete:
     name: Complete unit and component tests
-    needs: unit
+    needs: [lint, audit]
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -159,7 +114,7 @@ jobs:
 
   integration:
     name: Integration tests
-    needs: [contracts, unit]
+    needs: [lint, audit]
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -176,7 +131,7 @@ jobs:
 
   e2e-complete:
     name: Complete E2E matrix
-    needs: e2e
+    needs: [lint, audit]
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -189,10 +144,7 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
       - run: corepack pnpm install --frozen-lockfile
-      - uses: actions/download-artifact@v4
-        with:
-          name: application-build-${{ github.run_id }}
-          path: .
+      - run: corepack pnpm build
       - uses: actions/cache@v4
         with:
           path: ~/.cache/ms-playwright
@@ -226,9 +178,34 @@ jobs:
       - run: corepack pnpm install --frozen-lockfile
       - run: corepack pnpm audit --audit-level=high
 
+  build:
+    name: Production build
+    needs: [unit-complete, integration, e2e, e2e-complete]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v6
+        with:
+          version: ${{ env.PNPM_VERSION }}
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: corepack pnpm install --frozen-lockfile
+      - run: corepack pnpm build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: application-build-${{ github.run_id }}
+          path: |
+            dist/
+            apps/web/dist/
+          if-no-files-found: error
+          retention-days: 1
+
   docker:
     name: Docker persistence smoke test
-    needs: [build, e2e-complete]
+    needs: build
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
