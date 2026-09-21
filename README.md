@@ -202,8 +202,8 @@ unit/integration/browser tests, the production build, dependency audits, and
 the Docker persistence smoke test. The main workflow blocks on high-severity
 dependency findings, while a scheduled Security workflow repeats the audit.
 
-Dependabot is configured for weekly npm updates and monthly GitHub Actions
-updates. Patch and minor Dependabot pull requests are grouped by dependency
+Dependabot is configured for daily npm and GitHub Actions updates. Patch and
+minor Dependabot pull requests are grouped by dependency
 type and marked for GitHub auto-merge after the normal CI checks pass. Major
 updates remain manual review items.
 
