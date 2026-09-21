@@ -39,7 +39,7 @@ export function SettingsPage() {
 }
 function SettingsForm({ settings }: { settings: Settings }) {
   const { t, i18n } = useTranslation();
-  const refresh = useRefresh();
+  const refresh = useRefresh("settings");
   const { message } = AntApp.useApp();
   const [error, setError] = useState<unknown>();
   const form = useForm({
@@ -76,7 +76,7 @@ function SettingsForm({ settings }: { settings: Settings }) {
       );
       form.setValue("version", saved.version);
       await i18n.changeLanguage(v.language);
-      await refresh();
+      refresh();
       void message.success(t("saved"));
       setError(undefined);
     } catch (e) {

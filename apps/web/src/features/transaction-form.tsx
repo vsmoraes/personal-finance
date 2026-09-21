@@ -49,7 +49,7 @@ export function TransactionForm({
   const settings = useSettings().data;
   const categoryData = useResources("categories").data?.categories;
   const categories = useMemo(() => categoryData ?? [], [categoryData]);
-  const refresh = useRefresh();
+  const refresh = useRefresh("transactions");
   const [error, setError] = useState<unknown>();
   const [idempotency, setIdempotency] = useState(() => crypto.randomUUID());
   const today = new Intl.DateTimeFormat("en-CA", {
@@ -112,7 +112,7 @@ export function TransactionForm({
         { "idempotency-key": idempotency },
       );
       setIdempotency(crypto.randomUUID());
-      await refresh();
+      refresh();
       void message.success(t("saved"));
       if (!transaction) {
         form.reset({ ...values, amount: "", counterparty: "", note: "" });

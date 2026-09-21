@@ -32,7 +32,7 @@ import { EntryDrawer } from "./entry-drawer.tsx";
 import { TransactionTable } from "./transaction-table.tsx";
 export function Transactions() {
   const { t } = useTranslation();
-  const refresh = useRefresh();
+  const refresh = useRefresh("transactions");
   const [filters, setFilters] = useState<Record<string, string>>({
     sort: "date",
     descending: "true",
@@ -59,7 +59,7 @@ export function Transactions() {
     setError(undefined);
     try {
       await action();
-      await refresh();
+      refresh();
       setSelected([]);
       setDeleting(undefined);
     } catch (e) {

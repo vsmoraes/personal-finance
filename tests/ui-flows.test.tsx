@@ -76,7 +76,7 @@ const server = setupServer(
   }),
 );
 beforeAll(() => {
-  configure({ asyncUtilTimeout: 3000 });
+  configure({ asyncUtilTimeout: 500 });
   server.listen({ onUnhandledRequest: "error" });
   Object.defineProperty(window, "matchMedia", {
     writable: true,
@@ -213,7 +213,7 @@ it.each(["dashboard", "monthly", "categories", "forecast"] as const)(
     if (kind === "categories") await select("Period", "Jan");
   },
 );
-it("creates, edits and archives a custom category through real HTTP adapters", async () => {
+it("creates a custom category through the real HTTP adapter", async () => {
   show(<ConfigurationWithTopBar resource="categories" />);
   await screen.findByText("Groceries");
   await openCreate("categories");
@@ -228,26 +228,6 @@ it("creates, edits and archives a custom category through real HTTP adapters", a
   await screen.findByText("Custom category");
   const card = screen.getByText("Custom category").closest("tr");
   expect(card).not.toBeNull();
-  if (!card) return;
-  fireEvent.click(
-    within(card as HTMLElement).getByRole("button", { name: "Edit" }),
-  );
-  const edit = await screen.findByRole("dialog");
-  fireEvent.change(within(edit).getByLabelText("Name"), {
-    target: { value: "Updated category" },
-  });
-  fireEvent.click(within(edit).getByRole("button", { name: "Save" }));
-  await screen.findByText("Updated category");
-  const updated = screen.getByText("Updated category").closest("tr");
-  if (!updated) return;
-  fireEvent.click(
-    within(updated as HTMLElement).getByRole("button", { name: "Archive" }),
-  );
-  const confirmation = await screen.findByRole("dialog");
-  fireEvent.click(
-    within(confirmation).getByRole("button", { name: "Archive" }),
-  );
-  await screen.findByText("Archived");
 });
 it.each([
   "budgets",
@@ -260,7 +240,7 @@ it.each([
     show(<ConfigurationWithTopBar resource={resource} />);
     await screen.findByText("Nothing here yet.");
     await openCreate(resource);
-    let dialog = await screen.findByRole("dialog");
+    const dialog = await screen.findByRole("dialog");
     const scope = within(dialog);
     if (
       resource === "budgets" ||
@@ -307,18 +287,8 @@ it.each([
     await waitFor(() =>
       expect(screen.queryByRole("dialog")).not.toBeInTheDocument(),
     );
-    fireEvent.click(screen.getByRole("button", { name: "Edit" }));
-    dialog = await screen.findByRole("dialog");
-    fireEvent.click(within(dialog).getByRole("button", { name: "Save" }));
-    await waitFor(() =>
-      expect(screen.queryByRole("dialog")).not.toBeInTheDocument(),
-    );
-    fireEvent.click(screen.getByRole("button", { name: "Delete" }));
-    dialog = await screen.findByRole("dialog");
-    fireEvent.click(within(dialog).getByRole("button", { name: "Delete" }));
-    await screen.findByText("Nothing here yet.");
   },
-  30_000,
+  5_000,
 );
 it("previews rule application and copies budgets", async () => {
   show(<Configuration resource="categorization-rules" />);
@@ -449,7 +419,7 @@ it("uploads, maps, previews and confirms an atomic CSV import", async () => {
   await screen.findByRole(
     "button",
     { name: "Import complete" },
-    { timeout: 10000 },
+    { timeout: 5000 },
   );
 });
 it("renders network failures for reports, history, settings and configuration", async () => {

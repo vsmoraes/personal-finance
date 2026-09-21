@@ -6,7 +6,7 @@ IMAGE ?= personal-finance
 TAG ?= local
 PLATFORM ?= linux/amd64
 
-.PHONY: install build test test-fast test-integration e2e e2e-install e2e-fast verify verify-fast build-docker build-synology up down logs seed-demo
+.PHONY: install build test test-fast test-ui-flows test-integration e2e e2e-install e2e-fast verify verify-fast build-docker build-synology up down logs seed-demo
 
 install:
 	$(PNPM) install --frozen-lockfile
@@ -19,6 +19,9 @@ test:
 
 test-fast:
 	$(PNPM) exec vitest run tests/contracts.test.ts tests/domain.test.ts tests/web.test.tsx
+
+test-ui-flows:
+	$(PNPM) test:ui-flows
 
 test-integration:
 	$(PNPM) test:integration

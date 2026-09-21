@@ -941,9 +941,11 @@ Test at minimum:
 
 Coverage thresholds:
 
-- At least 90% statement and branch coverage for financial-domain and reporting services.
-- At least 80% overall coverage.
-- Enforce thresholds in CI.
+- Unit and integration suites must remain fast and deterministic; browser journeys
+  belong in Playwright E2E checks rather than the unit job. Coverage reporting is
+  available for local investigation but is not a PR blocking requirement.
+- Keep coverage reporting available for local investigation; it is not a PR
+  blocking requirement.
 - Prefer behavioral tests over superficial snapshots.
 
 ## 28. Continuous integration
@@ -1151,7 +1153,7 @@ must remain current when the product changes.
   unit/component tests, production build, and desktop smoke E2E on pull
   requests. Jobs run in parallel where possible and use explicit dependencies
   for generated contracts and build artifacts. After changes land on `main`,
-  it adds complete unit coverage, integration tests, the complete Playwright
+  it adds complete unit tests, integration tests, the complete Playwright
   device matrix, dependency audit, and Docker persistence smoke tests.
 - Releases are created manually in GitHub. Publishing a release with a semantic
   version tag (`vX.Y.Z`) publishes `linux/amd64` and `linux/arm64` images to

@@ -29,7 +29,7 @@ import { ErrorNotice, PageTitle } from "../shared/ui.tsx";
 export function Imports() {
   const { t } = useTranslation();
   const settings = useSettings().data;
-  const refresh = useRefresh();
+  const refresh = useRefresh("transactions");
   const [preview, setPreview] = useState<ImportResponse>();
   const [file, setFile] = useState<{ name: string; content: string }>();
   const [mapping, setMapping] = useState<Record<string, string>>({});
@@ -125,7 +125,7 @@ export function Imports() {
           ),
         ),
       );
-      await refresh();
+      refresh();
       setError(undefined);
     } catch (e) {
       setError(e);

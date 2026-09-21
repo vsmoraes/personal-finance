@@ -146,7 +146,7 @@ export function EntityForm({
 }) {
   const { t } = useTranslation();
   const { message } = AntApp.useApp();
-  const refresh = useRefresh();
+  const refresh = useRefresh(resource);
   const defaultCurrency = useSettings().data?.defaultCurrency ?? "EUR";
   const categories = useResources("categories").data?.categories ?? [];
   const [error, setError] = useState<unknown>();
@@ -333,7 +333,7 @@ export function EntityForm({
         entity ? "PATCH" : "POST",
         payload,
       );
-      await refresh();
+      refresh();
       void message.success(t("saved"));
       onSaved();
     } catch (e) {

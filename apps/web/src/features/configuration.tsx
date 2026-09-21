@@ -44,7 +44,7 @@ export function Configuration({ resource }: { resource: Resource }) {
   const screens = Grid.useBreakpoint();
   const data = useResources(resource);
   const categories = useResources("categories").data?.categories ?? [];
-  const refresh = useRefresh();
+  const refresh = useRefresh(resource);
   const [edit, setEdit] = useState<Entity | "new">();
   const [deleting, setDeleting] = useState<Entity>();
   const [error, setError] = useState<unknown>();
@@ -79,7 +79,7 @@ export function Configuration({ resource }: { resource: Resource }) {
       await request(`${resource}/${deleting.id}`, "DELETE", undefined, {
         "if-match": String(deleting.version),
       });
-      await refresh();
+      refresh();
       setDeleting(undefined);
     } catch (e) {
       setError(e);
@@ -393,7 +393,7 @@ export function Configuration({ resource }: { resource: Resource }) {
 }
 function BudgetCopy() {
   const { t } = useTranslation();
-  const refresh = useRefresh();
+  const refresh = useRefresh("budgets");
   const [error, setError] = useState<unknown>();
   const form = useForm({
     defaultValues: {
@@ -421,7 +421,7 @@ function BudgetCopy() {
           }),
         ),
       );
-      await refresh();
+      refresh();
       setError(undefined);
     } catch (e) {
       setError(e);
@@ -470,7 +470,7 @@ function BudgetCopy() {
 }
 function RulePreview() {
   const { t } = useTranslation();
-  const refresh = useRefresh();
+  const refresh = useRefresh("categorization-rules");
   const [overwrite, setOverwrite] = useState(false);
   const [preview, setPreview] = useState<p.RulePreviewResponse>();
   const [error, setError] = useState<unknown>();
@@ -492,7 +492,7 @@ function RulePreview() {
           ),
         ),
       );
-      if (apply) await refresh();
+      if (apply) refresh();
       setError(undefined);
     } catch (e) {
       setError(e);
