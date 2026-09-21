@@ -1155,8 +1155,8 @@ must remain current when the product changes.
   build, desktop/mobile E2E checks, dependency audit, and Docker persistence
   smoke tests. Jobs run in parallel where possible and use explicit
   dependencies for generated contracts and build artifacts. The order is
-  contracts; formatting/lint/types plus audit; complete unit, integration,
-  smoke E2E plus full E2E; production build; and Docker persistence.
+  contracts; formatting/lint/types plus audit; complete unit, integration, and
+  full E2E; production build; and Docker persistence.
 - Releases are created manually in GitHub. Publishing a release with a semantic
   version tag (`vX.Y.Z`) publishes `linux/amd64` and `linux/arm64` images to
   GHCR with a `latest` tag; pushes to `main` never open release pull requests.

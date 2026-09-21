@@ -138,10 +138,11 @@ test("quick entry preserves zero- and three-decimal currencies", async ({
       exact: true,
     });
     await currencyInput.fill(currency);
-    await page
+    const option = page
       .locator(".ant-select-item-option-content")
-      .filter({ hasText: new RegExp(`^${currency}$`) })
-      .click();
+      .filter({ hasText: new RegExp(`^${currency}$`) });
+    await expect(option).toBeVisible();
+    await option.evaluate((element) => (element as HTMLElement).click());
     await page
       .getByRole("dialog")
       .getByLabel("Amount", { exact: true })

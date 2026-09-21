@@ -208,10 +208,10 @@ declare dependencies only where an artifact or generated contract is required.
 A scheduled Security workflow repeats the audit.
 
 The dependency order is contracts first; formatting/lint/types and dependency
-audit in parallel; complete unit, integration, smoke E2E, and full E2E in
-parallel; production build; then Docker persistence verification. The E2E jobs
-build their isolated test server before running so they can remain parallel with
-the post-test production build gate.
+audit in parallel; complete unit, integration, and E2E in parallel; production
+build; then Docker persistence verification. The E2E job builds its isolated
+test server before running so it can remain parallel with the post-test
+production build gate.
 
 Dependabot is configured for daily npm and GitHub Actions updates. Patch and
 minor Dependabot pull requests are grouped by dependency

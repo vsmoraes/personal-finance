@@ -56,38 +56,6 @@ jobs:
       - run: corepack pnpm lint
       - run: corepack pnpm typecheck
 
-  e2e:
-    name: Smoke E2E
-    needs: [lint, audit]
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v6
-        with:
-          version: ${{ env.PNPM_VERSION }}
-      - uses: actions/setup-node@v7
-        with:
-          node-version-file: .nvmrc
-          cache: pnpm
-      - run: corepack pnpm install --frozen-lockfile
-      - run: corepack pnpm build
-      - uses: actions/cache@v4
-        with:
-          path: ~/.cache/ms-playwright
-          key: playwright-chromium-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
-          restore-keys: |
-            playwright-chromium-${{ runner.os }}-
-      - run: corepack pnpm exec playwright install chromium
-      - run: make e2e-fast
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: e2e-smoke-artifacts-${{ github.run_id }}
-          path: test-results/
-          if-no-files-found: ignore
-          retention-days: 7
-
   unit-complete:
     name: Complete unit and component tests
     needs: [lint, audit]
@@ -180,7 +148,7 @@ jobs:
 
   build:
     name: Production build
-    needs: [unit-complete, integration, e2e, e2e-complete]
+    needs: [unit-complete, integration, e2e-complete]
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
