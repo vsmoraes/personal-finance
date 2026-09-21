@@ -1,0 +1,8 @@
+pnpm-lock.yaml
+proto-baseline.binpb
+dist
+node_modules
+coverage
+apps/web/dist
+playwright-report
+test-results

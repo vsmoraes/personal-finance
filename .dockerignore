@@ -1,0 +1,10 @@
+node_modules
+.git
+data
+.env
+dist
+apps/web/dist
+coverage
+playwright-report
+test-results
+.pnpm-store

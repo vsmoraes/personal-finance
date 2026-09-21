@@ -1,0 +1,1925 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Personal Finance API",
+    "version": "1.0.0",
+    "description": "Generated from Protobuf descriptors and registered HTTP routes. Standard Protobuf JSON. Private-network single-profile deployment."
+  },
+  "paths": {
+    "/api/v1/categories": {
+      "get": {
+        "operationId": "get__api_v1_categories",
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/FinanceResponse" }
+              }
+            }
+          },
+          "default": {
+            "description": "Structured application error",
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/Problem" }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "post__api_v1_categories",
+        "responses": {
+          "201": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Category" }
+              }
+            }
+          },
+          "default": {
+            "description": "Structured application error",
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/Problem" }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/Category" }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/categories/{id}": {
+      "get": {
+        "operationId": "get__api_v1_categories__id_",
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Category" }
+              }
+            }
+          },
+          "default": {
+            "description": "Structured application error",
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/Problem" }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ]
+      },
+      "patch": {
+        "operationId": "patch__api_v1_categories__id_",
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Category" }
+              }
+            }
+          },
+          "default": {
+            "description": "Structured application error",
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/Problem" }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/Category" }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "delete__api_v1_categories__id_",
+        "responses": {
+          "204": { "description": "Successful operation" },
+          "default": {
+            "description": "Structured application error",
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/Problem" }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "If-Match",
+            "in": "header",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "Current optimistic concurrency version."
+          }
+        ]
+      }
+    },
+    "/api/v1/budgets": {
+      "get": {
+        "operationId": "get__api_v1_budgets",
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/FinanceResponse" }
+              }
+            }
+          },
+          "default": {
+            "description": "Structured application error",
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/Problem" }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "post__api_v1_budgets",
+        "responses": {
+          "201": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Budget" }
+              }
+            }
+          },
+          "default": {
+            "description": "Structured application error",
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/Problem" }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/Budget" }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/budgets/{id}": {
+      "get": {
+        "operationId": "get__api_v1_budgets__id_",
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Budget" }
+              }
+            }
+          },
+          "default": {
+            "description": "Structured application error",
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/Problem" }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ]
+      },
+      "patch": {
+        "operationId": "patch__api_v1_budgets__id_",
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Budget" }
+              }
+            }
+          },
+          "default": {
+            "description": "Structured application error",
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/Problem" }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/Budget" }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "delete__api_v1_budgets__id_",
+        "responses": {
+          "204": { "description": "Successful operation" },
+          "default": {
+            "description": "Structured application error",
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/Problem" }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "If-Match",
+            "in": "header",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "Current optimistic concurrency version."
+          }
+        ]
+      }
+    },
+    "/api/v1/recurring-commitments": {
+      "get": {
+        "operationId": "get__api_v1_recurring_commitments",
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/FinanceResponse" }
+              }
+            }
+          },
+          "default": {
+            "description": "Structured application error",
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/Problem" }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "post__api_v1_recurring_commitments",
+        "responses": {
+          "201": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/RecurringCommitment" }
+              }
+            }
+          },
+          "default": {
+            "description": "Structured application error",
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/Problem" }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/RecurringCommitment" }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/recurring-commitments/{id}": {
+      "get": {
+        "operationId": "get__api_v1_recurring_commitments__id_",
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/RecurringCommitment" }
+              }
+            }
+          },
+          "default": {
+            "description": "Structured application error",
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/Problem" }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ]
+      },
+      "patch": {
+        "operationId": "patch__api_v1_recurring_commitments__id_",
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/RecurringCommitment" }
+              }
+            }
+          },
+          "default": {
+            "description": "Structured application error",
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/Problem" }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/RecurringCommitment" }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "delete__api_v1_recurring_commitments__id_",
+        "responses": {
+          "204": { "description": "Successful operation" },
+          "default": {
+            "description": "Structured application error",
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/Problem" }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "If-Match",
+            "in": "header",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "Current optimistic concurrency version."
+          }
+        ]
+      }
+    },
+    "/api/v1/categorization-rules": {
+      "get": {
+        "operationId": "get__api_v1_categorization_rules",
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/FinanceResponse" }
+              }
+            }
+          },
+          "default": {
+            "description": "Structured application error",
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/Problem" }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "post__api_v1_categorization_rules",
+        "responses": {
+          "201": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CategorizationRule" }
+              }
+            }
+          },
+          "default": {
+            "description": "Structured application error",
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/Problem" }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CategorizationRule" }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/categorization-rules/{id}": {
+      "get": {
+        "operationId": "get__api_v1_categorization_rules__id_",
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CategorizationRule" }
+              }
+            }
+          },
+          "default": {
+            "description": "Structured application error",
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/Problem" }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ]
+      },
+      "patch": {
+        "operationId": "patch__api_v1_categorization_rules__id_",
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CategorizationRule" }
+              }
+            }
+          },
+          "default": {
+            "description": "Structured application error",
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/Problem" }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CategorizationRule" }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "delete__api_v1_categorization_rules__id_",
+        "responses": {
+          "204": { "description": "Successful operation" },
+          "default": {
+            "description": "Structured application error",
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/Problem" }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "If-Match",
+            "in": "header",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "Current optimistic concurrency version."
+          }
+        ]
+      }
+    },
+    "/api/v1/scenarios": {
+      "get": {
+        "operationId": "get__api_v1_scenarios",
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/FinanceResponse" }
+              }
+            }
+          },
+          "default": {
+            "description": "Structured application error",
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/Problem" }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "post__api_v1_scenarios",
+        "responses": {
+          "201": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Scenario" }
+              }
+            }
+          },
+          "default": {
+            "description": "Structured application error",
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/Problem" }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/Scenario" }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/scenarios/{id}": {
+      "get": {
+        "operationId": "get__api_v1_scenarios__id_",
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Scenario" }
+              }
+            }
+          },
+          "default": {
+            "description": "Structured application error",
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/Problem" }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ]
+      },
+      "patch": {
+        "operationId": "patch__api_v1_scenarios__id_",
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Scenario" }
+              }
+            }
+          },
+          "default": {
+            "description": "Structured application error",
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/Problem" }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/Scenario" }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "delete__api_v1_scenarios__id_",
+        "responses": {
+          "204": { "description": "Successful operation" },
+          "default": {
+            "description": "Structured application error",
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/Problem" }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "If-Match",
+            "in": "header",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "Current optimistic concurrency version."
+          }
+        ]
+      }
+    },
+    "/api/v1/settings": {
+      "get": {
+        "operationId": "get__api_v1_settings",
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Settings" }
+              }
+            }
+          },
+          "default": {
+            "description": "Structured application error",
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/Problem" }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "operationId": "patch__api_v1_settings",
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Settings" }
+              }
+            }
+          },
+          "default": {
+            "description": "Structured application error",
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/Problem" }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/Settings" }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/transactions": {
+      "get": {
+        "operationId": "get__api_v1_transactions",
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/FinanceResponse" }
+              }
+            }
+          },
+          "default": {
+            "description": "Structured application error",
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/Problem" }
+              }
+            }
+          }
+        },
+        "parameters": [
+          { "name": "page", "in": "query", "schema": { "type": "integer" } },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": { "type": "integer" }
+          },
+          { "name": "search", "in": "query", "schema": { "type": "string" } },
+          {
+            "name": "startDate",
+            "in": "query",
+            "schema": { "type": "string" }
+          },
+          { "name": "endDate", "in": "query", "schema": { "type": "string" } },
+          {
+            "name": "type",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "TRANSACTION_TYPE_UNSPECIFIED",
+                "TRANSACTION_TYPE_INCOME",
+                "TRANSACTION_TYPE_EXPENSE"
+              ]
+            }
+          },
+          {
+            "name": "categoryId",
+            "in": "query",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "currencyCode",
+            "in": "query",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "counterparty",
+            "in": "query",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "minMinorUnits",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "pattern": "^-?[0-9]+$",
+              "description": "Exact integer, serialized as a decimal string."
+            }
+          },
+          {
+            "name": "maxMinorUnits",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "pattern": "^-?[0-9]+$",
+              "description": "Exact integer, serialized as a decimal string."
+            }
+          },
+          { "name": "sort", "in": "query", "schema": { "type": "string" } },
+          {
+            "name": "descending",
+            "in": "query",
+            "schema": { "type": "boolean" }
+          }
+        ]
+      },
+      "post": {
+        "operationId": "post__api_v1_transactions",
+        "responses": {
+          "201": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Transaction" }
+              }
+            }
+          },
+          "default": {
+            "description": "Structured application error",
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/Problem" }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/Transaction" }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/transactions/{id}": {
+      "get": {
+        "operationId": "get__api_v1_transactions__id_",
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Transaction" }
+              }
+            }
+          },
+          "default": {
+            "description": "Structured application error",
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/Problem" }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ]
+      },
+      "patch": {
+        "operationId": "patch__api_v1_transactions__id_",
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Transaction" }
+              }
+            }
+          },
+          "default": {
+            "description": "Structured application error",
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/Problem" }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/Transaction" }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "delete__api_v1_transactions__id_",
+        "responses": {
+          "204": { "description": "Successful operation" },
+          "default": {
+            "description": "Structured application error",
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/Problem" }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "If-Match",
+            "in": "header",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "Current optimistic concurrency version."
+          }
+        ]
+      }
+    },
+    "/api/v1/transactions/bulk": {
+      "post": {
+        "operationId": "post__api_v1_transactions_bulk",
+        "responses": {
+          "200": { "description": "Successful operation" },
+          "default": {
+            "description": "Structured application error",
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/Problem" }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/BulkRequest" }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/categorization-rules/preview": {
+      "post": {
+        "operationId": "post__api_v1_categorization_rules_preview",
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/RulePreviewResponse" }
+              }
+            }
+          },
+          "default": {
+            "description": "Structured application error",
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/Problem" }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/BulkRequest" }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/budgets/{year}/{month}": {
+      "put": {
+        "operationId": "put__api_v1_budgets__year___month_",
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Budget" }
+              }
+            }
+          },
+          "default": {
+            "description": "Structured application error",
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/Problem" }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "year",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "month",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/Budget" }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/budgets/copy": {
+      "post": {
+        "operationId": "post__api_v1_budgets_copy",
+        "responses": {
+          "200": { "description": "Successful operation" },
+          "default": {
+            "description": "Structured application error",
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/Problem" }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/BudgetCopyRequest" }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/reports/dashboard": {
+      "get": {
+        "operationId": "get__api_v1_reports_dashboard",
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ReportResponse" }
+              }
+            }
+          },
+          "default": {
+            "description": "Structured application error",
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/Problem" }
+              }
+            }
+          }
+        },
+        "parameters": [
+          { "name": "year", "in": "query", "schema": { "type": "integer" } },
+          { "name": "month", "in": "query", "schema": { "type": "integer" } },
+          {
+            "name": "scenarioId",
+            "in": "query",
+            "schema": { "type": "string" }
+          },
+          { "name": "asOfDate", "in": "query", "schema": { "type": "string" } },
+          {
+            "name": "currencyCode",
+            "in": "query",
+            "schema": { "type": "string" }
+          }
+        ]
+      }
+    },
+    "/api/v1/reports/monthly": {
+      "get": {
+        "operationId": "get__api_v1_reports_monthly",
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ReportResponse" }
+              }
+            }
+          },
+          "default": {
+            "description": "Structured application error",
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/Problem" }
+              }
+            }
+          }
+        },
+        "parameters": [
+          { "name": "year", "in": "query", "schema": { "type": "integer" } },
+          { "name": "month", "in": "query", "schema": { "type": "integer" } },
+          {
+            "name": "scenarioId",
+            "in": "query",
+            "schema": { "type": "string" }
+          },
+          { "name": "asOfDate", "in": "query", "schema": { "type": "string" } },
+          {
+            "name": "currencyCode",
+            "in": "query",
+            "schema": { "type": "string" }
+          }
+        ]
+      }
+    },
+    "/api/v1/reports/categories": {
+      "get": {
+        "operationId": "get__api_v1_reports_categories",
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ReportResponse" }
+              }
+            }
+          },
+          "default": {
+            "description": "Structured application error",
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/Problem" }
+              }
+            }
+          }
+        },
+        "parameters": [
+          { "name": "year", "in": "query", "schema": { "type": "integer" } },
+          { "name": "month", "in": "query", "schema": { "type": "integer" } },
+          {
+            "name": "scenarioId",
+            "in": "query",
+            "schema": { "type": "string" }
+          },
+          { "name": "asOfDate", "in": "query", "schema": { "type": "string" } },
+          {
+            "name": "currencyCode",
+            "in": "query",
+            "schema": { "type": "string" }
+          }
+        ]
+      }
+    },
+    "/api/v1/reports/forecast": {
+      "get": {
+        "operationId": "get__api_v1_reports_forecast",
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ReportResponse" }
+              }
+            }
+          },
+          "default": {
+            "description": "Structured application error",
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/Problem" }
+              }
+            }
+          }
+        },
+        "parameters": [
+          { "name": "year", "in": "query", "schema": { "type": "integer" } },
+          { "name": "month", "in": "query", "schema": { "type": "integer" } },
+          {
+            "name": "scenarioId",
+            "in": "query",
+            "schema": { "type": "string" }
+          },
+          { "name": "asOfDate", "in": "query", "schema": { "type": "string" } },
+          {
+            "name": "currencyCode",
+            "in": "query",
+            "schema": { "type": "string" }
+          }
+        ]
+      }
+    },
+    "/api/v1/imports": {
+      "post": {
+        "operationId": "post__api_v1_imports",
+        "responses": {
+          "201": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ImportResponse" }
+              }
+            }
+          },
+          "default": {
+            "description": "Structured application error",
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/Problem" }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ImportRequest" }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/imports/{id}": {
+      "get": {
+        "operationId": "get__api_v1_imports__id_",
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ImportResponse" }
+              }
+            }
+          },
+          "default": {
+            "description": "Structured application error",
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/Problem" }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ]
+      }
+    },
+    "/api/v1/imports/{id}/confirm": {
+      "post": {
+        "operationId": "post__api_v1_imports__id__confirm",
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ImportResponse" }
+              }
+            }
+          },
+          "default": {
+            "description": "Structured application error",
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/Problem" }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ]
+      }
+    },
+    "/api/v1/imports/{id}/errors": {
+      "get": {
+        "operationId": "get__api_v1_imports__id__errors",
+        "responses": {
+          "200": { "description": "Successful operation" },
+          "default": {
+            "description": "Structured application error",
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/Problem" }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ]
+      }
+    },
+    "/api/v1/export": {
+      "get": {
+        "operationId": "get__api_v1_export",
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/FinanceResponse" }
+              }
+            }
+          },
+          "default": {
+            "description": "Structured application error",
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/Problem" }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Date": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "year": { "type": "integer" },
+          "month": { "type": "integer" },
+          "day": { "type": "integer" }
+        }
+      },
+      "Money": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "minorUnits": {
+            "type": "string",
+            "pattern": "^-?[0-9]+$",
+            "description": "Exact integer, serialized as a decimal string."
+          },
+          "currencyCode": { "type": "string" }
+        }
+      },
+      "Category": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string" },
+          "slug": { "type": "string" },
+          "name": { "type": "string" },
+          "builtin": { "type": "boolean" },
+          "type": {
+            "type": "string",
+            "enum": [
+              "TRANSACTION_TYPE_UNSPECIFIED",
+              "TRANSACTION_TYPE_INCOME",
+              "TRANSACTION_TYPE_EXPENSE"
+            ]
+          },
+          "color": { "type": "string" },
+          "icon": { "type": "string" },
+          "archived": { "type": "boolean" },
+          "budgetable": { "type": "boolean" },
+          "defaultBudget": { "$ref": "#/components/schemas/Money" },
+          "position": { "type": "integer" },
+          "version": { "type": "integer" }
+        }
+      },
+      "Transaction": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string" },
+          "date": { "$ref": "#/components/schemas/Date" },
+          "type": {
+            "type": "string",
+            "enum": [
+              "TRANSACTION_TYPE_UNSPECIFIED",
+              "TRANSACTION_TYPE_INCOME",
+              "TRANSACTION_TYPE_EXPENSE"
+            ]
+          },
+          "categoryId": { "type": "string" },
+          "amount": { "$ref": "#/components/schemas/Money" },
+          "baseAmount": {
+            "$ref": "#/components/schemas/Money",
+            "deprecated": true,
+            "description": "Legacy field retained for wire compatibility; ignored by the application."
+          },
+          "exchangeRate": {
+            "type": "string",
+            "deprecated": true,
+            "description": "Legacy field retained for wire compatibility; ignored by the application."
+          },
+          "counterparty": { "type": "string" },
+          "note": { "type": "string" },
+          "importSource": { "type": "string" },
+          "externalId": { "type": "string" },
+          "categorizationSource": {
+            "type": "string",
+            "enum": [
+              "CATEGORIZATION_SOURCE_UNSPECIFIED",
+              "CATEGORIZATION_SOURCE_MANUAL",
+              "CATEGORIZATION_SOURCE_IMPORT",
+              "CATEGORIZATION_SOURCE_RULE"
+            ]
+          },
+          "ruleId": { "type": "string" },
+          "includeInBudget": { "type": "boolean" },
+          "createdAt": { "type": "string" },
+          "updatedAt": { "type": "string" },
+          "version": { "type": "integer" }
+        }
+      },
+      "Budget": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string" },
+          "categoryId": { "type": "string" },
+          "startMonth": { "type": "string" },
+          "endMonth": { "type": "string" },
+          "amount": { "$ref": "#/components/schemas/Money" },
+          "version": { "type": "integer" }
+        }
+      },
+      "RecurringCommitment": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string" },
+          "categoryId": { "type": "string" },
+          "description": { "type": "string" },
+          "amount": { "$ref": "#/components/schemas/Money" },
+          "exchangeRate": {
+            "type": "string",
+            "deprecated": true,
+            "description": "Legacy field retained for wire compatibility; ignored by the application."
+          },
+          "startMonth": { "type": "string" },
+          "endMonth": { "type": "string" },
+          "intervalMonths": { "type": "integer" },
+          "contributesToBudget": { "type": "boolean" },
+          "version": { "type": "integer" }
+        }
+      },
+      "CategorizationRule": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "priority": { "type": "integer" },
+          "enabled": { "type": "boolean" },
+          "counterpartyContains": { "type": "string" },
+          "noteContains": { "type": "string" },
+          "minMinorUnits": {
+            "type": "string",
+            "pattern": "^-?[0-9]+$",
+            "description": "Exact integer, serialized as a decimal string."
+          },
+          "maxMinorUnits": {
+            "type": "string",
+            "pattern": "^-?[0-9]+$",
+            "description": "Exact integer, serialized as a decimal string."
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "TRANSACTION_TYPE_UNSPECIFIED",
+              "TRANSACTION_TYPE_INCOME",
+              "TRANSACTION_TYPE_EXPENSE"
+            ]
+          },
+          "currencyCode": { "type": "string" },
+          "categoryId": { "type": "string" },
+          "includeInBudget": { "type": "boolean" },
+          "continueMatching": { "type": "boolean" },
+          "version": { "type": "integer" },
+          "importSourceContains": { "type": "string" }
+        }
+      },
+      "RuleMatch": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "transactionId": { "type": "string" },
+          "ruleId": { "type": "string" },
+          "categoryId": { "type": "string" },
+          "reasons": { "type": "array", "items": { "type": "string" } }
+        }
+      },
+      "ExchangeRate": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string" },
+          "currencyCode": { "type": "string" },
+          "baseCurrency": { "type": "string" },
+          "rate": { "type": "string" },
+          "date": { "$ref": "#/components/schemas/Date" },
+          "version": { "type": "integer" }
+        }
+      },
+      "Settings": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "language": { "type": "string" },
+          "baseCurrency": {
+            "type": "string",
+            "deprecated": true,
+            "description": "Legacy field retained for wire compatibility; ignored by the application."
+          },
+          "timezone": { "type": "string" },
+          "firstDayOfWeek": { "type": "integer" },
+          "dateFormat": { "type": "string" },
+          "reportYear": { "type": "integer" },
+          "theme": { "type": "string" },
+          "importCurrency": { "type": "string" },
+          "importDateFormat": { "type": "string" },
+          "importDecimalSeparator": { "type": "string" },
+          "version": { "type": "integer" },
+          "defaultCurrency": { "type": "string" },
+          "customBackground": { "type": "string" },
+          "customSurface": { "type": "string" },
+          "customAccent": { "type": "string" },
+          "customAccentSecondary": { "type": "string" },
+          "customSidebarAccent": { "type": "string" },
+          "customSidebarAccentSecondary": { "type": "string" },
+          "customMode": { "type": "string" }
+        }
+      },
+      "Pagination": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "page": { "type": "integer" },
+          "pageSize": { "type": "integer" },
+          "total": { "type": "integer" }
+        }
+      },
+      "ListRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "page": { "type": "integer" },
+          "pageSize": { "type": "integer" },
+          "search": { "type": "string" },
+          "startDate": { "type": "string" },
+          "endDate": { "type": "string" },
+          "type": {
+            "type": "string",
+            "enum": [
+              "TRANSACTION_TYPE_UNSPECIFIED",
+              "TRANSACTION_TYPE_INCOME",
+              "TRANSACTION_TYPE_EXPENSE"
+            ]
+          },
+          "categoryId": { "type": "string" },
+          "currencyCode": { "type": "string" },
+          "counterparty": { "type": "string" },
+          "minMinorUnits": {
+            "type": "string",
+            "pattern": "^-?[0-9]+$",
+            "description": "Exact integer, serialized as a decimal string."
+          },
+          "maxMinorUnits": {
+            "type": "string",
+            "pattern": "^-?[0-9]+$",
+            "description": "Exact integer, serialized as a decimal string."
+          },
+          "sort": { "type": "string" },
+          "descending": { "type": "boolean" }
+        }
+      },
+      "FinanceResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "transactions": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Transaction" }
+          },
+          "categories": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Category" }
+          },
+          "budgets": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Budget" }
+          },
+          "commitments": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/RecurringCommitment" }
+          },
+          "rules": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/CategorizationRule" }
+          },
+          "exchangeRates": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/ExchangeRate" },
+            "deprecated": true,
+            "description": "Legacy field retained for wire compatibility; ignored by the application."
+          },
+          "settings": { "$ref": "#/components/schemas/Settings" },
+          "pagination": { "$ref": "#/components/schemas/Pagination" },
+          "scenarios": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Scenario" }
+          }
+        }
+      },
+      "ReportRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "year": { "type": "integer" },
+          "month": { "type": "integer" },
+          "scenarioId": { "type": "string" },
+          "asOfDate": { "type": "string" },
+          "currencyCode": { "type": "string" }
+        }
+      },
+      "ReportRow": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "key": { "type": "string" },
+          "income": {
+            "type": "string",
+            "pattern": "^-?[0-9]+$",
+            "description": "Exact integer, serialized as a decimal string."
+          },
+          "expenses": {
+            "type": "string",
+            "pattern": "^-?[0-9]+$",
+            "description": "Exact integer, serialized as a decimal string."
+          },
+          "netSavings": {
+            "type": "string",
+            "pattern": "^-?[0-9]+$",
+            "description": "Exact integer, serialized as a decimal string."
+          },
+          "budget": {
+            "type": "string",
+            "pattern": "^-?[0-9]+$",
+            "description": "Exact integer, serialized as a decimal string."
+          },
+          "variance": {
+            "type": "string",
+            "pattern": "^-?[0-9]+$",
+            "description": "Exact integer, serialized as a decimal string."
+          },
+          "savingsRate": { "type": "string" },
+          "actual": { "type": "boolean" }
+        }
+      },
+      "ReportResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "rows": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/ReportRow" }
+          },
+          "totals": { "$ref": "#/components/schemas/ReportRow" },
+          "currencyCode": { "type": "string" },
+          "recentTransactions": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Transaction" }
+          }
+        }
+      },
+      "ScenarioOverride": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "month": { "type": "string" },
+          "categoryId": { "type": "string" },
+          "amount": { "$ref": "#/components/schemas/Money" },
+          "additional": { "type": "boolean" }
+        }
+      },
+      "Scenario": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "overrides": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/ScenarioOverride" }
+          },
+          "version": { "type": "integer" }
+        }
+      },
+      "BulkRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "transactionIds": { "type": "array", "items": { "type": "string" } },
+          "categoryId": { "type": "string" },
+          "overwriteManual": { "type": "boolean" },
+          "apply": { "type": "boolean" }
+        }
+      },
+      "RulePreviewResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "matches": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/RuleMatch" }
+          }
+        }
+      },
+      "BudgetCopyRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "sourceMonth": { "type": "string" },
+          "targetMonths": { "type": "array", "items": { "type": "string" } },
+          "sourceYear": { "type": "integer" },
+          "targetYear": { "type": "integer" }
+        }
+      },
+      "ImportRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "filename": { "type": "string" },
+          "contentBase64": { "type": "string" },
+          "source": { "type": "string" },
+          "columns": {
+            "type": "object",
+            "additionalProperties": { "type": "string" }
+          },
+          "dateFormat": { "type": "string" },
+          "decimalSeparator": { "type": "string" },
+          "defaultCurrency": { "type": "string" },
+          "exchangeRate": {
+            "type": "string",
+            "deprecated": true,
+            "description": "Legacy field retained for wire compatibility; ignored by the application."
+          },
+          "delimiter": { "type": "string" }
+        }
+      },
+      "ImportRow": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "rowNumber": { "type": "integer" },
+          "transaction": { "$ref": "#/components/schemas/Transaction" },
+          "errors": { "type": "array", "items": { "type": "string" } },
+          "duplicate": { "type": "boolean" },
+          "ruleReasons": { "type": "array", "items": { "type": "string" } }
+        }
+      },
+      "ImportResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string" },
+          "status": { "type": "string" },
+          "rows": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/ImportRow" }
+          },
+          "imported": { "type": "integer" },
+          "duplicates": { "type": "integer" },
+          "encoding": { "type": "string" },
+          "delimiter": { "type": "string" },
+          "headers": { "type": "array", "items": { "type": "string" } },
+          "createdAt": { "type": "string" }
+        }
+      },
+      "Problem": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "type": { "type": "string" },
+          "title": { "type": "string" },
+          "status": { "type": "integer" },
+          "code": { "type": "string" },
+          "requestId": { "type": "string" },
+          "fields": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    }
+  }
+}

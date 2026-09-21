@@ -1,0 +1,16 @@
+CREATE TABLE categories (id TEXT PRIMARY KEY, payload TEXT NOT NULL, version INTEGER NOT NULL);
+CREATE TABLE transactions (id TEXT PRIMARY KEY, category_id TEXT NOT NULL REFERENCES categories(id), date TEXT NOT NULL, type INTEGER NOT NULL CHECK(type IN (1,2)), currency TEXT NOT NULL, amount TEXT NOT NULL, base_amount TEXT NOT NULL, counterparty TEXT NOT NULL, payload TEXT NOT NULL, version INTEGER NOT NULL, dedup TEXT);
+CREATE UNIQUE INDEX transactions_dedup ON transactions(dedup);
+CREATE INDEX transactions_date ON transactions(date,id);
+CREATE INDEX transactions_category ON transactions(category_id);
+CREATE TABLE budgets (id TEXT PRIMARY KEY, category_id TEXT NOT NULL REFERENCES categories(id), payload TEXT NOT NULL, version INTEGER NOT NULL);
+CREATE TABLE recurring_commitments (id TEXT PRIMARY KEY, category_id TEXT NOT NULL REFERENCES categories(id), payload TEXT NOT NULL, version INTEGER NOT NULL);
+CREATE TABLE categorization_rules (id TEXT PRIMARY KEY, category_id TEXT NOT NULL REFERENCES categories(id), payload TEXT NOT NULL, version INTEGER NOT NULL);
+CREATE TABLE exchange_rates (id TEXT PRIMARY KEY, payload TEXT NOT NULL, version INTEGER NOT NULL);
+CREATE TABLE scenarios (id TEXT PRIMARY KEY, payload TEXT NOT NULL, version INTEGER NOT NULL);
+CREATE TABLE application_settings (id TEXT PRIMARY KEY, payload TEXT NOT NULL, version INTEGER NOT NULL);
+CREATE TABLE imports (id TEXT PRIMARY KEY, payload TEXT NOT NULL, request TEXT NOT NULL, status TEXT NOT NULL, created_at TEXT NOT NULL);
+CREATE TABLE import_rows (id TEXT PRIMARY KEY, import_id TEXT NOT NULL REFERENCES imports(id), payload TEXT NOT NULL);
+CREATE INDEX import_rows_import ON import_rows(import_id);
+CREATE TABLE audit_events (id TEXT PRIMARY KEY, entity TEXT NOT NULL, action TEXT NOT NULL, entity_id TEXT NOT NULL, created_at TEXT NOT NULL);
+CREATE TABLE idempotency_keys (id TEXT PRIMARY KEY, hash TEXT NOT NULL, payload TEXT NOT NULL);

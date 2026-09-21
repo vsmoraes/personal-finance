@@ -1,0 +1,252 @@
+syntax = "proto3";
+package finance.v1;
+import "buf/validate/validate.proto";
+
+// Date-only Gregorian financial date; never interpreted as a UTC timestamp.
+message Date {
+  int32 year = 1 [(buf.validate.field).int32 = {gte: 1900, lte: 9999}];
+  int32 month = 2 [(buf.validate.field).int32 = {gte: 1, lte: 12}];
+  int32 day = 3 [(buf.validate.field).int32 = {gte: 1, lte: 31}];
+}
+message Money {
+  int64 minor_units = 1;
+  string currency_code = 2 [(buf.validate.field).string.pattern = "^[A-Z]{3}$"];
+}
+enum TransactionType {
+  TRANSACTION_TYPE_UNSPECIFIED = 0;
+  TRANSACTION_TYPE_INCOME = 1;
+  TRANSACTION_TYPE_EXPENSE = 2;
+}
+enum CategorizationSource {
+  CATEGORIZATION_SOURCE_UNSPECIFIED = 0;
+  CATEGORIZATION_SOURCE_MANUAL = 1;
+  CATEGORIZATION_SOURCE_IMPORT = 2;
+  CATEGORIZATION_SOURCE_RULE = 3;
+}
+message Category {
+  string id = 1;
+  string slug = 2;
+  string name = 3;
+  bool builtin = 4;
+  TransactionType type = 5;
+  string color = 6;
+  string icon = 7;
+  bool archived = 8;
+  bool budgetable = 9;
+  optional Money default_budget = 10;
+  int32 position = 11;
+  int32 version = 12;
+}
+message Transaction {
+  string id = 1;
+  Date date = 2 [(buf.validate.field).required = true];
+  TransactionType type = 3;
+  string category_id = 4 [(buf.validate.field).string.min_len = 1];
+  Money amount = 5 [(buf.validate.field).required = true];
+  // Legacy conversion fields are retained only for wire compatibility and ignored.
+  Money base_amount = 6 [deprecated = true];
+  string exchange_rate = 7 [deprecated = true];
+  string counterparty = 8 [(buf.validate.field).string.max_len = 250];
+  string note = 9 [(buf.validate.field).string.max_len = 4000];
+  string import_source = 10;
+  string external_id = 11;
+  CategorizationSource categorization_source = 12;
+  string rule_id = 13;
+  bool include_in_budget = 14;
+  string created_at = 15;
+  string updated_at = 16;
+  int32 version = 17;
+}
+message Budget {
+  string id = 1;
+  string category_id = 2;
+  string start_month = 3;
+  string end_month = 4;
+  Money amount = 5;
+  int32 version = 6;
+}
+message RecurringCommitment {
+  string id = 1;
+  string category_id = 2;
+  string description = 3;
+  Money amount = 4;
+  string exchange_rate = 5 [deprecated = true];
+  string start_month = 6;
+  string end_month = 7;
+  int32 interval_months = 8;
+  bool contributes_to_budget = 9;
+  int32 version = 10;
+}
+message CategorizationRule {
+  string id = 1;
+  string name = 2;
+  int32 priority = 3;
+  bool enabled = 4;
+  string counterparty_contains = 5;
+  string note_contains = 6;
+  optional int64 min_minor_units = 7;
+  optional int64 max_minor_units = 8;
+  TransactionType type = 9;
+  string currency_code = 10;
+  string category_id = 11;
+  optional bool include_in_budget = 12;
+  bool continue_matching = 13;
+  int32 version = 14;
+  string import_source_contains = 15;
+}
+message RuleMatch {
+  string transaction_id = 1;
+  string rule_id = 2;
+  string category_id = 3;
+  repeated string reasons = 4;
+}
+// Legacy descriptor; no exchange-rate endpoints or calculations remain.
+message ExchangeRate {
+  option deprecated = true;
+  string id = 1;
+  string currency_code = 2;
+  string base_currency = 3;
+  string rate = 4;
+  Date date = 5;
+  int32 version = 6;
+}
+message Settings {
+  string language = 1;
+  string base_currency = 2 [deprecated = true];
+  string timezone = 3;
+  int32 first_day_of_week = 4;
+  string date_format = 5;
+  int32 report_year = 6;
+  string theme = 7;
+  string import_currency = 8;
+  string import_date_format = 9;
+  string import_decimal_separator = 10;
+  int32 version = 11;
+  // Entry/report default only; changing it never alters recorded money.
+  string default_currency = 12;
+  string custom_background = 13;
+  string custom_surface = 14;
+  string custom_accent = 15;
+  string custom_accent_secondary = 16;
+  string custom_sidebar_accent = 17;
+  string custom_sidebar_accent_secondary = 18;
+  string custom_mode = 19;
+}
+message Pagination {
+  int32 page = 1;
+  int32 page_size = 2;
+  int32 total = 3;
+}
+message ListRequest {
+  int32 page = 1;
+  int32 page_size = 2;
+  string search = 3;
+  string start_date = 4;
+  string end_date = 5;
+  TransactionType type = 6;
+  string category_id = 7;
+  string currency_code = 8;
+  string counterparty = 9;
+  optional int64 min_minor_units = 10;
+  optional int64 max_minor_units = 11;
+  string sort = 12;
+  bool descending = 13;
+}
+message FinanceResponse {
+  repeated Transaction transactions = 1;
+  repeated Category categories = 2;
+  repeated Budget budgets = 3;
+  repeated RecurringCommitment commitments = 4;
+  repeated CategorizationRule rules = 5;
+  repeated ExchangeRate exchange_rates = 6 [deprecated = true];
+  Settings settings = 7;
+  Pagination pagination = 8;
+  repeated Scenario scenarios = 9;
+}
+message ReportRequest {
+  int32 year = 1;
+  int32 month = 2;
+  string scenario_id = 3;
+  string as_of_date = 4;
+  string currency_code = 5;
+}
+message ReportRow {
+  string key = 1;
+  int64 income = 2;
+  int64 expenses = 3;
+  int64 net_savings = 4;
+  optional int64 budget = 5;
+  optional int64 variance = 6;
+  string savings_rate = 7;
+  bool actual = 8;
+}
+message ReportResponse {
+  repeated ReportRow rows = 1;
+  ReportRow totals = 2;
+  string currency_code = 3;
+  repeated Transaction recent_transactions = 4;
+}
+message ScenarioOverride {
+  string month = 1;
+  string category_id = 2;
+  Money amount = 3;
+  bool additional = 4;
+}
+message Scenario {
+  string id = 1;
+  string name = 2;
+  repeated ScenarioOverride overrides = 3;
+  int32 version = 4;
+}
+message BulkRequest {
+  repeated string transaction_ids = 1;
+  string category_id = 2;
+  bool overwrite_manual = 3;
+  bool apply = 4;
+}
+message RulePreviewResponse {
+  repeated RuleMatch matches = 1;
+}
+message BudgetCopyRequest {
+  string source_month = 1;
+  repeated string target_months = 2;
+  int32 source_year = 3;
+  int32 target_year = 4;
+}
+message ImportRequest {
+  string filename = 1;
+  string content_base64 = 2;
+  string source = 3;
+  map<string, string> columns = 4;
+  string date_format = 5;
+  string decimal_separator = 6;
+  string default_currency = 7;
+  string exchange_rate = 8 [deprecated = true];
+  string delimiter = 9;
+}
+message ImportRow {
+  int32 row_number = 1;
+  Transaction transaction = 2;
+  repeated string errors = 3;
+  bool duplicate = 4;
+  repeated string rule_reasons = 5;
+}
+message ImportResponse {
+  string id = 1;
+  string status = 2;
+  repeated ImportRow rows = 3;
+  int32 imported = 4;
+  int32 duplicates = 5;
+  string encoding = 6;
+  string delimiter = 7;
+  repeated string headers = 8;
+  string created_at = 9;
+}
+message Problem {
+  string type = 1;
+  string title = 2;
+  int32 status = 3;
+  string code = 4;
+  string request_id = 5;
+  repeated string fields = 6;
+}

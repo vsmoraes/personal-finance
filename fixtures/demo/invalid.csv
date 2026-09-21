@@ -1,0 +1,3 @@
+date,amount,currency,counterparty
+2026-02-30,-12.00,EUR,Demo invalid date
+2026-09-02,not-a-number,EUR,Demo invalid amount

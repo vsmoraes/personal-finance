@@ -1,0 +1,34 @@
+name: CI / PR checks
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+concurrency:
+  group: verify-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+      - run: corepack enable
+      - run: corepack pnpm install --frozen-lockfile
+      - run: make verify
+      - run: corepack pnpm exec playwright install --with-deps chromium
+      - run: make e2e
+      - run: corepack pnpm audit --audit-level=low
+      - run: mkdir -p data && sudo chown -R 1000:1000 data
+      - run: corepack pnpm test:docker
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: verification-artifacts
+          path: |
+            coverage/
+            test-results/

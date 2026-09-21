@@ -1,0 +1,5 @@
+date,amount,currency,counterparty,note,externalId
+2026-09-08,-32.45,EUR,Demo Market,DEMO 2025-2026 | imported groceries,market-2026-9
+2026-09-08,-18.00,EUR,Demo Transit,DEMO 2025-2026 | commute,transit-2026-9
+2026-09-08,175.00,EUR,Demo Project,DEMO 2025-2026 | imported income,project-2026-9
+2026-09-20,-27.50,EUR,Demo Market,Additional test purchase,manual-demo-market-2026-9
