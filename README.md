@@ -222,6 +222,13 @@ creates a `vX.Y.Z` tag; the Release workflow builds and publishes images for
 tag. Deploy a specific version on Synology by changing `FINANCE_TAG`; do not
 deploy an unpinned moving tag for a production upgrade.
 
+Release Please requires the repository secret `RELEASE_PLEASE_TOKEN`. Use a
+fine-grained token restricted to this repository with **Contents: write**,
+**Issues: write**, and **Pull requests: write**, or enable GitHub Actions'
+permission to create and approve pull requests and use the repository token.
+The dedicated token is preferred because releases and release pull requests
+created with `GITHUB_TOKEN` do not trigger subsequent workflows.
+
 Vitest covers financial arithmetic, reports, rules, imports, repository mappings, migrations, concurrency, HTTP behavior, and React flows with MSW. Playwright uses desktop, 320/360/390px mobile, tablet, and landscape profiles. Coverage is enforced in CI, including at least 90% statement and branch coverage for the financial domain. Docker smoke tests create a transaction, restart and recreate the container, then verify persistence.
 
 ## External access control
