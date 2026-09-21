@@ -6,7 +6,7 @@ IMAGE ?= personal-finance
 TAG ?= local
 PLATFORM ?= linux/amd64
 
-.PHONY: install build test test-integration e2e verify build-docker build-synology up down logs seed-demo
+.PHONY: install build test test-fast test-integration e2e e2e-install e2e-fast verify verify-fast build-docker build-synology up down logs seed-demo
 
 install:
 	$(PNPM) install --frozen-lockfile
@@ -17,12 +17,31 @@ build:
 test:
 	$(PNPM) test
 
+test-fast:
+	$(PNPM) exec vitest run tests/contracts.test.ts tests/domain.test.ts tests/web.test.tsx
+
 test-integration:
 	$(PNPM) test:integration
 
 e2e:
-	$(PNPM) exec playwright install chromium
 	$(PNPM) test:e2e
+
+e2e-install:
+	$(PNPM) exec playwright install chromium
+
+e2e-fast:
+	$(PNPM) test:e2e --project=desktop -g "quick entry persists"
+
+verify-fast:
+	$(PNPM) proto:lint
+	$(PNPM) proto:check
+	$(PNPM) proto:breaking
+	$(PNPM) api:check
+	$(PNPM) format:check
+	$(PNPM) lint
+	$(PNPM) typecheck
+	$(MAKE) test-fast
+	$(PNPM) build
 
 verify:
 	$(PNPM) proto:lint

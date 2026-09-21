@@ -1148,8 +1148,10 @@ must remain current when the product changes.
   verification, tests, integration, E2E, Docker builds, Synology builds,
   Compose lifecycle, and guarded development-only demo seeding.
 - CI runs frozen-lockfile installation, contract checks, formatting, lint,
-  typechecking, unit/component/integration tests, production build, Playwright
-  profiles, dependency audit, and Docker persistence smoke tests.
+  typechecking, focused unit/component tests, and a desktop smoke E2E on pull
+  requests. After changes land on `main`, it runs coverage, integration and
+  migration tests, the complete Playwright device matrix, dependency audit,
+  production build, and Docker persistence smoke tests.
 - Release Please manages conventional-commit releases. Version tags publish
   `linux/amd64` and `linux/arm64` images to GHCR with a `latest` tag; production
   deployments should use a pinned version tag.

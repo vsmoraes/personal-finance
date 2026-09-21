@@ -48,8 +48,12 @@ The repository also exposes the common workflows through a Makefile:
 ```sh
 make install       # install the locked dependencies
 make verify        # contracts, formatting, lint, types, tests, and build
+make verify-fast   # focused PR checks without coverage or heavy integration suites
 make test          # Vitest with coverage
+make test-fast     # focused unit/component checks
+make e2e-install   # install Playwright browsers once
 make e2e           # Playwright browser suite
+make e2e-fast      # one desktop smoke flow
 make build-docker  # build the local image
 make build-synology PLATFORM=linux/amd64 TAG=v1.2.3
 make up            # start the local Compose stack
