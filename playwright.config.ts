@@ -20,38 +20,8 @@ export default defineConfig({
   projects: [
     { name: "desktop", use: { ...devices["Desktop Chrome"] } },
     {
-      name: "mobile-320",
-      use: {
-        ...devices["iPhone SE"],
-        defaultBrowserType: "chromium",
-        viewport: { width: 320, height: 640 },
-      },
-    },
-    {
-      name: "mobile-360",
-      use: { ...devices["Pixel 5"], viewport: { width: 360, height: 740 } },
-    },
-    {
-      name: "mobile-390",
-      use: {
-        ...devices["iPhone 13"],
-        defaultBrowserType: "chromium",
-        viewport: { width: 390, height: 844 },
-      },
-    },
-    {
-      name: "tablet",
-      use: {
-        ...devices["Desktop Chrome"],
-        viewport: { width: 768, height: 1024 },
-      },
-    },
-    {
-      name: "landscape",
-      use: {
-        ...devices["Desktop Chrome"],
-        viewport: { width: 844, height: 390 },
-      },
+      name: "mobile",
+      use: { ...devices["Pixel 5"] },
     },
   ],
 });

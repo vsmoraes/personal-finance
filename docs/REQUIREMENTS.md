@@ -744,7 +744,7 @@ Requirements:
 - Respect reduced-motion preferences.
 - Design loading, empty, error, and network-failure states.
 - Ensure important actions are not available only through hover.
-- Test portrait and landscape layouts.
+- Test desktop and a representative mobile layout.
 
 ## 23. Production-readiness boundary
 
@@ -1154,7 +1154,8 @@ must remain current when the product changes.
   requests. Jobs run in parallel where possible and use explicit dependencies
   for generated contracts and build artifacts. After changes land on `main`,
   it adds complete unit tests, integration tests, the complete Playwright
-  device matrix, dependency audit, and Docker persistence smoke tests.
+  desktop/mobile E2E checks, dependency audit, and Docker persistence smoke
+  tests.
 - Releases are created manually in GitHub. Publishing a release with a semantic
   version tag (`vX.Y.Z`) publishes `linux/amd64` and `linux/arm64` images to
   GHCR with a `latest` tag; pushes to `main` never open release pull requests.

@@ -35,7 +35,7 @@ The coverage run includes domain, application, persistence, HTTP adapters, brows
 
 ## Browser acceptance
 
-Profiles: desktop, 320px mobile, 360px mobile, 390px mobile, 768px tablet, and 844px landscape. Tests create, edit, and delete transactions through the UI; inspect all screens for horizontal page overflow; switch English, Spanish, and Brazilian Portuguese; verify twelve monthly detail rows; and record EUR, zero-decimal JPY, and three-decimal KWD amounts through the quick-entry form. Currency assertions read the persisted generated REST messages, rather than only inspecting formatted screen text.
+Profiles: desktop and generic mobile (Pixel 5). Tests create, edit, and delete transactions through the UI; inspect all screens for horizontal page overflow; switch English, Spanish, and Brazilian Portuguese; verify twelve monthly detail rows; and record EUR, zero-decimal JPY, and three-decimal KWD amounts through the quick-entry form. Currency assertions read the persisted generated REST messages, rather than only inspecting formatted screen text.
 
 Component tests use React Testing Library and MSW, including real Fastify injection behind the HTTP boundary for configuration CRUD, settings, reports, transaction editing, and CSV preview/confirmation. Integration tests also verify invalid input, idempotency conflicts, preview validation, duplicate imports, rollback after category archival, SQLite writer contention, historical exchange-rate stability, and database reopen behavior.
 

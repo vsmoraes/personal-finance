@@ -204,7 +204,7 @@ Every push and pull request runs the CI workflow as separate jobs for contracts,
 formatting/lint/types, unit tests, production build, and desktop smoke E2E. The
 jobs start in parallel where possible and declare dependencies only where an
 artifact or generated contract is required. Pushes to `main` additionally run
-complete unit tests, integration tests, the full Playwright device matrix,
+complete unit tests, integration tests, desktop and generic mobile Playwright,
 the dependency audit, and Docker persistence smoke tests. A scheduled Security
 workflow repeats the audit.
 
@@ -224,7 +224,7 @@ GitHub Container Registry with both the version tag and `latest`. Deploy a
 specific version on Synology by changing `FINANCE_TAG`; do not deploy an
 unpinned moving tag for a production upgrade.
 
-Vitest covers financial arithmetic, reports, rules, imports, repository mappings, migrations, concurrency, HTTP behavior, and focused React components. Browser journeys run in Playwright across desktop, 320/360/390px mobile, tablet, and landscape profiles. Longer UI flow checks are opt-in with `make test-ui-flows` and are covered by the E2E suite in CI. Docker smoke tests create a transaction, restart and recreate the container, then verify persistence.
+Vitest covers financial arithmetic, reports, rules, imports, repository mappings, migrations, concurrency, HTTP behavior, and focused React components. Browser journeys run in Playwright on desktop and a generic mobile profile. Longer UI flow checks are opt-in with `make test-ui-flows` and are covered by the E2E suite in CI. Docker smoke tests create a transaction, restart and recreate the container, then verify persistence.
 
 ## External access control
 
