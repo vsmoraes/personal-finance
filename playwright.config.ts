@@ -4,10 +4,15 @@ export default defineConfig({
   fullyParallel: false,
   workers: 1,
   retries: 0,
-  reporter: "list",
+  reporter: process.env["CI"] ? [["github"], ["list"]] : "list",
   timeout: 30_000,
+  expect: {
+    timeout: 5_000,
+  },
   use: {
     baseURL: process.env["E2E_BASE_URL"] ?? "http://127.0.0.1:8081",
+    actionTimeout: 5_000,
+    navigationTimeout: 10_000,
     trace: "retain-on-failure",
   },
   webServer: process.env["E2E_BASE_URL"]
