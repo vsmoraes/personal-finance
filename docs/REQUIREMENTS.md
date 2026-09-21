@@ -1152,9 +1152,10 @@ must remain current when the product changes.
   requests. After changes land on `main`, it runs coverage, integration and
   migration tests, the complete Playwright device matrix, dependency audit,
   production build, and Docker persistence smoke tests.
-- Release Please manages conventional-commit releases. Version tags publish
-  `linux/amd64` and `linux/arm64` images to GHCR with a `latest` tag; production
-  deployments should use a pinned version tag.
+- Releases are created manually in GitHub. Publishing a release with a semantic
+  version tag (`vX.Y.Z`) publishes `linux/amd64` and `linux/arm64` images to
+  GHCR with a `latest` tag; pushes to `main` never open release pull requests.
+  Production deployments should use a pinned version tag.
 - README and ADRs document local development, API behavior, architecture,
   database ownership, migrations, online backups/restores, Synology deployment,
   security boundaries, troubleshooting, and the no-production-seed rule.

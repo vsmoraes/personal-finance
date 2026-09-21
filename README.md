@@ -71,8 +71,8 @@ the production image never runs the seed script.
 ## Deploy on a Synology NAS
 
 The release workflow publishes multi-architecture images to GitHub Container
-Registry when a `vX.Y.Z` tag is pushed. Synology Container Manager can pull that
-image directly. For a Compose-based deployment, copy
+Registry when a GitHub release is manually published with a `vX.Y.Z` tag.
+Synology Container Manager can pull that image directly. For a Compose-based deployment, copy
 [`docker-compose.synology.yml`](docker-compose.synology.yml) to the NAS and
 create a directory such as `/volume1/docker/personal-finance/data` before the
 first start:
@@ -215,19 +215,12 @@ a read-only token, configure a repository secret named
 and pull requests if automatic merging is desired; without it, the workflow
 leaves updates for manual merging without failing CI.
 
-Merges to `main` are handled by Release Please. It opens or updates the next
-release pull request from conventional commit history. Merging that release PR
-creates a `vX.Y.Z` tag; the Release workflow builds and publishes images for
-`linux/amd64` and `linux/arm64` to GitHub Container Registry, plus a `latest`
-tag. Deploy a specific version on Synology by changing `FINANCE_TAG`; do not
-deploy an unpinned moving tag for a production upgrade.
-
-Release Please requires the repository secret `RELEASE_PLEASE_TOKEN`. Use a
-fine-grained token restricted to this repository with **Contents: write**,
-**Issues: write**, and **Pull requests: write**, or enable GitHub Actions'
-permission to create and approve pull requests and use the repository token.
-The dedicated token is preferred because releases and release pull requests
-created with `GITHUB_TOKEN` do not trigger subsequent workflows.
+To publish a release, create a semantic version tag such as `v1.2.3` and
+choose **Draft a new release** in GitHub with that tag. Publishing the release
+starts the image workflow. It pushes `linux/amd64` and `linux/arm64` images to
+GitHub Container Registry with both the version tag and `latest`. Deploy a
+specific version on Synology by changing `FINANCE_TAG`; do not deploy an
+unpinned moving tag for a production upgrade.
 
 Vitest covers financial arithmetic, reports, rules, imports, repository mappings, migrations, concurrency, HTTP behavior, and React flows with MSW. Playwright uses desktop, 320/360/390px mobile, tablet, and landscape profiles. Coverage is enforced in CI, including at least 90% statement and branch coverage for the financial domain. Docker smoke tests create a transaction, restart and recreate the container, then verify persistence.
 

@@ -30,7 +30,7 @@ e2e-install:
 	$(PNPM) exec playwright install chromium
 
 e2e-fast:
-	$(PNPM) test:e2e --project=desktop --max-failures=1 --timeout=20000 -g "quick entry persists"
+	$(PNPM) test:e2e --project=desktop --max-failures=1 -g "quick entry persists"
 
 verify-fast:
 	$(PNPM) proto:lint

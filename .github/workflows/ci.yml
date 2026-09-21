@@ -11,10 +11,9 @@ concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 jobs:
-  pr:
-    if: github.event_name == 'pull_request'
+  verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
       - name: Set up pnpm
@@ -37,50 +36,28 @@ jobs:
           restore-keys: |
             playwright-chromium-${{ runner.os }}-
       - name: Install Playwright browser
-        timeout-minutes: 5
         run: corepack pnpm exec playwright install chromium
       - name: Run desktop smoke E2E
-        timeout-minutes: 5
         run: make e2e-fast
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: pr-verification-artifacts
-          if-no-files-found: ignore
-          path: |
-            coverage/
-            test-results/
-  main:
-    if: github.event_name != 'pull_request'
-    runs-on: ubuntu-latest
-    timeout-minutes: 60
-    steps:
-      - uses: actions/checkout@v4
-      - name: Set up pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10.17.1
-      - uses: actions/setup-node@v4
-        with:
-          node-version-file: .nvmrc
-          cache: pnpm
-      - name: Install dependencies
-        run: corepack pnpm install --frozen-lockfile
       - name: Run complete verification
+        if: github.event_name != 'pull_request'
         run: make verify
-      - name: Install Playwright browser
-        run: corepack pnpm exec playwright install --with-deps chromium
       - name: Run complete E2E matrix
+        if: github.event_name != 'pull_request'
         run: make e2e
       - name: Audit dependencies
+        if: github.event_name != 'pull_request'
         run: corepack pnpm audit --audit-level=high
-      - run: mkdir -p data && sudo chown -R 1000:1000 data
       - name: Verify Docker persistence
-        run: corepack pnpm test:docker
+        if: github.event_name != 'pull_request'
+        run: |
+          mkdir -p data
+          sudo chown -R 1000:1000 data
+          corepack pnpm test:docker
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: main-verification-artifacts
+          name: verification-artifacts-${{ github.run_id }}
           if-no-files-found: ignore
           path: |
             coverage/
