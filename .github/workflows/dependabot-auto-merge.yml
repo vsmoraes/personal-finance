@@ -1,12 +1,12 @@
 name: Dependabot auto-merge
 
 on:
-  pull_request:
+  pull_request_target:
     types: [opened, synchronize, reopened]
 
 permissions:
-  contents: write
-  pull-requests: write
+  contents: read
+  pull-requests: read
 
 concurrency:
   group: dependabot-${{ github.event.pull_request.number }}
@@ -21,16 +21,29 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
+      - name: Check merge credential
+        id: credential
+        env:
+          AUTOMERGE_TOKEN: ${{ secrets.DEPENDABOT_AUTOMERGE_TOKEN }}
+        run: |
+          if [ -n "$AUTOMERGE_TOKEN" ]; then
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "DEPENDABOT_AUTOMERGE_TOKEN is not configured; leaving PR for manual merge."
+          fi
       - name: Fetch Dependabot metadata
         id: metadata
+        if: steps.credential.outputs.configured == 'true'
         uses: dependabot/fetch-metadata@v3
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
       - name: Enable auto-merge for patch and minor updates
         if: >-
-          steps.metadata.outputs.update-type == 'version-update:semver-patch' ||
-          steps.metadata.outputs.update-type == 'version-update:semver-minor'
+          steps.credential.outputs.configured == 'true' &&
+          (steps.metadata.outputs.update-type == 'version-update:semver-patch' ||
+          steps.metadata.outputs.update-type == 'version-update:semver-minor')
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.DEPENDABOT_AUTOMERGE_TOKEN }}
           PR_URL: ${{ github.event.pull_request.html_url }}
         run: gh pr merge --auto --squash "$PR_URL"

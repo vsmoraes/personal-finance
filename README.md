@@ -209,7 +209,11 @@ dependency findings, while a scheduled Security workflow repeats the audit.
 Dependabot is configured for daily npm and GitHub Actions updates. Patch and
 minor Dependabot pull requests are grouped by dependency
 type and marked for GitHub auto-merge after the normal CI checks pass. Major
-updates remain manual review items.
+updates remain manual review items. Because GitHub gives Dependabot workflows
+a read-only token, configure a repository secret named
+`DEPENDABOT_AUTOMERGE_TOKEN` with a fine-grained token that can write contents
+and pull requests if automatic merging is desired; without it, the workflow
+leaves updates for manual merging without failing CI.
 
 Merges to `main` are handled by Release Please. It opens or updates the next
 release pull request from conventional commit history. Merging that release PR
