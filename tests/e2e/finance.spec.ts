@@ -193,10 +193,11 @@ test("Overview opens shared category and budget drawers", async ({
   await dialog
     .getByRole("combobox", { name: "Category", exact: true })
     .fill(name);
-  await page
+  const categoryOption = page
     .locator(".ant-select-item-option-content")
-    .filter({ hasText: name })
-    .click();
+    .filter({ hasText: new RegExp(`^${name}$`) });
+  await expect(categoryOption).toBeVisible();
+  await categoryOption.evaluate((element) => (element as HTMLElement).click());
   await dialog.getByLabel("Amount", { exact: true }).fill("25.00");
   await dialog.getByRole("button", { name: "Save", exact: true }).click();
   await expect(dialog).toHaveCount(0);
