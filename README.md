@@ -189,7 +189,7 @@ pnpm build
 pnpm exec playwright install chromium
 pnpm test:e2e
 pnpm test:docker
-pnpm audit --audit-level=low
+pnpm audit --audit-level=high
 ```
 
 Buf's dependency lock and pnpm's lockfile are checked in. `proto:check` regenerates and compares a content digest; CI fails on stale generated files. `proto:breaking` compares against the checked-in initial contract image. Do not replace the baseline to conceal breaking changes; introduce a new API version. Generated OpenAPI derives message schemas from Protobuf reflection and paths from the HTTP adapter; `api:check` prevents stale documentation.
@@ -199,8 +199,13 @@ Buf's dependency lock and pnpm's lockfile are checked in. `proto:check` regenera
 Every push and pull request runs the Verify workflow. It installs the locked
 toolchain, checks Protobuf and OpenAPI contracts, formatting, lint, types,
 unit/integration/browser tests, the production build, dependency audits, and
-the Docker persistence smoke test. A scheduled Security workflow runs a stricter
-dependency audit.
+the Docker persistence smoke test. The main workflow blocks on high-severity
+dependency findings, while a scheduled Security workflow repeats the audit.
+
+Dependabot is configured for weekly npm updates and monthly GitHub Actions
+updates. Patch and minor Dependabot pull requests are grouped by dependency
+type and marked for GitHub auto-merge after the normal CI checks pass. Major
+updates remain manual review items.
 
 Merges to `main` are handled by Release Please. It opens or updates the next
 release pull request from conventional commit history. Merging that release PR
