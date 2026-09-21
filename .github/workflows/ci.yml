@@ -1,64 +1,257 @@
 name: CI
+
 on:
   push:
     branches: [main]
   pull_request:
     branches: [main]
   workflow_dispatch:
+
 permissions:
   contents: read
+
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
+
+env:
+  PNPM_VERSION: 10.17.1
+
 jobs:
-  verify:
+  contracts:
+    name: Contracts and generated files
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
-      - name: Set up pnpm
-        uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v4
         with:
-          version: 10.17.1
+          version: ${{ env.PNPM_VERSION }}
       - uses: actions/setup-node@v4
         with:
           node-version-file: .nvmrc
           cache: pnpm
-      - name: Install dependencies
-        run: corepack pnpm install --frozen-lockfile
-      - name: Run focused verification
-        run: make verify-fast
-      - name: Cache Playwright browser
-        uses: actions/cache@v4
+      - run: corepack pnpm install --frozen-lockfile
+      - run: corepack pnpm proto:lint
+      - run: corepack pnpm proto:check
+      - run: corepack pnpm proto:breaking
+      - run: corepack pnpm api:check
+
+  lint:
+    name: Formatting, lint, and types
+    needs: contracts
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: corepack pnpm install --frozen-lockfile
+      - run: corepack pnpm format:check
+      - run: corepack pnpm lint
+      - run: corepack pnpm typecheck
+
+  unit:
+    name: Unit and component tests
+    needs: contracts
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: corepack pnpm install --frozen-lockfile
+      - run: make test-fast
+
+  build:
+    name: Production build
+    needs: [contracts, lint]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: corepack pnpm install --frozen-lockfile
+      - run: corepack pnpm build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: application-build-${{ github.run_id }}
+          path: |
+            dist/
+            apps/web/dist/
+          if-no-files-found: error
+          retention-days: 1
+
+  e2e:
+    name: Desktop smoke E2E
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: corepack pnpm install --frozen-lockfile
+      - uses: actions/download-artifact@v4
+        with:
+          name: application-build-${{ github.run_id }}
+          path: .
+      - uses: actions/cache@v4
         with:
           path: ~/.cache/ms-playwright
           key: playwright-chromium-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
           restore-keys: |
             playwright-chromium-${{ runner.os }}-
-      - name: Install Playwright browser
-        run: corepack pnpm exec playwright install chromium
-      - name: Run desktop smoke E2E
-        run: make e2e-fast
-      - name: Run complete verification
-        if: github.event_name != 'pull_request'
-        run: make verify
-      - name: Run complete E2E matrix
-        if: github.event_name != 'pull_request'
-        run: make e2e
-      - name: Audit dependencies
-        if: github.event_name != 'pull_request'
-        run: corepack pnpm audit --audit-level=high
-      - name: Verify Docker persistence
-        if: github.event_name != 'pull_request'
-        run: |
-          mkdir -p data
-          sudo chown -R 1000:1000 data
-          corepack pnpm test:docker
+      - run: corepack pnpm exec playwright install chromium
+      - run: make e2e-fast
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: verification-artifacts-${{ github.run_id }}
+          name: e2e-smoke-artifacts-${{ github.run_id }}
+          path: test-results/
           if-no-files-found: ignore
-          path: |
-            coverage/
-            test-results/
+          retention-days: 7
+
+  unit-complete:
+    name: Complete unit and component tests
+    if: github.event_name != 'pull_request'
+    needs: unit
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: corepack pnpm install --frozen-lockfile
+      - run: >-
+          corepack pnpm exec vitest run --coverage
+          tests/contracts.test.ts
+          tests/currency-migration.test.ts
+          tests/demo-seed.test.ts
+          tests/domain.test.ts
+          tests/ui-flows.test.tsx
+          tests/web.test.tsx
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: unit-coverage-${{ github.run_id }}
+          path: coverage/
+          if-no-files-found: ignore
+          retention-days: 7
+
+  integration:
+    name: Integration tests
+    if: github.event_name != 'pull_request'
+    needs: [contracts, unit]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: corepack pnpm install --frozen-lockfile
+      - run: corepack pnpm test:integration
+
+  e2e-complete:
+    name: Complete E2E matrix
+    if: github.event_name != 'pull_request'
+    needs: e2e
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: corepack pnpm install --frozen-lockfile
+      - uses: actions/download-artifact@v4
+        with:
+          name: application-build-${{ github.run_id }}
+          path: .
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-chromium-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            playwright-chromium-${{ runner.os }}-
+      - run: corepack pnpm exec playwright install chromium
+      - run: make e2e
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: e2e-complete-artifacts-${{ github.run_id }}
+          path: test-results/
+          if-no-files-found: ignore
+          retention-days: 7
+
+  audit:
+    name: Dependency audit
+    if: github.event_name != 'pull_request'
+    needs: contracts
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: corepack pnpm install --frozen-lockfile
+      - run: corepack pnpm audit --audit-level=high
+
+  docker:
+    name: Docker persistence smoke test
+    if: github.event_name != 'pull_request'
+    needs: [build, e2e-complete]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: corepack pnpm install --frozen-lockfile
+      - run: mkdir -p data && sudo chown -R 1000:1000 data
+      - run: corepack pnpm test:docker

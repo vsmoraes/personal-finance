@@ -200,11 +200,13 @@ Buf's dependency lock and pnpm's lockfile are checked in. `proto:check` regenera
 
 ## CI/CD and releases
 
-Every push and pull request runs the Verify workflow. It installs the locked
-toolchain, checks Protobuf and OpenAPI contracts, formatting, lint, types,
-unit/integration/browser tests, the production build, dependency audits, and
-the Docker persistence smoke test. The main workflow blocks on high-severity
-dependency findings, while a scheduled Security workflow repeats the audit.
+Every push and pull request runs the CI workflow as separate jobs for contracts,
+formatting/lint/types, unit tests, production build, and desktop smoke E2E. The
+jobs start in parallel where possible and declare dependencies only where an
+artifact or generated contract is required. Pushes to `main` additionally run
+complete unit coverage, integration tests, the full Playwright device matrix,
+the dependency audit, and Docker persistence smoke tests. A scheduled Security
+workflow repeats the audit.
 
 Dependabot is configured for daily npm and GitHub Actions updates. Patch and
 minor Dependabot pull requests are grouped by dependency
