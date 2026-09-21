@@ -29,8 +29,15 @@ jobs:
         run: corepack pnpm install --frozen-lockfile
       - name: Run focused verification
         run: make verify-fast
+      - name: Cache Playwright browser
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-chromium-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            playwright-chromium-${{ runner.os }}-
       - name: Install Playwright browser
-        run: corepack pnpm exec playwright install --with-deps chromium
+        run: corepack pnpm exec playwright install chromium
       - name: Run desktop smoke E2E
         run: make e2e-fast
       - uses: actions/upload-artifact@v4
