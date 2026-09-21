@@ -135,7 +135,6 @@ jobs:
 
   unit-complete:
     name: Complete unit and component tests
-    if: github.event_name != 'pull_request'
     needs: unit
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -160,7 +159,6 @@ jobs:
 
   integration:
     name: Integration tests
-    if: github.event_name != 'pull_request'
     needs: [contracts, unit]
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -178,7 +176,6 @@ jobs:
 
   e2e-complete:
     name: Complete E2E matrix
-    if: github.event_name != 'pull_request'
     needs: e2e
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -214,7 +211,6 @@ jobs:
 
   audit:
     name: Dependency audit
-    if: github.event_name != 'pull_request'
     needs: contracts
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -232,7 +228,6 @@ jobs:
 
   docker:
     name: Docker persistence smoke test
-    if: github.event_name != 'pull_request'
     needs: [build, e2e-complete]
     runs-on: ubuntu-latest
     timeout-minutes: 30

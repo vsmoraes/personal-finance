@@ -1149,13 +1149,12 @@ must remain current when the product changes.
 - The Makefile is the canonical task entry point for installation, formatting,
   verification, tests, integration, E2E, Docker builds, Synology builds,
   Compose lifecycle, and guarded development-only demo seeding.
-- CI runs focused jobs for contracts/generated files, formatting/lint/types,
-  unit/component tests, production build, and desktop smoke E2E on pull
-  requests. Jobs run in parallel where possible and use explicit dependencies
-  for generated contracts and build artifacts. After changes land on `main`,
-  it adds complete unit tests, integration tests, the complete Playwright
-  desktop/mobile E2E checks, dependency audit, and Docker persistence smoke
-  tests.
+- CI runs the same complete dependency-aware job graph on pull requests and
+  pushes to `main`: contracts/generated files, formatting/lint/types,
+  focused and complete unit/component tests, integration tests, production
+  build, desktop/mobile E2E checks, dependency audit, and Docker persistence
+  smoke tests. Jobs run in parallel where possible and use explicit
+  dependencies for generated contracts and build artifacts.
 - Releases are created manually in GitHub. Publishing a release with a semantic
   version tag (`vX.Y.Z`) publishes `linux/amd64` and `linux/arm64` images to
   GHCR with a `latest` tag; pushes to `main` never open release pull requests.
