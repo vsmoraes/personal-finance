@@ -54,6 +54,7 @@ export async function openTurso(
     });
     if (!applied.rows.length) {
       const statements = migration
+        .replace(/^--.*$/gm, "")
         .split(";")
         .map((sql) => sql.trim())
         .filter(Boolean)
