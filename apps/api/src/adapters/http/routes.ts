@@ -56,12 +56,15 @@ export function registerRoutes(
     toJson(
       p.FinanceResponseSchema,
       create(p.FinanceResponseSchema, {
-        categories: finance.list("categories"),
+        categories: await finance.list("categories"),
       }),
     ),
   );
   app.get("/api/v1/categories/:id", async (request) =>
-    toJson(p.CategorySchema, finance.get("categories", param(request, "id"))),
+    toJson(
+      p.CategorySchema,
+      await finance.get("categories", param(request, "id")),
+    ),
   );
   app.post("/api/v1/categories", async (request, reply) =>
     reply
@@ -69,14 +72,17 @@ export function registerRoutes(
       .send(
         toJson(
           p.CategorySchema,
-          finance.save("categories", decode(p.CategorySchema, request.body)),
+          await finance.save(
+            "categories",
+            decode(p.CategorySchema, request.body),
+          ),
         ),
       ),
   );
   app.patch("/api/v1/categories/:id", async (request) =>
     toJson(
       p.CategorySchema,
-      finance.save(
+      await finance.save(
         "categories",
         decode(p.CategorySchema, request.body),
         param(request, "id"),
@@ -84,7 +90,7 @@ export function registerRoutes(
     ),
   );
   app.delete("/api/v1/categories/:id", async (request, reply) => {
-    finance.remove(
+    await finance.remove(
       "categories",
       param(request, "id"),
       Number(request.headers["if-match"]),
@@ -94,11 +100,13 @@ export function registerRoutes(
   app.get("/api/v1/budgets", async () =>
     toJson(
       p.FinanceResponseSchema,
-      create(p.FinanceResponseSchema, { budgets: finance.list("budgets") }),
+      create(p.FinanceResponseSchema, {
+        budgets: await finance.list("budgets"),
+      }),
     ),
   );
   app.get("/api/v1/budgets/:id", async (request) =>
-    toJson(p.BudgetSchema, finance.get("budgets", param(request, "id"))),
+    toJson(p.BudgetSchema, await finance.get("budgets", param(request, "id"))),
   );
   app.post("/api/v1/budgets", async (request, reply) =>
     reply
@@ -106,14 +114,14 @@ export function registerRoutes(
       .send(
         toJson(
           p.BudgetSchema,
-          finance.save("budgets", decode(p.BudgetSchema, request.body)),
+          await finance.save("budgets", decode(p.BudgetSchema, request.body)),
         ),
       ),
   );
   app.patch("/api/v1/budgets/:id", async (request) =>
     toJson(
       p.BudgetSchema,
-      finance.save(
+      await finance.save(
         "budgets",
         decode(p.BudgetSchema, request.body),
         param(request, "id"),
@@ -121,7 +129,7 @@ export function registerRoutes(
     ),
   );
   app.delete("/api/v1/budgets/:id", async (request, reply) => {
-    finance.remove(
+    await finance.remove(
       "budgets",
       param(request, "id"),
       Number(request.headers["if-match"]),
@@ -132,14 +140,14 @@ export function registerRoutes(
     toJson(
       p.FinanceResponseSchema,
       create(p.FinanceResponseSchema, {
-        commitments: finance.list("commitments"),
+        commitments: await finance.list("commitments"),
       }),
     ),
   );
   app.get("/api/v1/recurring-commitments/:id", async (request) =>
     toJson(
       p.RecurringCommitmentSchema,
-      finance.get("commitments", param(request, "id")),
+      await finance.get("commitments", param(request, "id")),
     ),
   );
   app.post("/api/v1/recurring-commitments", async (request, reply) =>
@@ -148,7 +156,7 @@ export function registerRoutes(
       .send(
         toJson(
           p.RecurringCommitmentSchema,
-          finance.save(
+          await finance.save(
             "commitments",
             decode(p.RecurringCommitmentSchema, request.body),
           ),
@@ -158,7 +166,7 @@ export function registerRoutes(
   app.patch("/api/v1/recurring-commitments/:id", async (request) =>
     toJson(
       p.RecurringCommitmentSchema,
-      finance.save(
+      await finance.save(
         "commitments",
         decode(p.RecurringCommitmentSchema, request.body),
         param(request, "id"),
@@ -166,7 +174,7 @@ export function registerRoutes(
     ),
   );
   app.delete("/api/v1/recurring-commitments/:id", async (request, reply) => {
-    finance.remove(
+    await finance.remove(
       "commitments",
       param(request, "id"),
       Number(request.headers["if-match"]),
@@ -176,13 +184,13 @@ export function registerRoutes(
   app.get("/api/v1/categorization-rules", async () =>
     toJson(
       p.FinanceResponseSchema,
-      create(p.FinanceResponseSchema, { rules: finance.list("rules") }),
+      create(p.FinanceResponseSchema, { rules: await finance.list("rules") }),
     ),
   );
   app.get("/api/v1/categorization-rules/:id", async (request) =>
     toJson(
       p.CategorizationRuleSchema,
-      finance.get("rules", param(request, "id")),
+      await finance.get("rules", param(request, "id")),
     ),
   );
   app.post("/api/v1/categorization-rules", async (request, reply) =>
@@ -191,7 +199,7 @@ export function registerRoutes(
       .send(
         toJson(
           p.CategorizationRuleSchema,
-          finance.save(
+          await finance.save(
             "rules",
             decode(p.CategorizationRuleSchema, request.body),
           ),
@@ -201,7 +209,7 @@ export function registerRoutes(
   app.patch("/api/v1/categorization-rules/:id", async (request) =>
     toJson(
       p.CategorizationRuleSchema,
-      finance.save(
+      await finance.save(
         "rules",
         decode(p.CategorizationRuleSchema, request.body),
         param(request, "id"),
@@ -209,7 +217,7 @@ export function registerRoutes(
     ),
   );
   app.delete("/api/v1/categorization-rules/:id", async (request, reply) => {
-    finance.remove(
+    await finance.remove(
       "rules",
       param(request, "id"),
       Number(request.headers["if-match"]),
@@ -219,11 +227,16 @@ export function registerRoutes(
   app.get("/api/v1/scenarios", async () =>
     toJson(
       p.FinanceResponseSchema,
-      create(p.FinanceResponseSchema, { scenarios: finance.list("scenarios") }),
+      create(p.FinanceResponseSchema, {
+        scenarios: await finance.list("scenarios"),
+      }),
     ),
   );
   app.get("/api/v1/scenarios/:id", async (request) =>
-    toJson(p.ScenarioSchema, finance.get("scenarios", param(request, "id"))),
+    toJson(
+      p.ScenarioSchema,
+      await finance.get("scenarios", param(request, "id")),
+    ),
   );
   app.post("/api/v1/scenarios", async (request, reply) =>
     reply
@@ -231,14 +244,17 @@ export function registerRoutes(
       .send(
         toJson(
           p.ScenarioSchema,
-          finance.save("scenarios", decode(p.ScenarioSchema, request.body)),
+          await finance.save(
+            "scenarios",
+            decode(p.ScenarioSchema, request.body),
+          ),
         ),
       ),
   );
   app.patch("/api/v1/scenarios/:id", async (request) =>
     toJson(
       p.ScenarioSchema,
-      finance.save(
+      await finance.save(
         "scenarios",
         decode(p.ScenarioSchema, request.body),
         param(request, "id"),
@@ -246,7 +262,7 @@ export function registerRoutes(
     ),
   );
   app.delete("/api/v1/scenarios/:id", async (request, reply) => {
-    finance.remove(
+    await finance.remove(
       "scenarios",
       param(request, "id"),
       Number(request.headers["if-match"]),
@@ -254,12 +270,12 @@ export function registerRoutes(
     return reply.code(204).send();
   });
   app.get("/api/v1/settings", async () =>
-    toJson(p.SettingsSchema, finance.settings()),
+    toJson(p.SettingsSchema, await finance.settings()),
   );
   app.patch("/api/v1/settings", async (request) =>
     toJson(
       p.SettingsSchema,
-      finance.updateSettings(decode(p.SettingsSchema, request.body)),
+      await finance.updateSettings(decode(p.SettingsSchema, request.body)),
     ),
   );
   app.get("/api/v1/transactions", async (request) => {
@@ -270,13 +286,13 @@ export function registerRoutes(
       q["descending"] = q["descending"] === "true";
     return toJson(
       p.FinanceResponseSchema,
-      finance.transactions(decode(p.ListRequestSchema, q)),
+      await finance.transactions(decode(p.ListRequestSchema, q)),
     );
   });
   app.get("/api/v1/transactions/:id", async (request) =>
     toJson(
       p.TransactionSchema,
-      finance.get("transactions", param(request, "id")),
+      await finance.get("transactions", param(request, "id")),
     ),
   );
   app.post("/api/v1/transactions", async (request, reply) => {
@@ -287,7 +303,7 @@ export function registerRoutes(
       .send(
         toJson(
           p.TransactionSchema,
-          finance.createTransaction(
+          await finance.createTransaction(
             decode(p.TransactionSchema, request.body),
             key,
           ),
@@ -297,14 +313,14 @@ export function registerRoutes(
   app.patch("/api/v1/transactions/:id", async (request) =>
     toJson(
       p.TransactionSchema,
-      finance.updateTransaction(
+      await finance.updateTransaction(
         param(request, "id"),
         decode(p.TransactionSchema, request.body),
       ),
     ),
   );
   app.delete("/api/v1/transactions/:id", async (request, reply) => {
-    finance.remove(
+    await finance.remove(
       "transactions",
       param(request, "id"),
       Number(request.headers["if-match"]),
@@ -312,19 +328,19 @@ export function registerRoutes(
     return reply.code(204).send();
   });
   app.post("/api/v1/transactions/bulk", async (request) => {
-    finance.recategorize(decode(p.BulkRequestSchema, request.body));
+    await finance.recategorize(decode(p.BulkRequestSchema, request.body));
     return {};
   });
   app.post("/api/v1/categorization-rules/preview", async (request) =>
     toJson(
       p.RulePreviewResponseSchema,
-      finance.previewRules(decode(p.BulkRequestSchema, request.body)),
+      await finance.previewRules(decode(p.BulkRequestSchema, request.body)),
     ),
   );
   app.put("/api/v1/budgets/:year/:month", async (request) =>
     toJson(
       p.BudgetSchema,
-      finance.putBudget(
+      await finance.putBudget(
         param(request, "year"),
         param(request, "month"),
         decode(p.BudgetSchema, request.body),
@@ -332,7 +348,7 @@ export function registerRoutes(
     ),
   );
   app.post("/api/v1/budgets/copy", async (request) => {
-    finance.copyBudgets(decode(p.BudgetCopyRequestSchema, request.body));
+    await finance.copyBudgets(decode(p.BudgetCopyRequestSchema, request.body));
     return {};
   });
   for (const kind of [
@@ -347,7 +363,7 @@ export function registerRoutes(
         if (q[key] !== undefined) q[key] = Number(q[key]);
       return toJson(
         p.ReportResponseSchema,
-        finance.report(kind, decode(p.ReportRequestSchema, q)),
+        await finance.report(kind, decode(p.ReportRequestSchema, q)),
       );
     });
   app.post("/api/v1/imports", async (request, reply) =>
@@ -356,12 +372,17 @@ export function registerRoutes(
       .send(
         toJson(
           p.ImportResponseSchema,
-          finance.imports.preview(decode(p.ImportRequestSchema, request.body)),
+          await finance.imports.preview(
+            decode(p.ImportRequestSchema, request.body),
+          ),
         ),
       ),
   );
   app.get("/api/v1/imports/:id", async (request) =>
-    toJson(p.ImportResponseSchema, finance.imports.get(param(request, "id"))),
+    toJson(
+      p.ImportResponseSchema,
+      await finance.imports.get(param(request, "id")),
+    ),
   );
   app.post("/api/v1/imports/:id/confirm", async (request) => {
     assert(
@@ -370,7 +391,7 @@ export function registerRoutes(
     );
     return toJson(
       p.ImportResponseSchema,
-      finance.imports.confirm(param(request, "id")),
+      await finance.imports.confirm(param(request, "id")),
     );
   });
   app.get("/api/v1/imports/:id/errors", async (request, reply) =>
@@ -380,15 +401,14 @@ export function registerRoutes(
       .send(
         [
           "row,errors",
-          ...finance.imports
-            .get(param(request, "id"))
-            .rows.filter((r) => r.errors.length)
+          ...(await finance.imports.get(param(request, "id"))).rows
+            .filter((r) => r.errors.length)
             .map((r) => `${r.rowNumber},${csvCell(r.errors.join(";"))}`),
         ].join("\r\n"),
       ),
   );
   app.get("/api/v1/export", async (request, reply) => {
-    const data = finance.export();
+    const data = await finance.export();
     if (query(request)["format"] === "json")
       return reply
         .header("content-disposition", 'attachment; filename="finance.json"')

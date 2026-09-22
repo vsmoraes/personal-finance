@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/require-await */
 import {
   type DescMessage,
   fromJsonString,
@@ -13,6 +14,7 @@ import { assert, DomainError } from "../../domain/src/money.js";
 import { type Store } from "./index.js";
 import * as t from "./schema.js";
 export function createSqliteAdapter(store: Store): FinanceStore {
+  let tail = Promise.resolve();
   function repository<D extends DescMessage>(
     schema: D,
     table:
@@ -35,17 +37,17 @@ export function createSqliteAdapter(store: Store): FinanceStore {
       return value as Entity;
     }
     return {
-      list: () =>
+      list: async () =>
         store.db
           .select()
           .from(table)
           .all()
           .map((row) => deserialize(row.payload)),
-      get: (id) => {
+      get: async (id) => {
         const row = store.db.select().from(table).where(eq(table.id, id)).get();
         return row ? deserialize(row.payload) : undefined;
       },
-      save: (value, expectedVersion, deduplicationKey) => {
+      save: async (value, expectedVersion, deduplicationKey) => {
         const fields = {
           id: value.id,
           payload: toJsonString(schema, value),
@@ -108,7 +110,7 @@ export function createSqliteAdapter(store: Store): FinanceStore {
           } else store.db.insert(table).values(fields).run();
         }
       },
-      remove: (id, version) => {
+      remove: async (id, version) => {
         assert(
           store.db
             .delete(table)
@@ -129,9 +131,20 @@ export function createSqliteAdapter(store: Store): FinanceStore {
       rules: repository(p.CategorizationRuleSchema, t.rules),
       scenarios: repository(p.ScenarioSchema, t.scenarios),
     },
-    atomic: (operation) => {
+    atomic: async (operation) => {
+      const previous = tail;
+      let release!: () => void;
+      tail = new Promise<void>((resolve) => {
+        release = resolve;
+      });
+      await previous;
       try {
-        return store.sqlite.transaction(operation).immediate();
+        // better-sqlite3 stays on this connection while awaits yield. The
+        // queue prevents another request from interleaving its statements.
+        store.sqlite.exec("BEGIN IMMEDIATE");
+        const value = await operation();
+        store.sqlite.exec("COMMIT");
+        return value;
       } catch (error) {
         let cause: unknown = error;
         const visited = new Set<unknown>();
@@ -144,12 +157,21 @@ export function createSqliteAdapter(store: Store): FinanceStore {
             throw new DomainError("DATABASE_BUSY", 503);
           cause = cause.cause;
         }
+        try {
+          store.sqlite.exec("ROLLBACK");
+        } catch {
+          // No transaction was opened (for example, BEGIN itself failed).
+        }
         throw error;
+      } finally {
+        release();
       }
     },
-    settings: store.settings,
-    audit: store.audit,
-    saveSettings: (settings, version) => {
+    settings: async () => store.settings(),
+    audit: async (entity, action, entityId) => {
+      store.audit(entity, action, entityId);
+    },
+    saveSettings: async (settings, version) => {
       assert(
         store.db
           .update(t.settings)
@@ -168,22 +190,22 @@ export function createSqliteAdapter(store: Store): FinanceStore {
         409,
       );
     },
-    deduplicationKeys: () =>
+    deduplicationKeys: async () =>
       store.db
         .select({ key: t.transactions.dedup })
         .from(t.transactions)
         .all()
         .flatMap((row) => (row.key ? [row.key] : [])),
-    getIdempotency: (key) =>
+    getIdempotency: async (key) =>
       store.db
         .select({ hash: t.idempotency.hash, payload: t.idempotency.payload })
         .from(t.idempotency)
         .where(eq(t.idempotency.id, key))
         .get(),
-    saveIdempotency: (id, hash, payload) => {
+    saveIdempotency: async (id, hash, payload) => {
       store.db.insert(t.idempotency).values({ id, hash, payload }).run();
     },
-    getImport: (id) => {
+    getImport: async (id) => {
       const row = store.db
         .select()
         .from(t.imports)
@@ -193,7 +215,7 @@ export function createSqliteAdapter(store: Store): FinanceStore {
         ? fromJsonString(p.ImportResponseSchema, row.payload)
         : undefined;
     },
-    saveImport: (value, request) => {
+    saveImport: async (value, request) => {
       const payload = toJsonString(p.ImportResponseSchema, value);
       if (request) {
         store.db

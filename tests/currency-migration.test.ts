@@ -11,7 +11,7 @@ import * as p from "../packages/contracts/src/finance/v1/finance_pb.js";
 import { createSqliteAdapter } from "../packages/database/src/adapter.js";
 import { openDatabase } from "../packages/database/src/index.js";
 
-it("migrates conversion-era records without changing original money, identity, or settings", () => {
+it("migrates conversion-era records without changing original money, identity, or settings", async () => {
   const directory = mkdtempSync(join(tmpdir(), "native-currency-migration-"));
   const filename = join(directory, "finance.db");
   try {
@@ -110,12 +110,13 @@ it("migrates conversion-era records without changing original money, identity, o
       const migrated = openDatabase(filename);
       try {
         const store = createSqliteAdapter(migrated);
-        const saved = store.repositories.transactions.get("legacy-transaction");
+        const saved =
+          await store.repositories.transactions.get("legacy-transaction");
         expect(saved?.amount).toEqual(transaction.amount);
         expect(saved?.version).toBe(4);
         expect(saved?.baseAmount).toBeUndefined();
         expect(saved?.exchangeRate).toBe("");
-        expect(store.settings()).toMatchObject({
+        expect(await store.settings()).toMatchObject({
           defaultCurrency: "EUR",
           baseCurrency: "",
           language: "es",
@@ -123,15 +124,15 @@ it("migrates conversion-era records without changing original money, identity, o
           theme: "dark",
           version: 7,
         });
-        expect(store.deduplicationKeys()).toEqual(["existing-dedup"]);
+        expect(await store.deduplicationKeys()).toEqual(["existing-dedup"]);
         expect(
-          store.getIdempotency("transaction:legacy-key")?.payload,
+          (await store.getIdempotency("transaction:legacy-key"))?.payload,
         ).not.toMatch(/baseAmount|exchangeRate/);
         expect(
-          store.getImport("preview")?.rows[0]?.transaction?.amount,
+          (await store.getImport("preview"))?.rows[0]?.transaction?.amount,
         ).toEqual(transaction.amount);
         expect(
-          store.getImport("preview")?.rows[0]?.transaction?.baseAmount,
+          (await store.getImport("preview"))?.rows[0]?.transaction?.baseAmount,
         ).toBeUndefined();
         expect(
           migrated.sqlite

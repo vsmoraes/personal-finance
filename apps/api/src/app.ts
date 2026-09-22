@@ -11,16 +11,35 @@ import Fastify from "fastify";
 import { FinanceApplication } from "../../../packages/application/src/finance-application.js";
 import * as p from "../../../packages/contracts/src/finance/v1/finance_pb.js";
 import { createSqliteAdapter } from "../../../packages/database/src/adapter.js";
+import type { DatabaseConfig } from "../../../packages/database/src/config.js";
 import * as tables from "../../../packages/database/src/index.js";
+import {
+  createTursoAdapter,
+  openTurso,
+} from "../../../packages/database/src/turso.js";
 import { assert, DomainError } from "../../../packages/domain/src/money.js";
 import { registerRoutes } from "./adapters/http/routes.js";
 import { csvAdapter } from "./adapters/import/csv.js";
 export async function buildApp(
-  options: { database?: string; logger?: boolean; webRoot?: string } = {},
+  options: {
+    database?: string;
+    config?: DatabaseConfig;
+    logger?: boolean;
+    webRoot?: string;
+  } = {},
 ) {
-  const store = tables.openDatabase(options.database ?? "data/finance.db");
+  const config = options.config ?? {
+    driver: "sqlite" as const,
+    url: `file:${options.database ?? "data/finance.db"}`,
+  };
+  const store =
+    config.driver === "sqlite"
+      ? tables.openDatabase(config.url.replace(/^file:/, ""))
+      : await openTurso(config.url, config.authToken);
   const finance = new FinanceApplication(
-    createSqliteAdapter(store),
+    "sqlite" in store
+      ? createSqliteAdapter(store)
+      : createTursoAdapter(store.client),
     {
       id: randomUUID,
       now: () => new Date().toISOString(),
@@ -119,11 +138,13 @@ export async function buildApp(
       );
   });
   app.addHook("onClose", async () => {
-    store.sqlite.close();
+    if ("sqlite" in store) store.sqlite.close();
+    else store.close();
   });
   app.get("/healthz", async () => ({ status: "ok" }));
   app.get("/readyz", async () => {
-    store.sqlite.prepare("SELECT 1").get();
+    if ("sqlite" in store) store.sqlite.prepare("SELECT 1").get();
+    else await store.client.execute("SELECT 1");
     return { status: "ready" };
   });
   registerRoutes(app, finance);
@@ -143,5 +164,7 @@ export async function buildApp(
       return reply.sendFile("index.html");
     });
   }
-  return { app, store };
+  // The store is exposed for the SQLite-only integration harness. Runtime
+  // operations use the driver-neutral FinanceStore above.
+  return { app, store: store as ReturnType<typeof tables.openDatabase> };
 }

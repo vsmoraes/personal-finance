@@ -16,12 +16,12 @@ export function importService(
   runtime: Runtime,
   csvAdapter: ImportAdapter,
 ) {
-  function get(id: string) {
-    const row = store.getImport(id);
+  async function get(id: string) {
+    const row = await store.getImport(id);
     assert(row, "NOT_FOUND", 404);
     return row;
   }
-  function preview(request: p.ImportRequest): p.ImportResponse {
+  async function preview(request: p.ImportRequest): Promise<p.ImportResponse> {
     assert(
       request.source.trim() && request.source.length <= 100,
       "IMPORT_SOURCE_REQUIRED",
@@ -36,11 +36,11 @@ export function importService(
       delimiter: decoded.delimiter,
       createdAt: runtime.now(),
     });
-    const seen = new Set(store.deduplicationKeys());
+    const seen = new Set(await store.deduplicationKeys());
     if (Object.keys(request.columns).length) {
       for (const key of ["date", "amount"])
         assert(headers.includes(request.columns[key] ?? ""), "INVALID_MAPPING");
-      records.forEach((record, index) => {
+      for (const [index, record] of records.entries()) {
         const row = create(p.ImportRowSchema, { rowNumber: index + 2 });
         try {
           assert(record.length === headers.length, "COLUMN_COUNT_MISMATCH");
@@ -77,15 +77,13 @@ export function importService(
                   ? p.TransactionType.EXPENSE
                   : p.TransactionType.INCOME;
           const categoryText = cell("category");
-          const category = svc
-            .allCategories()
-            .find(
-              (c) =>
-                Boolean(categoryText) &&
-                (c.id === categoryText ||
-                  c.slug === categoryText ||
-                  c.name === categoryText),
-            );
+          const category = (await svc.allCategories()).find(
+            (c) =>
+              Boolean(categoryText) &&
+              (c.id === categoryText ||
+                c.slug === categoryText ||
+                c.name === categoryText),
+          );
           const t = create(p.TransactionSchema, {
             date: parseDate(date),
             type,
@@ -101,13 +99,13 @@ export function importService(
             externalId: cell("externalId"),
             includeInBudget: true,
           });
-          row.transaction = svc.normalizeTransaction(t, undefined, true);
+          row.transaction = await svc.normalizeTransaction(t, undefined, true);
           row.ruleReasons = applyRules(
             {
               ...row.transaction,
               categorizationSource: p.CategorizationSource.IMPORT,
             },
-            svc.allRules(),
+            await svc.allRules(),
           ).matches.flatMap((m) => m.reasons);
           const key = fingerprint(row.transaction);
           row.duplicate = seen.has(key);
@@ -118,18 +116,18 @@ export function importService(
           );
         }
         result.rows.push(row);
-      });
+      }
     }
     result.duplicates = result.rows.filter((r) => r.duplicate).length;
-    store.atomic(() => {
-      store.saveImport(result, request);
-      store.audit("import", "preview", result.id);
+    await store.atomic(async () => {
+      await store.saveImport(result, request);
+      await store.audit("import", "preview", result.id);
     });
     return result;
   }
-  function confirm(id: string) {
-    return store.atomic(() => {
-      const result = get(id);
+  async function confirm(id: string) {
+    return store.atomic(async () => {
+      const result = await get(id);
       if (result.status === "confirmed") return result;
       assert(
         result.rows.length > 0 &&
@@ -137,7 +135,7 @@ export function importService(
         "IMPORT_INVALID",
         422,
       );
-      const known = new Set(store.deduplicationKeys());
+      const known = new Set(await store.deduplicationKeys());
       result.imported = 0;
       result.duplicates = 0;
       for (const row of result.rows) {
@@ -147,14 +145,14 @@ export function importService(
           result.duplicates++;
           continue;
         }
-        svc.category(row.transaction.categoryId, row.transaction.type);
-        svc.saveTransaction(row.transaction, undefined, key);
+        await svc.category(row.transaction.categoryId, row.transaction.type);
+        await svc.saveTransaction(row.transaction, undefined, key);
         known.add(key);
         result.imported++;
       }
       result.status = "confirmed";
-      store.saveImport(result);
-      store.audit("import", "confirm", id);
+      await store.saveImport(result);
+      await store.audit("import", "confirm", id);
       return result;
     });
   }

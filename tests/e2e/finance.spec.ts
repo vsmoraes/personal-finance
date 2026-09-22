@@ -246,10 +246,16 @@ test("CSV preview and confirmation preserve original currency", async ({
   await preview.click();
   const confirm = page.getByTestId("import-confirm");
   await expect(confirm).toBeEnabled({ timeout: 10_000 });
-  await confirm.click();
-  await expect(
-    page.getByRole("button", { name: "Import complete", exact: true }),
-  ).toBeVisible();
+  const [confirmation] = await Promise.all([
+    page.waitForResponse(
+      (response) =>
+        response.request().method() === "POST" &&
+        /\/api\/v1\/imports\/[^/]+\/confirm$/.test(response.url()),
+    ),
+    confirm.click(),
+  ]);
+  expect(confirmation.ok()).toBe(true);
+  expect(await confirmation.json()).toMatchObject({ status: "confirmed" });
   const entries = fromJsonString(
     FinanceResponseSchema,
     await (await request.get(`/api/v1/transactions?search=${source}`)).text(),
