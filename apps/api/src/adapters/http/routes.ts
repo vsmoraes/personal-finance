@@ -9,7 +9,7 @@ import {
 import { createValidator } from "@bufbuild/protovalidate";
 import type { FastifyInstance, FastifyRequest } from "fastify";
 
-import { FinanceApplication } from "../../../../../packages/application/src/finance-application.js";
+import type { FinanceUseCases } from "../../../../../packages/application/src/finance-use-cases.js";
 import { csvCell } from "../../../../../packages/application/src/imports.js";
 import * as p from "../../../../../packages/contracts/src/finance/v1/finance_pb.js";
 import { dateString } from "../../../../../packages/domain/src/finance.js";
@@ -50,7 +50,7 @@ function query(request: FastifyRequest): Record<string, JsonValue> {
 }
 export function registerRoutes(
   app: FastifyInstance,
-  finance: FinanceApplication,
+  finance: FinanceUseCases,
 ): void {
   app.get("/api/v1/categories", async () =>
     toJson(
