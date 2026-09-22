@@ -199,19 +199,24 @@ test("every configuration resource supports create, edit, and delete through its
       await page.locator("#categoryId").fill("Groceries");
       await page.keyboard.press("Enter");
     }
+    if (item.resource === "recurring-commitments")
+      await page.locator("#amount").fill("10.00");
     await page.locator(`#${item.name}`).fill(item.value);
     await page.locator(`#${item.resource}-form-save`).click();
-    const body = (await (
-      await request.get(`/api/v1/${item.resource}`)
-    ).json()) as Record<string, Array<{ id: string }>>;
-    const entity = body[item.collection]?.find((candidate) => {
-      const record = candidate as Record<string, unknown>;
-      return item.resource === "budgets"
-        ? (record["amount"] as { minorUnits?: string } | undefined)
-            ?.minorUnits === "1000"
-        : record[item.name] === item.value;
-    });
-    expect(entity?.id).toBeTruthy();
+    const response = await request.get(`/api/v1/${item.resource}`);
+    const entity =
+      item.resource === "budgets"
+        ? fromJsonString(
+            FinanceResponseSchema,
+            await response.text(),
+          ).budgets.find((budget) => budget.amount?.minorUnits === 1000n)
+        : ((await response.json()) as Record<string, Array<{ id: string }>>)[
+            item.collection
+          ]?.find(
+            (candidate) =>
+              (candidate as Record<string, unknown>)[item.name] === item.value,
+          );
+    expect(entity?.id, item.resource).toBeTruthy();
     await page.reload();
     if (item.resource !== "budgets")
       await page.locator(`#${item.resource}-search`).fill(item.value);
