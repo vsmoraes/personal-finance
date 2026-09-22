@@ -110,7 +110,8 @@ it("migrates conversion-era records without changing original money, identity, o
       const migrated = openDatabase(filename);
       try {
         const store = createSqliteAdapter(migrated);
-        const saved = await store.repositories.transactions.get("legacy-transaction");
+        const saved =
+          await store.repositories.transactions.get("legacy-transaction");
         expect(saved?.amount).toEqual(transaction.amount);
         expect(saved?.version).toBe(4);
         expect(saved?.baseAmount).toBeUndefined();

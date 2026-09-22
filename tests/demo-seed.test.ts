@@ -1,5 +1,3 @@
-/* eslint-disable */
-// @ts-nocheck
 import { createHash, randomUUID } from "node:crypto";
 
 import { create } from "@bufbuild/protobuf";
@@ -12,7 +10,7 @@ import { createSqliteAdapter } from "../packages/database/src/adapter.js";
 import { openDatabase } from "../packages/database/src/index.js";
 import { DEMO_CUTOFF, seedDemo } from "../scripts/demo/seed.js";
 
-it("seeds realistic history, keeps settings, reconciles reports and is repeatable", () => {
+it("seeds realistic history, keeps settings, reconciles reports and is repeatable", async () => {
   const connection = openDatabase(":memory:");
   try {
     const store = createSqliteAdapter(connection);
@@ -25,9 +23,9 @@ it("seeds realistic history, keeps settings, reconciles reports and is repeatabl
       },
       csvAdapter,
     );
-    const settings = finance.settings();
-    expect(seedDemo(finance, store)).toEqual({ seeded: true });
-    const transactions = finance.list("transactions");
+    const settings = await finance.settings();
+    expect(await seedDemo(finance, store)).toEqual({ seeded: true });
+    const transactions = await finance.list("transactions");
     expect(transactions).toHaveLength(727);
     expect(
       new Set(transactions.map((tr) => tr.amount?.currencyCode)).size,
@@ -42,7 +40,7 @@ it("seeds realistic history, keeps settings, reconciles reports and is repeatabl
       ),
     ).toBe(true);
     for (const year of [2025, 2026]) {
-      const report = finance.report(
+      const report = await finance.report(
         "monthly",
         create(ReportRequestSchema, { year }),
       );
@@ -56,17 +54,17 @@ it("seeds realistic history, keeps settings, reconciles reports and is repeatabl
       if (year === 2025) expect(report.rows[1]?.income).toBe(0n);
     }
     expect(
-      finance.list("categories").some((category) => category.archived),
+      (await finance.list("categories")).some((category) => category.archived),
     ).toBe(true);
     expect(
-      finance
-        .list("categories")
-        .some((category) => category.defaultBudget?.minorUnits === 0n),
+      (await finance.list("categories")).some(
+        (category) => category.defaultBudget?.minorUnits === 0n,
+      ),
     ).toBe(true);
-    expect(finance.list("scenarios")).toHaveLength(3);
-    expect(seedDemo(finance, store)).toEqual({ seeded: false });
-    expect(finance.list("transactions")).toEqual(transactions);
-    expect(finance.settings()).toEqual(settings);
+    expect(await finance.list("scenarios")).toHaveLength(3);
+    expect(await seedDemo(finance, store)).toEqual({ seeded: false });
+    expect(await finance.list("transactions")).toEqual(transactions);
+    expect(await finance.settings()).toEqual(settings);
   } finally {
     connection.sqlite.close();
   }
