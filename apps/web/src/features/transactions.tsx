@@ -18,7 +18,6 @@ import {
   BulkRequestSchema,
   FinanceResponseSchema,
   type Transaction,
-  TransactionSchema,
 } from "../../../../packages/contracts/src/finance/v1/finance_pb.ts";
 import {
   categoryName,
@@ -28,7 +27,7 @@ import {
   useResources,
 } from "../shared/api.ts";
 import { ErrorNotice, PageTitle } from "../shared/ui.tsx";
-import { EntryDrawer } from "./entry-drawer.tsx";
+import { TransactionDetailsDrawer } from "./transaction-details-drawer.tsx";
 import { TransactionTable } from "./transaction-table.tsx";
 export function Transactions() {
   const { t } = useTranslation();
@@ -39,7 +38,7 @@ export function Transactions() {
   });
   const [page, setPage] = useState(1);
   const [selected, setSelected] = useState<string[]>([]);
-  const [edit, setEdit] = useState<Transaction | "new">();
+  const [viewing, setViewing] = useState<Transaction>();
   const [deleting, setDeleting] = useState<Transaction>();
   const [bulkCategory, setBulkCategory] = useState("");
   const [error, setError] = useState<unknown>();
@@ -62,23 +61,13 @@ export function Transactions() {
       refresh();
       setSelected([]);
       setDeleting(undefined);
+      setViewing(undefined);
     } catch (e) {
       setError(e);
     } finally {
       setBusy(false);
     }
   }
-  function editTransaction(transaction: Transaction) {
-    void getMessage(`transactions/${transaction.id}`, TransactionSchema)
-      .then(setEdit)
-      .catch(setError);
-  }
-  const draft = edit
-    ? {
-        resource: "transactions" as const,
-        ...(edit === "new" ? {} : { entity: edit }),
-      }
-    : undefined;
   return (
     <>
       <PageTitle
@@ -183,10 +172,10 @@ export function Transactions() {
         <TransactionTable
           rows={query.data?.transactions ?? []}
           loading={query.isPending}
-          onEdit={editTransaction}
-          onDelete={setDeleting}
+          onView={setViewing}
           selected={selected}
           onSelectionChange={setSelected}
+          onPageChange={setPage}
           filters={filters}
           onChange={(next) => {
             setFilters({ sort: "date", descending: "true", ...next });
@@ -197,14 +186,17 @@ export function Transactions() {
             current: page,
             pageSize: 20,
             total: query.data?.pagination?.total ?? 0,
-            onChange: setPage,
             showSizeChanger: false,
             responsive: true,
             showTotal: (total) => t("transactionCount", { count: total }),
           }}
         />
       </Card>
-      <EntryDrawer draft={draft} onClose={() => setEdit(undefined)} />
+      <TransactionDetailsDrawer
+        transaction={viewing}
+        onClose={() => setViewing(undefined)}
+        onDelete={setDeleting}
+      />
       <Modal
         title={t("deleteTransaction")}
         open={Boolean(deleting)}

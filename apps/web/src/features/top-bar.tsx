@@ -1,5 +1,5 @@
 import { MenuOutlined, SettingOutlined, UserOutlined } from "@ant-design/icons";
-import { Breadcrumb, Button, Dropdown, Flex, Space, theme } from "antd";
+import { Button, Dropdown, Flex, Space, theme, Typography } from "antd";
 import { useTranslation } from "react-i18next";
 
 import { CreateEntryButton, type EntryDraft } from "./entry-drawer.tsx";
@@ -32,9 +32,13 @@ export function TopBar({
           onClick={onMenu}
           style={{ display: compact ? undefined : "none" }}
         />
-        <Breadcrumb
-          items={[{ title: t("appName") }, { title: currentLabel }]}
-        />
+        <Typography.Title
+          className="topbar-page-title"
+          level={2}
+          style={{ margin: 0 }}
+        >
+          {currentLabel}
+        </Typography.Title>
       </Space>
       <Space>
         <CreateEntryButton onCreate={onCreate} compact={compact} />

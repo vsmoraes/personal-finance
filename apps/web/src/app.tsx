@@ -124,6 +124,24 @@ export function App() {
       }
       theme={{
         algorithm: dark ? theme.darkAlgorithm : theme.defaultAlgorithm,
+        token: {
+          borderRadius: 6,
+          borderRadiusLG: 6,
+          colorPrimary: "#5b63f6",
+          colorInfo: "#5b63f6",
+          ...(dark
+            ? {
+                colorBgLayout: "#10111f",
+                colorBgContainer: "#181a2b",
+                colorBgElevated: "#20233a",
+                colorBorderSecondary: "#2c304a",
+              }
+            : {
+                colorBgLayout: "#f6f7fc",
+                colorBgContainer: "#ffffff",
+                colorBorderSecondary: "#e9eaf2",
+              }),
+        },
         ...(custom
           ? {
               token: {
@@ -138,8 +156,8 @@ export function App() {
                 colorBgLayout: settings?.customBackground || "#F5F5F5",
                 colorBgContainer: settings?.customSurface || "#FFFFFF",
                 colorBgElevated: settings?.customSurface || "#FFFFFF",
-                colorTextBase: "#1F1F1F",
-                colorTextSecondary: "#595959",
+                colorTextBase: dark ? "#f7f8ff" : "#1f2233",
+                colorTextSecondary: dark ? "#bbc0d4" : "#62677d",
               },
               components: {
                 Menu: {
@@ -219,6 +237,7 @@ function Workspace({
   );
   const brand = (
     <Flex
+      className="finance-brand"
       align="center"
       justify={collapsed ? "center" : "flex-start"}
       gap="middle"
@@ -234,10 +253,11 @@ function Workspace({
     </Flex>
   );
   return (
-    <Layout style={{ minHeight: "100dvh" }}>
+    <Layout className="finance-shell" style={{ minHeight: "100dvh" }}>
       {screens.lg && (
         <Layout.Sider
           width={256}
+          className="finance-sider"
           collapsed={collapsed}
           collapsedWidth={72}
           collapsible
@@ -273,6 +293,7 @@ function Workspace({
       )}
       <Layout style={{ minWidth: 0 }}>
         <Layout.Header
+          className="finance-header"
           style={{
             paddingInline: screens.sm ? 32 : 16,
             background: token.colorBgContainer,
@@ -290,6 +311,7 @@ function Workspace({
           />
         </Layout.Header>
         <Layout.Content
+          className="finance-content"
           style={{
             padding: screens.sm ? 32 : 16,
             minWidth: 0,

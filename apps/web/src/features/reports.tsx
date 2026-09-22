@@ -29,6 +29,7 @@ import { useTranslation } from "react-i18next";
 import {
   ReportResponseSchema,
   type ReportRow,
+  type Transaction,
 } from "../../../../packages/contracts/src/finance/v1/finance_pb.ts";
 import { formatMoney } from "../../../../packages/domain/src/money.ts";
 import {
@@ -38,8 +39,8 @@ import {
   useSettings,
 } from "../shared/api.ts";
 import { ErrorNotice, Loading, PageTitle } from "../shared/ui.tsx";
-import { type EntryDraft, EntryDrawer } from "./entry-drawer.tsx";
 import { ReportChart } from "./report-chart.tsx";
+import { TransactionDetailsDrawer } from "./transaction-details-drawer.tsx";
 import { TransactionTable } from "./transaction-table.tsx";
 export function Reports({
   kind = "dashboard",
@@ -57,7 +58,7 @@ export function Reports({
   const [scenario, setScenario] = useState(
     () => new URLSearchParams(window.location.search).get("scenarioId") ?? "",
   );
-  const [draft, setDraft] = useState<EntryDraft>();
+  const [viewing, setViewing] = useState<Transaction>();
   const categories = useResources("categories").data?.categories ?? [];
   const scenarios = useResources("scenarios").data?.scenarios ?? [];
   const report = useQuery({
@@ -174,6 +175,7 @@ export function Reports({
         actions={null}
       />
       <Flex
+        className="report-filters"
         align="center"
         justify="space-between"
         gap="middle"
@@ -229,7 +231,7 @@ export function Reports({
         <ErrorNotice error={report.error} />
       ) : (
         <Space direction="vertical" size="large" style={{ width: "100%" }}>
-          <Row gutter={[16, 16]}>
+          <Row className="metric-grid" gutter={[16, 16]}>
             {(
               [
                 ["income", totals?.income, ArrowDownOutlined],
@@ -239,7 +241,11 @@ export function Reports({
               ] as const
             ).map(([key, value, Icon]) => (
               <Col xs={12} sm={12} xl={6} key={key}>
-                <Card size="small" style={{ height: "100%" }}>
+                <Card
+                  className={`metric-card metric-card-${key}`}
+                  size="small"
+                  style={{ height: "100%" }}
+                >
                   <Flex justify="space-between" align="start" gap="small">
                     <Statistic
                       title={t(key)}
@@ -247,6 +253,7 @@ export function Reports({
                       formatter={() => money(value)}
                     />
                     <Avatar
+                      className="metric-icon"
                       shape="square"
                       icon={<Icon />}
                       style={{
@@ -275,6 +282,7 @@ export function Reports({
           <Row gutter={[24, 24]}>
             <Col xs={24} xl={kind === "categories" ? 24 : 16}>
               <Card
+                className="insight-card"
                 title={t(
                   kind === "categories"
                     ? "categorySpending"
@@ -292,6 +300,7 @@ export function Reports({
             {kind !== "categories" && (
               <Col xs={24} xl={8}>
                 <Card
+                  className="budget-health-card"
                   title={t("budgetHealth")}
                   style={{ height: "100%" }}
                   extra={<WalletOutlined />}
@@ -331,12 +340,13 @@ export function Reports({
             )}
           </Row>
           {kind !== "categories" && (
-            <Card title={t("savingsVsVariance")}>
+            <Card className="insight-card" title={t("savingsVsVariance")}>
               <ReportChart rows={chart} kind="savings" format={tooltip} />
             </Card>
           )}
           {kind === "dashboard" ? (
             <Card
+              className="recent-transactions-card"
               title={t("recentTransactions")}
               extra={
                 <Button type="link" href="/transactions">
@@ -347,9 +357,7 @@ export function Reports({
             >
               <TransactionTable
                 rows={report.data.recentTransactions}
-                onEdit={(transaction) =>
-                  setDraft({ resource: "transactions", entity: transaction })
-                }
+                onView={setViewing}
               />
             </Card>
           ) : (
@@ -376,7 +384,10 @@ export function Reports({
           )}
         </Space>
       )}
-      <EntryDrawer draft={draft} onClose={() => setDraft(undefined)} />
+      <TransactionDetailsDrawer
+        transaction={viewing}
+        onClose={() => setViewing(undefined)}
+      />
     </>
   );
 }

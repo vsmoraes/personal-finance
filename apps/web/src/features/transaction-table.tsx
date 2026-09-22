@@ -1,4 +1,3 @@
-import { DeleteOutlined, EditOutlined } from "@ant-design/icons";
 import {
   Button,
   Flex,
@@ -25,20 +24,20 @@ import { EmptyState } from "../shared/ui.tsx";
 export function TransactionTable({
   rows,
   loading = false,
-  onEdit,
-  onDelete,
+  onView,
   selected,
   onSelectionChange,
+  onPageChange,
   pagination = false,
   filters,
   onChange,
 }: {
   rows: Transaction[];
   loading?: boolean;
-  onEdit: (transaction: Transaction) => void;
-  onDelete?: (transaction: Transaction) => void;
+  onView: (transaction: Transaction) => void;
   selected?: string[];
   onSelectionChange?: (ids: string[]) => void;
+  onPageChange?: (page: number) => void;
   pagination?: TableProps<Transaction>["pagination"];
   filters?: Record<string, string>;
   onChange?: (filters: Record<string, string>) => void;
@@ -102,7 +101,7 @@ export function TransactionTable({
       ),
       filteredValue: filters?.["search"] ? [filters["search"]] : null,
       render: (_, row) => (
-        <Flex vertical gap={2}>
+        <Flex gap="small" align="center" style={{ minWidth: 0 }}>
           <Typography.Text strong ellipsis>
             {row.counterparty ||
               categoryName(
@@ -111,7 +110,7 @@ export function TransactionTable({
               )}
           </Typography.Text>
           {row.note && (
-            <Typography.Text type="secondary" ellipsis={{ tooltip: row.note }}>
+            <Typography.Text type="secondary" ellipsis>
               {row.note}
             </Typography.Text>
           )}
@@ -178,46 +177,18 @@ export function TransactionTable({
         </Typography.Text>
       ),
     },
-    {
-      title: t("actions"),
-      key: "actions",
-      width: onDelete ? (screens.md ? 150 : 96) : 64,
-      ...(screens.md ? { fixed: "right" as const } : {}),
-      render: (_, row) => (
-        <Space size={0}>
-          <Button
-            type="text"
-            size="small"
-            icon={<EditOutlined aria-hidden />}
-            aria-label={t("edit")}
-            onClick={() => onEdit(row)}
-          >
-            {screens.md ? t("edit") : null}
-          </Button>
-          {onDelete && (
-            <Button
-              type="text"
-              size="small"
-              danger
-              icon={<DeleteOutlined aria-hidden />}
-              aria-label={t("delete")}
-              onClick={() => onDelete(row)}
-            >
-              {screens.md ? t("delete") : null}
-            </Button>
-          )}
-        </Space>
-      ),
-    },
   ];
   return (
     <Table<Transaction>
+      className="transaction-table"
       rowKey="id"
       columns={columns}
       dataSource={rows}
       loading={loading}
       pagination={pagination}
-      onChange={(_, tableFilters, sorter) => {
+      onChange={(nextPagination, tableFilters, sorter, extra) => {
+        onPageChange?.(nextPagination.current ?? 1);
+        if (extra.action === "paginate") return;
         const next: Record<string, string> = {};
         const search = tableFilters["counterparty"]?.[0];
         const categoryId = tableFilters["category"]?.[0];
@@ -232,7 +203,11 @@ export function TransactionTable({
           next["descending"] = String(currentSorter.order === "descend");
         onChange?.(next);
       }}
-      scroll={{ x: screens.md ? 985 : 430 }}
+      onRow={(transaction) => ({
+        onClick: () => onView(transaction),
+        style: { cursor: "pointer" },
+      })}
+      scroll={{ x: screens.md ? 825 : 300 }}
       locale={{ emptyText: <EmptyState /> }}
       {...(onSelectionChange
         ? {

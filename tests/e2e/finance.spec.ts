@@ -57,16 +57,16 @@ test("quick entry persists and reports reconcile without overflow", async ({
   await page.goto("/transactions");
   const transactionRow = page.getByRole("row", { name: new RegExp(note) });
   await expect(transactionRow).toBeVisible();
-  await transactionRow
-    .getByRole("button", { name: "Edit", exact: true })
-    .click();
+  await transactionRow.click();
+  const drawer = page.getByRole("dialog");
+  await drawer.getByRole("button", { name: "Edit", exact: true }).click();
+  await drawer.getByLabel("Amount", { exact: true }).fill("13.45");
+  await drawer.getByRole("button", { name: "Save", exact: true }).click();
+  await expect(page.getByText("Saved successfully")).toBeVisible();
+  await page.getByRole("row", { name: new RegExp(note) }).click();
   await page
     .getByRole("dialog")
-    .getByLabel("Amount", { exact: true })
-    .fill("13.45");
-  await page.getByRole("button", { name: "Save", exact: true }).click();
-  await expect(page.getByText("Saved successfully")).toBeVisible();
-  await transactionRow
+    .filter({ hasText: "This changes your financial records" })
     .getByRole("button", { name: "Delete", exact: true })
     .click();
   await page
@@ -75,6 +75,40 @@ test("quick entry persists and reports reconcile without overflow", async ({
     .click();
   const deleted = await request.get(`/api/v1/transactions?search=${note}`);
   expect(JSON.stringify(await deleted.json())).not.toContain(note);
+});
+
+test("transactions pagination requests and displays the selected page", async ({
+  page,
+  request,
+}) => {
+  const prefix = `pagination-${crypto.randomUUID()}`;
+  const notes = Array.from({ length: 21 }, (_, index) => `${prefix}-${index}`);
+  for (const [index, note] of notes.entries()) {
+    const response = await request.post("/api/v1/transactions", {
+      headers: { "idempotency-key": crypto.randomUUID() },
+      data: {
+        date: { year: 2026, month: 1, day: index + 1 },
+        type: "TRANSACTION_TYPE_EXPENSE",
+        categoryId: "groceries",
+        amount: { minorUnits: "100", currencyCode: "EUR" },
+        note,
+        includeInBudget: true,
+      },
+    });
+    expect(response.ok()).toBe(true);
+  }
+  await page.goto("/transactions");
+  await expect(page.getByText(notes[0] ?? "")).not.toBeVisible();
+  await page.locator(".ant-pagination-item-2").click();
+  await expect(page.getByText(notes[0] ?? "")).toBeVisible();
+  const rows = fromJsonString(
+    FinanceResponseSchema,
+    await (await request.get(`/api/v1/transactions?search=${prefix}`)).text(),
+  ).transactions;
+  for (const row of rows)
+    await request.delete(`/api/v1/transactions/${row.id}`, {
+      headers: { "if-match": String(row.version) },
+    });
 });
 test("every screen fits the viewport and languages switch", async ({
   page,

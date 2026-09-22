@@ -1,4 +1,4 @@
-import { Flex, Typography } from "antd";
+import { Flex } from "antd";
 import type { ReactNode } from "react";
 
 export interface PageTitleProps {
@@ -7,26 +7,18 @@ export interface PageTitleProps {
   actions?: ReactNode;
 }
 
-export function PageTitle({ title, subtitle, actions }: PageTitleProps) {
+export function PageTitle({ actions }: PageTitleProps) {
+  if (!actions) return null;
   return (
     <Flex
+      className="page-title"
       justify="space-between"
       align="center"
       gap="middle"
       wrap
       style={{ marginBottom: 24 }}
     >
-      <Flex vertical gap="small">
-        <Typography.Title level={2} style={{ margin: 0 }}>
-          {title}
-        </Typography.Title>
-        {subtitle && (
-          <Typography.Paragraph type="secondary" style={{ margin: 0 }}>
-            {subtitle}
-          </Typography.Paragraph>
-        )}
-      </Flex>
-      <Flex gap="small" align="center" wrap>
+      <Flex className="page-title-actions" gap="small" align="center" wrap>
         {actions}
       </Flex>
     </Flex>
