@@ -28,12 +28,7 @@ import {
   useResources,
   useSettings,
 } from "../shared/api.ts";
-import {
-  currencies,
-  Field,
-  FormFields,
-  type Option,
-} from "../shared/forms.tsx";
+import { Field, FormFields, type Option } from "../shared/forms.tsx";
 import { ErrorNotice } from "../shared/ui.tsx";
 export type Resource =
   | "categories"
@@ -66,7 +61,6 @@ function fields(
     required: true,
   };
   const amount = { key: "amount", type: "decimal", required: true };
-  const currency = { key: "currency", options: currencies, required: true };
   const month = { key: "startMonth", type: "month", required: true };
   switch (resource) {
     case "categories":
@@ -83,24 +77,16 @@ function fields(
         { key: "icon", type: "icon" },
         { key: "budgetable", type: "checkbox" },
         { key: "defaultBudget", type: "decimal" },
-        currency,
         { key: "position", type: "number" },
         { key: "archived", type: "checkbox" },
       ];
     case "budgets":
-      return [
-        category,
-        amount,
-        currency,
-        month,
-        { key: "endMonth", type: "month" },
-      ];
+      return [category, amount, month, { key: "endMonth", type: "month" }];
     case "recurring-commitments":
       return [
         category,
         { key: "description", required: true },
         amount,
-        currency,
         month,
         { key: "endMonth", type: "month" },
         { key: "intervalMonths", type: "number", required: true },
@@ -115,10 +101,6 @@ function fields(
         { key: "counterpartyContains" },
         { key: "noteContains" },
         { key: "importSourceContains" },
-        {
-          key: "currencyCode",
-          options: [{ value: "", label: t("anyCurrency") }, ...currencies],
-        },
         { key: "minMinorUnits", type: "number" },
         { key: "maxMinorUnits", type: "number" },
         {
@@ -159,7 +141,7 @@ export function EntityForm({
             ? decimalAmount(o.amount.minorUnits, o.amount.currencyCode)
             : "",
           additional: o.additional,
-          currency: o.amount?.currencyCode ?? defaultCurrency,
+          currency: defaultCurrency,
         }))
       : [],
   );
@@ -202,8 +184,6 @@ export function EntityForm({
     }
     if (entity.$typeName === "finance.v1.Category") {
       initial["name"] = categoryName(entity, t);
-      initial["currency"] =
-        entity.defaultBudget?.currencyCode ?? defaultCurrency;
       initial["defaultBudget"] = entity.defaultBudget
         ? decimalAmount(
             entity.defaultBudget.minorUnits,
@@ -216,7 +196,6 @@ export function EntityForm({
         entity.amount.minorUnits,
         entity.amount.currencyCode,
       );
-      initial["currency"] = entity.amount.currencyCode;
     }
     if (entity.$typeName === "finance.v1.CategorizationRule")
       initial["budgetControl"] =
@@ -289,7 +268,7 @@ export function EntityForm({
             counterpartyContains: s("counterpartyContains"),
             noteContains: s("noteContains"),
             importSourceContains: s("importSourceContains"),
-            currencyCode: s("currencyCode"),
+            currencyCode: "",
             ...(s("minMinorUnits")
               ? { minMinorUnits: s("minMinorUnits") }
               : {}),
@@ -312,7 +291,7 @@ export function EntityForm({
               additional: o.additional,
               amount: {
                 minorUnits: parseAmount(o.amount, o.currency).toString(),
-                currencyCode: o.currency,
+                currencyCode: defaultCurrency,
               },
             })),
           };
@@ -420,25 +399,6 @@ export function EntityForm({
                                     i === index
                                       ? { ...v, categoryId: value }
                                       : v,
-                                  ),
-                                )
-                              }
-                            />
-                          </Form.Item>
-                          <Form.Item
-                            label={t("currency")}
-                            htmlFor={`override-currency-${index}`}
-                          >
-                            <Select
-                              id={`override-currency-${index}`}
-                              value={o.currency}
-                              options={currencies}
-                              showSearch
-                              optionFilterProp="label"
-                              onChange={(value) =>
-                                setOverrides((old) =>
-                                  old.map((v, i) =>
-                                    i === index ? { ...v, currency: value } : v,
                                   ),
                                 )
                               }

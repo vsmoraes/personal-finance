@@ -14,8 +14,10 @@ const resources = [
 
 export function CreateEntryButton({
   onCreate,
+  compact = false,
 }: {
   onCreate: (draft: EntryDraft) => void;
+  compact?: boolean;
 }) {
   const { t } = useTranslation();
   return (
@@ -23,9 +25,10 @@ export function CreateEntryButton({
       <Button
         type="primary"
         icon={<PlusOutlined aria-hidden />}
+        aria-label={t("addTransaction")}
         onClick={() => onCreate({ resource: "transactions" })}
       >
-        {t("addTransaction")}
+        {compact ? null : t("addTransaction")}
       </Button>
       <Dropdown
         trigger={["click"]}

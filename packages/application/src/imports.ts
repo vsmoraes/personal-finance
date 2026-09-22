@@ -37,6 +37,10 @@ export function importService(
       createdAt: runtime.now(),
     });
     const seen = new Set(await store.deduplicationKeys());
+    // The data model remains currency-aware, but the current product operates
+    // in the profile currency. A future exchange-rate adapter can opt into the
+    // supplied import currency without changing this port.
+    const currency = (await store.settings()).defaultCurrency;
     if (Object.keys(request.columns).length) {
       for (const key of ["date", "amount"])
         assert(headers.includes(request.columns[key] ?? ""), "INVALID_MAPPING");
@@ -57,7 +61,6 @@ export function importService(
             const b = parts[1] ?? "";
             date = `${parts[2] ?? ""}-${(request.dateFormat === "dd/MM/yyyy" ? b : a).padStart(2, "0")}-${(request.dateFormat === "dd/MM/yyyy" ? a : b).padStart(2, "0")}`;
           }
-          const currency = cell("currency") || request.defaultCurrency;
           let amount = cell("amount");
           if (request.decimalSeparator === ",")
             amount = amount.replaceAll(".", "").replace(",", ".");

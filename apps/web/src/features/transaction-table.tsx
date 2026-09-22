@@ -4,7 +4,6 @@ import {
   Flex,
   Grid,
   Input,
-  Select,
   Space,
   Table,
   type TableProps,
@@ -21,7 +20,6 @@ import { formatMoney } from "../../../../packages/domain/src/money.ts";
 import { categoryName, useResources, useSettings } from "../shared/api.ts";
 import { CategoryIcon } from "../shared/category-icons.tsx";
 import { formatDate } from "../shared/dates.ts";
-import { currencies } from "../shared/forms.tsx";
 import { EmptyState } from "../shared/ui.tsx";
 
 export function TransactionTable({
@@ -67,7 +65,7 @@ export function TransactionTable({
       ),
     },
     {
-      title: t("counterparty"),
+      title: t("merchant"),
       key: "counterparty",
       width: screens.md ? 260 : 180,
       sorter: true,
@@ -165,42 +163,19 @@ export function TransactionTable({
       width: screens.md ? 160 : 120,
       align: "right",
       sorter: true,
-      filterDropdown: ({ setSelectedKeys, selectedKeys, confirm }) => (
-        <Select
-          style={{ width: 150, margin: 8 }}
-          placeholder={t("currency")}
-          options={currencies}
-          showSearch
-          optionFilterProp="label"
-          value={selectedKeys[0] ? String(selectedKeys[0]) : null}
-          onChange={(value) => {
-            setSelectedKeys(value ? [value] : []);
-            confirm();
-          }}
-          allowClear
-        />
-      ),
-      filteredValue: filters?.["currencyCode"]
-        ? [filters["currencyCode"]]
-        : null,
       render: (_, row) => (
-        <Flex vertical align="end">
-          <Typography.Text
-            strong
-            {...(row.type === TransactionType.INCOME
-              ? { type: "success" as const }
-              : {})}
-          >
-            {formatMoney(
-              row.amount?.minorUnits ?? 0n,
-              row.amount?.currencyCode ?? "EUR",
-              i18n.language,
-            )}
-          </Typography.Text>
-          <Typography.Text type="secondary">
-            {row.amount?.currencyCode}
-          </Typography.Text>
-        </Flex>
+        <Typography.Text
+          strong
+          {...(row.type === TransactionType.INCOME
+            ? { type: "success" as const }
+            : {})}
+        >
+          {formatMoney(
+            row.amount?.minorUnits ?? 0n,
+            row.amount?.currencyCode ?? "EUR",
+            i18n.language,
+          )}
+        </Typography.Text>
       ),
     },
     {
@@ -247,11 +222,9 @@ export function TransactionTable({
         const search = tableFilters["counterparty"]?.[0];
         const categoryId = tableFilters["category"]?.[0];
         const type = tableFilters["type"]?.[0];
-        const currencyCode = tableFilters["amount"]?.[0];
         if (search) next["search"] = String(search);
         if (categoryId) next["categoryId"] = String(categoryId);
         if (type) next["type"] = String(type);
-        if (currencyCode) next["currencyCode"] = String(currencyCode);
         const currentSorter = Array.isArray(sorter) ? sorter[0] : sorter;
         if (currentSorter?.columnKey)
           next["sort"] = String(currentSorter.columnKey);

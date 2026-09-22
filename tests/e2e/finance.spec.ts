@@ -120,56 +120,38 @@ test("every screen fits the viewport and languages switch", async ({
   }
 });
 
-test("quick entry preserves zero- and three-decimal currencies", async ({
+test("quick entry uses the currency configured in Settings", async ({
   page,
   request,
 }) => {
-  for (const [currency, amount, minor] of [
-    ["JPY", "123", "123"],
-    ["KWD", "1.234", "1234"],
-  ] as const) {
-    await page.goto("/");
-    await page
-      .getByRole("button", { name: "Add transaction", exact: true })
-      .first()
-      .click();
-    const currencyInput = page.getByRole("dialog").getByRole("combobox", {
-      name: "Currency",
-      exact: true,
+  await page.goto("/");
+  await page
+    .getByRole("button", { name: "Add transaction", exact: true })
+    .first()
+    .click();
+  const dialog = page.getByRole("dialog");
+  await expect(dialog.getByRole("combobox", { name: "Currency" })).toHaveCount(
+    0,
+  );
+  await dialog.getByLabel("Amount", { exact: true }).fill("123.45");
+  const note = `currency-test-${crypto.randomUUID()}`;
+  await dialog.getByLabel("Note", { exact: true }).fill(note);
+  await dialog
+    .getByRole("button", { name: "Add transaction", exact: true })
+    .click();
+  await expect(page.getByText("Saved successfully")).toBeVisible();
+  const data = fromJsonString(
+    FinanceResponseSchema,
+    await (await request.get(`/api/v1/transactions?search=${note}`)).text(),
+  );
+  expect(data.transactions[0]?.amount).toMatchObject({
+    minorUnits: 12345n,
+    currencyCode: "EUR",
+  });
+  for (const row of data.transactions)
+    await request.delete(`/api/v1/transactions/${row.id}`, {
+      headers: { "if-match": String(row.version) },
     });
-    await currencyInput.fill(currency);
-    const option = page
-      .locator(".ant-select-item-option-content")
-      .filter({ hasText: new RegExp(`^${currency}$`) });
-    await expect(option).toBeVisible();
-    await option.evaluate((element) => (element as HTMLElement).click());
-    await page
-      .getByRole("dialog")
-      .getByLabel("Amount", { exact: true })
-      .fill(amount);
-    await expect(page.getByLabel("Exchange rate to base currency")).toHaveCount(
-      0,
-    );
-    const note = `currency-test-${crypto.randomUUID()}`;
-    await page
-      .getByRole("dialog")
-      .getByLabel("Note", { exact: true })
-      .fill(note);
-    await page
-      .getByRole("dialog")
-      .getByRole("button", { name: "Add transaction", exact: true })
-      .click();
-    await expect(page.getByText("Saved successfully")).toBeVisible();
-    const response = await request.get(`/api/v1/transactions?search=${note}`);
-    const raw = await response.text();
-    const data = fromJsonString(FinanceResponseSchema, raw);
-    expect(data.transactions[0]?.amount?.minorUnits).toBe(BigInt(minor));
-    expect(data.transactions[0]?.amount?.currencyCode).toBe(currency);
-    for (const row of data.transactions)
-      await request.delete(`/api/v1/transactions/${row.id}`, {
-        headers: { "if-match": String(row.version) },
-      });
-  }
 });
 
 test("Overview opens shared category and budget drawers", async ({
@@ -223,7 +205,7 @@ test("Overview opens shared category and budget drawers", async ({
     });
 });
 
-test("CSV preview and confirmation preserve original currency", async ({
+test("CSV preview and confirmation use the Settings currency", async ({
   page,
   request,
 }) => {
@@ -263,7 +245,7 @@ test("CSV preview and confirmation preserve original currency", async ({
   expect(entries).toHaveLength(1);
   expect(entries[0]?.amount).toMatchObject({
     minorUnits: 1234n,
-    currencyCode: "USD",
+    currencyCode: "EUR",
   });
   for (const entry of entries)
     await request.delete(`/api/v1/transactions/${entry.id}`, {

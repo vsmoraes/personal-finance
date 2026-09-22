@@ -685,16 +685,16 @@ it("keeps budgets, forecasts, scenarios and budget copies isolated by currency",
   expect((await get("reports/monthly?currencyCode=XYZ")).statusCode).toBe(400);
 });
 
-it("imports and exports original currencies without conversion fields or rates", async () => {
+it("imports and exports records in the profile currency without conversion fields or rates", async () => {
   const preview = await post("imports", {
     source: "native-currencies",
     filename: "native.csv",
     dateFormat: "yyyy-MM-dd",
     decimalSeparator: ".",
     defaultCurrency: "EUR",
-    columns: { date: "date", amount: "amount", currency: "currency" },
+    columns: { date: "date", amount: "amount" },
     contentBase64: Buffer.from(
-      "date,amount,currency\n2026-01-01,-12.34,USD\n2026-01-02,-123,JPY\n2026-01-03,-1.234,KWD",
+      "date,amount\n2026-01-01,-12.34\n2026-01-02,-123\n2026-01-03,-1.23",
     ).toString("base64"),
   });
   const imported = fromJson(p.ImportResponseSchema, preview.json());
@@ -713,13 +713,13 @@ it("imports and exports original currencies without conversion fields or rates",
     ]),
   ).toEqual(
     expect.arrayContaining([
-      ["USD", 1234n],
-      ["JPY", 123n],
-      ["KWD", 1234n],
+      ["EUR", 1234n],
+      ["EUR", 12300n],
+      ["EUR", 123n],
     ]),
   );
   const csv = (await get("export?format=csv")).body;
-  expect(csv).toContain('"1.234","KWD"');
+  expect(csv).toContain('"1.23","EUR"');
   expect(csv).not.toMatch(/baseAmount|baseCurrency|exchangeRate/);
   const json = (await get("export?format=json")).body;
   expect(json).not.toMatch(/baseAmount|baseCurrency|exchangeRate/);

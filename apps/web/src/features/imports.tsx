@@ -24,7 +24,7 @@ import {
   ImportResponseSchema,
 } from "../../../../packages/contracts/src/finance/v1/finance_pb.ts";
 import { request, useRefresh, useSettings } from "../shared/api.ts";
-import { currencies, Field, FormFields } from "../shared/forms.tsx";
+import { Field, FormFields } from "../shared/forms.tsx";
 import { ErrorNotice, PageTitle } from "../shared/ui.tsx";
 export function Imports() {
   const { t } = useTranslation();
@@ -41,7 +41,7 @@ export function Imports() {
       source: "",
       dateFormat: settings?.importDateFormat ?? "yyyy-MM-dd",
       decimalSeparator: settings?.importDecimalSeparator ?? ".",
-      defaultCurrency: settings?.importCurrency ?? "EUR",
+      defaultCurrency: settings?.defaultCurrency ?? "EUR",
       delimiter: "",
     },
   });
@@ -80,7 +80,6 @@ export function Imports() {
             [
               "date",
               "amount",
-              "currency",
               "type",
               "category",
               "counterparty",
@@ -104,6 +103,7 @@ export function Imports() {
       ImportRequestSchema,
       create(ImportRequestSchema, {
         ...values,
+        defaultCurrency: settings?.defaultCurrency ?? "EUR",
         filename: file?.name ?? "",
         contentBase64: file?.content ?? "",
         columns: mapping,
@@ -210,12 +210,6 @@ export function Imports() {
             />
             <Field
               control={form.control}
-              name="defaultCurrency"
-              label="defaultCurrency"
-              options={currencies}
-            />
-            <Field
-              control={form.control}
               name="delimiter"
               label="delimiter"
               options={[
@@ -246,7 +240,6 @@ export function Imports() {
             {[
               "date",
               "amount",
-              "currency",
               "type",
               "category",
               "counterparty",

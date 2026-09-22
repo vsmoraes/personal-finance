@@ -25,13 +25,12 @@ import {
   useResources,
   useSettings,
 } from "../shared/api.ts";
-import { currencies, Field, FormFields } from "../shared/forms.tsx";
+import { Field, FormFields } from "../shared/forms.tsx";
 import { ErrorNotice } from "../shared/ui.tsx";
 type Values = {
   date: string;
   type: string;
   categoryId: string;
-  currency: string;
   amount: string;
   counterparty: string;
   note: string;
@@ -63,8 +62,6 @@ export function TransactionForm({
       date: transaction ? dateString(transaction.date) : today,
       type: String(transaction?.type ?? TransactionType.EXPENSE),
       categoryId: transaction?.categoryId ?? "groceries",
-      currency:
-        transaction?.amount?.currencyCode ?? settings?.defaultCurrency ?? "EUR",
       amount: transaction?.amount
         ? decimalAmount(
             transaction.amount.minorUnits,
@@ -97,8 +94,8 @@ export function TransactionForm({
         type: Number(values.type),
         categoryId: values.categoryId,
         amount: money(
-          parseAmount(values.amount, values.currency),
-          values.currency,
+          parseAmount(values.amount, settings?.defaultCurrency ?? "EUR"),
+          settings?.defaultCurrency ?? "EUR",
         ),
         counterparty: values.counterparty,
         note: values.note,
@@ -167,13 +164,6 @@ export function TransactionForm({
                     )
                     .sort((a, b) => a.position - b.position)
                     .map((c) => ({ value: c.id, label: categoryName(c, t) }))}
-                  required
-                />
-                <Field
-                  control={form.control}
-                  name="currency"
-                  label="currency"
-                  options={currencies}
                   required
                 />
                 <Field

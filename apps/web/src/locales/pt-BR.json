@@ -77,6 +77,7 @@
   "currencyCode": "Moeda",
   "amount": "Valor",
   "counterparty": "Estabelecimento, origem ou contraparte",
+  "merchant": "Estabelecimento",
   "note": "Observação",
   "includeInBudget": "Incluir no orçamento",
   "search": "Pesquisar",

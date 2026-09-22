@@ -37,7 +37,6 @@ import {
   useResources,
   useSettings,
 } from "../shared/api.ts";
-import { currencies } from "../shared/forms.tsx";
 import { ErrorNotice, Loading, PageTitle } from "../shared/ui.tsx";
 import { type EntryDraft, EntryDrawer } from "./entry-drawer.tsx";
 import { ReportChart } from "./report-chart.tsx";
@@ -53,7 +52,7 @@ export function Reports({
   const [year, setYear] = useState(
     settings?.reportYear ?? new Date().getFullYear(),
   );
-  const [currency, setCurrency] = useState(settings?.defaultCurrency ?? "EUR");
+  const currency = settings?.defaultCurrency ?? "EUR";
   const [month, setMonth] = useState(0);
   const [scenario, setScenario] = useState(
     () => new URLSearchParams(window.location.search).get("scenarioId") ?? "",
@@ -192,15 +191,6 @@ export function Reports({
               label: String(new Date().getFullYear() - 10 + i),
             }))}
           />
-          <Select
-            aria-label={t("reportCurrency")}
-            value={currency}
-            onChange={setCurrency}
-            options={currencies}
-            showSearch
-            optionFilterProp="label"
-            style={{ width: 120 }}
-          />
           {kind === "categories" && (
             <Select
               aria-label={t("period")}
@@ -231,9 +221,7 @@ export function Reports({
             />
           )}
         </Space>
-        <Typography.Text type="secondary">
-          {t("currencyReportHelp")}
-        </Typography.Text>
+        <Typography.Text type="secondary">{currency}</Typography.Text>
       </Flex>
       {report.isPending ? (
         <Loading />
@@ -250,8 +238,8 @@ export function Reports({
                 ["variance", totals?.variance, LineChartOutlined],
               ] as const
             ).map(([key, value, Icon]) => (
-              <Col xs={24} sm={12} xl={6} key={key}>
-                <Card style={{ height: "100%" }}>
+              <Col xs={12} sm={12} xl={6} key={key}>
+                <Card size="small" style={{ height: "100%" }}>
                   <Flex justify="space-between" align="start" gap="small">
                     <Statistic
                       title={t(key)}
@@ -262,8 +250,8 @@ export function Reports({
                       shape="square"
                       icon={<Icon />}
                       style={{
-                        background: token.colorBgBase,
-                        color: token.colorBgContainer,
+                        background: token.colorPrimaryBg,
+                        color: token.colorPrimary,
                       }}
                     />
                   </Flex>

@@ -37,7 +37,7 @@ export function TopBar({
         />
       </Space>
       <Space>
-        <CreateEntryButton onCreate={onCreate} />
+        <CreateEntryButton onCreate={onCreate} compact={compact} />
         <Dropdown
           trigger={["click"]}
           menu={{

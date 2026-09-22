@@ -79,18 +79,11 @@ export function useResources(path: string) {
     queryFn: () => getMessage(path, FinanceResponseSchema),
   });
 }
-export function useRefresh(queryKey?: string) {
+export function useRefresh(_queryKey?: string) {
   const client = useQueryClient();
   return () => {
-    // Refresh only the resource changed by the mutation, in the background.
-    // Mutations should not block on refetching every active query.
-    setTimeout(
-      () =>
-        void client.invalidateQueries(
-          queryKey ? { queryKey: [queryKey] } : undefined,
-        ),
-      0,
-    );
+    // A shared drawer can change the page behind it and dependent reports.
+    setTimeout(() => void client.invalidateQueries(), 0);
   };
 }
 export function categoryName(
