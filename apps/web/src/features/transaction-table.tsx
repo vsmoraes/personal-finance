@@ -165,9 +165,11 @@ export function TransactionTable({
       render: (_, row) => (
         <Typography.Text
           strong
-          {...(row.type === TransactionType.INCOME
-            ? { type: "success" as const }
-            : {})}
+          className={
+            row.type === TransactionType.INCOME
+              ? "finance-income"
+              : "finance-expense"
+          }
         >
           {formatMoney(
             row.amount?.minorUnits ?? 0n,

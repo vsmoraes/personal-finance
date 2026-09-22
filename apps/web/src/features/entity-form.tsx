@@ -321,6 +321,7 @@ export function EntityForm({
   });
   return (
     <Form
+      className="finance-standard-form"
       layout="vertical"
       onFinish={() => {
         void submit();
@@ -473,6 +474,7 @@ export function EntityForm({
         ]}
       />
       <Button
+        id={`${resource}-form-save`}
         type="primary"
         htmlType="submit"
         loading={form.formState.isSubmitting}

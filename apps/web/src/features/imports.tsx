@@ -152,33 +152,38 @@ export function Imports() {
           title: t(key),
         }))}
       />
-      <Card style={{ marginTop: 24 }}>
+      <Card className="finance-form-surface" style={{ marginTop: 24 }}>
         <Form.Item extra={t("uploadHelp")}>
-          <Upload.Dragger
-            accept=".csv,text/csv"
-            maxCount={1}
-            beforeUpload={(selected) => {
-              void readFile(selected);
-              return false;
-            }}
-            fileList={
-              file ? [{ uid: file.name, name: file.name, status: "done" }] : []
-            }
-            onRemove={() => {
-              setFile(undefined);
-              setPreview(undefined);
-              setMapping({});
-            }}
-          >
-            <Spin spinning={busy}>
-              <Space direction="vertical" align="center" size="middle">
-                <InboxOutlined aria-hidden style={{ fontSize: 32 }} />
-                <Typography.Text strong>{t("uploadCsv")}</Typography.Text>
-              </Space>
-            </Spin>
-          </Upload.Dragger>
+          <div id="import-file-upload">
+            <Upload.Dragger
+              accept=".csv,text/csv"
+              maxCount={1}
+              beforeUpload={(selected) => {
+                void readFile(selected);
+                return false;
+              }}
+              fileList={
+                file
+                  ? [{ uid: file.name, name: file.name, status: "done" }]
+                  : []
+              }
+              onRemove={() => {
+                setFile(undefined);
+                setPreview(undefined);
+                setMapping({});
+              }}
+            >
+              <Spin spinning={busy}>
+                <Space direction="vertical" align="center" size="middle">
+                  <InboxOutlined aria-hidden style={{ fontSize: 32 }} />
+                  <Typography.Text strong>{t("uploadCsv")}</Typography.Text>
+                </Space>
+              </Spin>
+            </Upload.Dragger>
+          </div>
         </Form.Item>
         <Form
+          className="finance-standard-form"
           layout="vertical"
           onFinish={() => {
             void inspect();
@@ -220,7 +225,7 @@ export function Imports() {
               ]}
             />
             <Button
-              data-testid="import-detect"
+              id="import-detect"
               htmlType="submit"
               disabled={!file}
               loading={busy}
@@ -232,11 +237,15 @@ export function Imports() {
       </Card>
       {error ? <ErrorNotice error={error} /> : null}
       {preview && (
-        <Card style={{ marginTop: 24 }} title={t("mapColumns")}>
+        <Card
+          className="finance-form-surface"
+          style={{ marginTop: 24 }}
+          title={t("mapColumns")}
+        >
           <Typography.Paragraph>
             {t("encoding")}: {preview.encoding}
           </Typography.Paragraph>
-          <Flex vertical gap="middle">
+          <div className="finance-form-fields">
             {[
               "date",
               "amount",
@@ -263,10 +272,10 @@ export function Imports() {
                 />
               </Form.Item>
             ))}
-          </Flex>
+          </div>
           <Typography.Paragraph>{t("importSignedHelp")}</Typography.Paragraph>
           <Button
-            data-testid="import-preview"
+            id="import-preview"
             type="primary"
             loading={busy}
             disabled={busy || !mapping["date"] || !mapping["amount"]}
@@ -328,11 +337,14 @@ export function Imports() {
             ]}
           />
           <Flex gap="small" wrap>
-            <Button href={`/api/v1/imports/${preview.id}/errors`}>
+            <Button
+              id="import-download-errors"
+              href={`/api/v1/imports/${preview.id}/errors`}
+            >
               {t("downloadErrors")}
             </Button>
             <Button
-              data-testid="import-confirm"
+              id="import-confirm"
               type="primary"
               loading={busy}
               disabled={

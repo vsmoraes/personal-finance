@@ -121,6 +121,7 @@ export function TransactionForm({
   });
   return (
     <Form
+      className="finance-transaction-form finance-standard-form"
       layout="vertical"
       onFinish={() => {
         void submit();
@@ -199,6 +200,7 @@ export function TransactionForm({
         ]}
       />
       <Button
+        id={transaction ? "transaction-form-save" : "transaction-form-create"}
         type="primary"
         htmlType="submit"
         loading={form.formState.isSubmitting}

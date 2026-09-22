@@ -6,3 +6,4 @@ coverage
 apps/web/dist
 playwright-report
 test-results
+mockups

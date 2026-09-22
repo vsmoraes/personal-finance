@@ -1,16 +1,6 @@
 import { create } from "@bufbuild/protobuf";
-import {
-  Alert,
-  App as AntApp,
-  Button,
-  Card,
-  Flex,
-  Form,
-  Select,
-  Tabs,
-  Typography,
-} from "antd";
-import { useState } from "react";
+import { App as AntApp, Button, Card, Flex, Form, Typography } from "antd";
+import { type ReactNode, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 
@@ -19,7 +9,7 @@ import {
   SettingsSchema,
 } from "../../../../packages/contracts/src/finance/v1/finance_pb.ts";
 import { saveMessage, useRefresh, useSettings } from "../shared/api.ts";
-import { currencies, Field, FormFields } from "../shared/forms.tsx";
+import { currencies, Field } from "../shared/forms.tsx";
 import { ErrorNotice, Loading, PageTitle } from "../shared/ui.tsx";
 export function SettingsPage() {
   const { t } = useTranslation();
@@ -42,6 +32,7 @@ function SettingsForm({ settings }: { settings: Settings }) {
   const refresh = useRefresh("settings");
   const { message } = AntApp.useApp();
   const [error, setError] = useState<unknown>();
+  const [section, setSection] = useState("general");
   const form = useForm({
     defaultValues: {
       ...settings,
@@ -84,8 +75,9 @@ function SettingsForm({ settings }: { settings: Settings }) {
     }
   });
   return (
-    <Card>
+    <Card className="finance-settings-card">
       <Form
+        id="settings-form"
         layout="vertical"
         onFinish={() => {
           void submit();
@@ -93,13 +85,35 @@ function SettingsForm({ settings }: { settings: Settings }) {
       >
         <Flex vertical gap="large">
           {error ? <ErrorNotice error={error} /> : null}
-          <Tabs
-            items={[
-              {
-                key: "general",
-                label: t("preferences"),
-                children: (
-                  <FormFields>
+          <div className="finance-settings-layout">
+            <aside className="finance-settings-nav">
+              {[
+                ["general", t("preferences")],
+                ["appearance", t("themeSettings")],
+                ["display", t("displayPreferences")],
+                ["imports", t("importDefaults")],
+              ].map(([key, label]) => (
+                <button
+                  id={`settings-section-${key}`}
+                  type="button"
+                  key={key}
+                  className={section === key ? "active" : ""}
+                  onClick={() => setSection(key ?? "general")}
+                >
+                  {label}
+                </button>
+              ))}
+            </aside>
+            <div className="finance-settings-content">
+              {section === "general" && (
+                <SettingsSection
+                  title={t("preferences")}
+                  description={t("settingsDescription")}
+                >
+                  <Preference
+                    label={t("language")}
+                    help="Language used throughout the application."
+                  >
                     <Field
                       control={form.control}
                       name="language"
@@ -110,12 +124,11 @@ function SettingsForm({ settings }: { settings: Settings }) {
                         { value: "pt-BR", label: "Português (Brasil)" },
                       ]}
                     />
-                    <Field
-                      control={form.control}
-                      name="defaultCurrency"
-                      label="defaultCurrency"
-                      options={currencies}
-                    />
+                  </Preference>
+                  <Preference
+                    label={t("timezone")}
+                    help="Used to interpret transaction dates."
+                  >
                     <Field
                       control={form.control}
                       name="timezone"
@@ -125,89 +138,87 @@ function SettingsForm({ settings }: { settings: Settings }) {
                         ...Intl.supportedValuesOf("timeZone"),
                       ].map((value) => ({ value, label: value }))}
                     />
-                  </FormFields>
-                ),
-              },
-              {
-                key: "theme",
-                label: t("themeSettings"),
-                children: (
-                  <Flex vertical gap="middle">
-                    <Form.Item label={t("theme")}>
-                      <Select
-                        value={form.watch("theme")}
-                        onChange={(value) => form.setValue("theme", value)}
-                        options={["light", "dark", "custom"].map((value) => ({
-                          value,
-                          label: t(value),
-                        }))}
-                      />
-                    </Form.Item>
-                    {form.watch("theme") === "custom" && (
-                      <Card size="small" title={t("customColors")}>
-                        <Typography.Paragraph type="secondary">
-                          {t("customColorsHelp")}
-                        </Typography.Paragraph>
-                        <Form.Item label={t("customMode")}>
-                          <Select
-                            value={form.watch("customMode")}
-                            onChange={(value) =>
-                              form.setValue("customMode", value)
-                            }
-                            options={["light", "dark"].map((value) => ({
-                              value,
-                              label: t(value),
-                            }))}
-                          />
-                        </Form.Item>
-                        <FormFields>
-                          <Field
-                            control={form.control}
-                            name="customBackground"
-                            label="customBackground"
-                            type="color"
-                          />
-                          <Field
-                            control={form.control}
-                            name="customSurface"
-                            label="customSurface"
-                            type="color"
-                          />
-                          <Field
-                            control={form.control}
-                            name="customAccent"
-                            label="customAccent"
-                            type="color"
-                          />
-                          <Field
-                            control={form.control}
-                            name="customAccentSecondary"
-                            label="customAccentSecondary"
-                            type="color"
-                          />
-                          <Field
-                            control={form.control}
-                            name="customSidebarAccent"
-                            label="customSidebarAccent"
-                            type="color"
-                          />
-                          <Field
-                            control={form.control}
-                            name="customSidebarAccentSecondary"
-                            label="customSidebarAccentSecondary"
-                            type="color"
-                          />
-                        </FormFields>
-                      </Card>
-                    )}
-                  </Flex>
-                ),
-              },
-              {
-                key: "display",
-                label: t("displayPreferences"),
-                children: (
-                  <FormFields>
+                  </Preference>
+                </SettingsSection>
+              )}
+              {section === "appearance" && (
+                <SettingsSection
+                  title={t("themeSettings")}
+                  description={t("customColorsHelp")}
+                >
+                  <Preference
+                    label={t("theme")}
+                    help="Choose how the interface appears."
+                  >
+                    <Field
+                      control={form.control}
+                      name="theme"
+                      label="theme"
+                      options={["light", "dark", "custom"].map((value) => ({
+                        value,
+                        label: t(value),
+                      }))}
+                    />
+                  </Preference>
+                  {form.watch("theme") === "custom" && (
+                    <>
+                      <Preference
+                        label={t("customBackground")}
+                        help="Page background color."
+                      >
+                        <Field
+                          control={form.control}
+                          name="customBackground"
+                          label="customBackground"
+                          type="color"
+                        />
+                      </Preference>
+                      <Preference
+                        label={t("customSurface")}
+                        help="Cards and panels color."
+                      >
+                        <Field
+                          control={form.control}
+                          name="customSurface"
+                          label="customSurface"
+                          type="color"
+                        />
+                      </Preference>
+                      <Preference
+                        label={t("customAccent")}
+                        help="Primary action color."
+                      >
+                        <Field
+                          control={form.control}
+                          name="customAccent"
+                          label="customAccent"
+                          type="color"
+                        />
+                      </Preference>
+                    </>
+                  )}
+                </SettingsSection>
+              )}
+              {section === "display" && (
+                <SettingsSection
+                  title={t("displayPreferences")}
+                  description="Choose the formats used in lists and reports."
+                >
+                  <Preference
+                    label={t("defaultCurrency")}
+                    help={t("defaultCurrencyHelp")}
+                  >
+                    <Field
+                      control={form.control}
+                      name="defaultCurrency"
+                      label="defaultCurrency"
+                      options={currencies}
+                    />
+                  </Preference>
+                  <Preference
+                    label={t("dateFormat")}
+                    help="How dates are shown."
+                  >
                     <Field
                       control={form.control}
                       name="dateFormat"
@@ -216,38 +227,40 @@ function SettingsForm({ settings }: { settings: Settings }) {
                         (value) => ({ value, label: value }),
                       )}
                     />
+                  </Preference>
+                  <Preference
+                    label={t("reportYear")}
+                    help="Default year for reports."
+                  >
                     <Field
                       control={form.control}
                       name="reportYear"
                       label="reportYear"
                       type="number"
                     />
-                    <Field
-                      control={form.control}
-                      name="firstDayOfWeek"
-                      label="firstDayOfWeek"
-                      options={Array.from({ length: 7 }, (_, i) => ({
-                        value: String(i),
-                        label: new Intl.DateTimeFormat(i18n.language, {
-                          weekday: "long",
-                          timeZone: "UTC",
-                        }).format(new Date(Date.UTC(2024, 0, 7 + i))),
-                      }))}
-                    />
-                  </FormFields>
-                ),
-              },
-              {
-                key: "imports",
-                label: t("importDefaults"),
-                children: (
-                  <FormFields>
+                  </Preference>
+                </SettingsSection>
+              )}
+              {section === "imports" && (
+                <SettingsSection
+                  title={t("importDefaults")}
+                  description="Defaults used while importing financial data."
+                >
+                  <Preference
+                    label={t("importCurrency")}
+                    help="Currency used when an import does not declare one."
+                  >
                     <Field
                       control={form.control}
                       name="importCurrency"
                       label="importCurrency"
                       options={currencies}
                     />
+                  </Preference>
+                  <Preference
+                    label={t("importDateFormat")}
+                    help="Expected date format in CSV files."
+                  >
                     <Field
                       control={form.control}
                       name="importDateFormat"
@@ -256,6 +269,11 @@ function SettingsForm({ settings }: { settings: Settings }) {
                         (value) => ({ value, label: value }),
                       )}
                     />
+                  </Preference>
+                  <Preference
+                    label={t("importDecimalSeparator")}
+                    help="Decimal separator expected in imports."
+                  >
                     <Field
                       control={form.control}
                       name="importDecimalSeparator"
@@ -265,19 +283,14 @@ function SettingsForm({ settings }: { settings: Settings }) {
                         { value: ",", label: t("decimalComma") },
                       ]}
                     />
-                  </FormFields>
-                ),
-              },
-            ]}
-          />
-          <Alert
-            role="note"
-            type="info"
-            showIcon
-            message={t("defaultCurrencyHelp")}
-          />
+                  </Preference>
+                </SettingsSection>
+              )}
+            </div>
+          </div>
           <Flex justify="end">
             <Button
+              id="settings-save-button"
               type="primary"
               htmlType="submit"
               loading={form.formState.isSubmitting}
@@ -288,5 +301,43 @@ function SettingsForm({ settings }: { settings: Settings }) {
         </Flex>
       </Form>
     </Card>
+  );
+}
+function SettingsSection({
+  title,
+  description,
+  children,
+}: {
+  title: string;
+  description: string;
+  children: ReactNode;
+}) {
+  return (
+    <section>
+      <h2>{title}</h2>
+      <Typography.Paragraph type="secondary">
+        {description}
+      </Typography.Paragraph>
+      <div className="finance-preference-card">{children}</div>
+    </section>
+  );
+}
+function Preference({
+  label,
+  help,
+  children,
+}: {
+  label: string;
+  help: string;
+  children: ReactNode;
+}) {
+  return (
+    <div className="finance-preference-row">
+      <div>
+        <strong>{label}</strong>
+        <small>{help}</small>
+      </div>
+      <div className="finance-preference-control">{children}</div>
+    </div>
   );
 }

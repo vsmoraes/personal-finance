@@ -1,13 +1,5 @@
-import { DeleteOutlined, EditOutlined } from "@ant-design/icons";
-import {
-  Button,
-  Descriptions,
-  Drawer,
-  Grid,
-  Space,
-  Tag,
-  Typography,
-} from "antd";
+import { CloseOutlined, DeleteOutlined, EditOutlined } from "@ant-design/icons";
+import { Button, Drawer, Grid } from "antd";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -17,6 +9,7 @@ import {
 } from "../../../../packages/contracts/src/finance/v1/finance_pb.ts";
 import { formatMoney } from "../../../../packages/domain/src/money.ts";
 import { categoryName, useResources, useSettings } from "../shared/api.ts";
+import { CategoryIcon } from "../shared/category-icons.tsx";
 import { formatDate } from "../shared/dates.ts";
 import { TransactionForm } from "./transaction-form.tsx";
 
@@ -42,113 +35,129 @@ export function TransactionDetailsDrawer({
     <Drawer
       open={Boolean(transaction)}
       onClose={close}
-      width={screens.sm ? 520 : "100%"}
+      width={screens.sm ? 470 : "100%"}
       destroyOnHidden
-      title={t(editing ? "editTransaction" : "transactionDetails")}
-      extra={
-        transaction &&
-        (editing ? (
-          <Button onClick={() => setEditing(false)}>{t("cancel")}</Button>
-        ) : (
-          <Space>
-            {onDelete && (
-              <Button
-                danger
-                icon={<DeleteOutlined aria-hidden />}
-                onClick={() => onDelete(transaction)}
-              >
-                {t("delete")}
-              </Button>
-            )}
-            <Button
-              type="primary"
-              icon={<EditOutlined aria-hidden />}
-              onClick={() => setEditing(true)}
-            >
-              {t("edit")}
-            </Button>
-          </Space>
-        ))
+      closable={false}
+      className="finance-transaction-drawer"
+      title={
+        <div className="finance-drawer-head">
+          <span className="finance-eyebrow">
+            {t(editing ? "editTransaction" : "transactionDetails")}
+          </span>
+          <Button
+            id="transaction-details-close"
+            type="text"
+            shape="circle"
+            icon={<CloseOutlined />}
+            onClick={close}
+            aria-label={t("cancel")}
+          />
+        </div>
       }
     >
       {transaction &&
         (editing ? (
-          <TransactionForm transaction={transaction} onSaved={close} />
+          <div className="finance-drawer-form">
+            <TransactionForm transaction={transaction} onSaved={close} />
+            <Button
+              className="finance-danger-button"
+              onClick={() => setEditing(false)}
+            >
+              {t("cancel")}
+            </Button>
+          </div>
         ) : (
-          <Descriptions
-            column={1}
-            size="small"
-            labelStyle={{ width: 120 }}
-            items={[
-              {
-                key: "date",
-                label: t("date"),
-                children: formatDate(
-                  transaction.date,
-                  i18n.language,
-                  settings?.dateFormat ?? "yyyy-MM-dd",
-                ),
-              },
-              {
-                key: "merchant",
-                label: t("merchant"),
-                children: transaction.counterparty || t("unknown"),
-              },
-              {
-                key: "category",
-                label: t("category"),
-                children: categoryName(
+          <div className="finance-transaction-detail">
+            <div className="finance-merchant">
+              <div className="finance-tx-icon">
+                <CategoryIcon
+                  name={
+                    categories.find(
+                      (category) => category.id === transaction.categoryId,
+                    )?.icon ?? ""
+                  }
+                />
+              </div>
+              <div>
+                <h2>{transaction.counterparty || t("unknown")}</h2>
+                <span className="finance-muted">
+                  {t(
+                    transaction.type === TransactionType.INCOME
+                      ? "income"
+                      : "expenses",
+                  )}
+                </span>
+              </div>
+            </div>
+            <div
+              className={`finance-big-amount ${transaction.type === TransactionType.INCOME ? "finance-income" : "finance-expense"}`}
+            >
+              {formatMoney(
+                transaction.amount?.minorUnits ?? 0n,
+                transaction.amount?.currencyCode ?? "EUR",
+                i18n.language,
+              )}
+            </div>
+            <div className="finance-details-list">
+              <Detail
+                label={t("category")}
+                value={categoryName(
                   categories.find(
                     (category) => category.id === transaction.categoryId,
                   ),
                   t,
-                ),
-              },
-              {
-                key: "type",
-                label: t("type"),
-                children: (
-                  <Tag
-                    bordered={false}
-                    color={
-                      transaction.type === TransactionType.INCOME
-                        ? "success"
-                        : "default"
-                    }
-                  >
-                    {t(
-                      transaction.type === TransactionType.INCOME
-                        ? "income"
-                        : "expenses",
-                    )}
-                  </Tag>
-                ),
-              },
-              {
-                key: "amount",
-                label: t("amount"),
-                children: (
-                  <Typography.Text strong>
-                    {formatMoney(
-                      transaction.amount?.minorUnits ?? 0n,
-                      transaction.amount?.currencyCode ?? "EUR",
-                      i18n.language,
-                    )}
-                  </Typography.Text>
-                ),
-              },
-              ...(transaction.note
-                ? [
-                    {
-                      key: "note",
-                      label: t("note"),
-                      children: transaction.note,
-                    },
-                  ]
-                : []),
-            ]}
-          />
+                )}
+              />
+              <Detail
+                label={t("date")}
+                value={formatDate(
+                  transaction.date,
+                  i18n.language,
+                  settings?.dateFormat ?? "yyyy-MM-dd",
+                )}
+              />
+              <Detail
+                label={t("type")}
+                value={t(
+                  transaction.type === TransactionType.INCOME
+                    ? "income"
+                    : "expenses",
+                )}
+              />
+              <Detail label={t("note")} value={transaction.note || "—"} />
+            </div>
+            <div className="finance-drawer-actions">
+              <Button
+                id="transaction-edit-button"
+                type="primary"
+                icon={<EditOutlined />}
+                onClick={() => setEditing(true)}
+              >
+                {t("edit")}
+              </Button>
+              {onDelete && (
+                <Button
+                  id="transaction-delete-button"
+                  danger
+                  className="finance-danger-button"
+                  icon={<DeleteOutlined />}
+                  onClick={() => onDelete(transaction)}
+                >
+                  {t("delete")}
+                </Button>
+              )}
+            </div>
+          </div>
         ))}
     </Drawer>
+  );
+}
+
+function Detail({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <span>{label}</span>
+      <b>{value}</b>
+    </div>
   );
 }

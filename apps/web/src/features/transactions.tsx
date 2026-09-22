@@ -1,49 +1,31 @@
 import { DownloadOutlined } from "@ant-design/icons";
-import { create, toJson } from "@bufbuild/protobuf";
 import { useQuery } from "@tanstack/react-query";
-import {
-  Button,
-  Card,
-  Dropdown,
-  Flex,
-  Modal,
-  Select,
-  Space,
-  Typography,
-} from "antd";
+import { Button, Card, Dropdown, Modal, Space, Typography } from "antd";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import {
-  BulkRequestSchema,
   FinanceResponseSchema,
   type Transaction,
+  TransactionType,
 } from "../../../../packages/contracts/src/finance/v1/finance_pb.ts";
-import {
-  categoryName,
-  getMessage,
-  request,
-  useRefresh,
-  useResources,
-} from "../shared/api.ts";
-import { ErrorNotice, PageTitle } from "../shared/ui.tsx";
+import { formatMoney } from "../../../../packages/domain/src/money.ts";
+import { getMessage, request, useRefresh } from "../shared/api.ts";
+import { ErrorNotice } from "../shared/ui.tsx";
 import { TransactionDetailsDrawer } from "./transaction-details-drawer.tsx";
-import { TransactionTable } from "./transaction-table.tsx";
+import { TransactionFeed } from "./transaction-feed.tsx";
 export function Transactions() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const refresh = useRefresh("transactions");
   const [filters, setFilters] = useState<Record<string, string>>({
     sort: "date",
     descending: "true",
   });
   const [page, setPage] = useState(1);
-  const [selected, setSelected] = useState<string[]>([]);
   const [viewing, setViewing] = useState<Transaction>();
   const [deleting, setDeleting] = useState<Transaction>();
-  const [bulkCategory, setBulkCategory] = useState("");
   const [error, setError] = useState<unknown>();
   const [busy, setBusy] = useState(false);
-  const categories = useResources("categories").data?.categories ?? [];
   const params = new URLSearchParams({
     ...Object.fromEntries(Object.entries(filters).filter(([, v]) => v)),
     page: String(page),
@@ -53,13 +35,23 @@ export function Transactions() {
     queryKey: ["transactions", params.toString()],
     queryFn: () => getMessage(`transactions?${params}`, FinanceResponseSchema),
   });
+  const totals = (query.data?.transactions ?? []).reduce(
+    (result, transaction) => {
+      const amount = transaction.amount?.minorUnits ?? 0n;
+      if (transaction.type === TransactionType.INCOME) result.income += amount;
+      else result.expenses += amount;
+      return result;
+    },
+    { income: 0n, expenses: 0n },
+  );
+  const currency = query.data?.transactions[0]?.amount?.currencyCode ?? "EUR";
+  const money = (value: bigint) => formatMoney(value, currency, i18n.language);
   async function mutate(action: () => Promise<unknown>) {
     setBusy(true);
     setError(undefined);
     try {
       await action();
       refresh();
-      setSelected([]);
       setDeleting(undefined);
       setViewing(undefined);
     } catch (e) {
@@ -70,18 +62,38 @@ export function Transactions() {
   }
   return (
     <>
-      <PageTitle
-        title={t("transactions")}
-        subtitle={t("transactionsDescription")}
-        actions={
+      <section className="finance-hero">
+        <div>
+          <div className="finance-eyebrow">
+            {new Intl.DateTimeFormat(undefined, {
+              month: "long",
+              year: "numeric",
+            }).format(new Date())}
+          </div>
+          <h1>{t("transactions")}</h1>
+        </div>
+        <div>
           <Space wrap>
+            <Button
+              id="transaction-create-button"
+              type="primary"
+              className="finance-new-transaction"
+              onClick={() =>
+                window.dispatchEvent(new Event("finance:create-transaction"))
+              }
+            >
+              + {t("addTransaction")}
+            </Button>
             <Dropdown
               menu={{
                 items: [
                   {
                     key: "csv",
                     label: (
-                      <Typography.Link href="/api/v1/export?format=csv">
+                      <Typography.Link
+                        id="transaction-export-csv"
+                        href="/api/v1/export?format=csv"
+                      >
                         {t("exportCsv")}
                       </Typography.Link>
                     ),
@@ -89,7 +101,10 @@ export function Transactions() {
                   {
                     key: "json",
                     label: (
-                      <Typography.Link href="/api/v1/export?format=json">
+                      <Typography.Link
+                        id="transaction-export-json"
+                        href="/api/v1/export?format=json"
+                      >
                         {t("exportJson")}
                       </Typography.Link>
                     ),
@@ -97,98 +112,49 @@ export function Transactions() {
                 ],
               }}
             >
-              <Button icon={<DownloadOutlined aria-hidden />}>
+              <Button
+                id="transaction-export-button"
+                icon={<DownloadOutlined aria-hidden />}
+              >
                 {t("export")}
               </Button>
             </Dropdown>
           </Space>
-        }
-      />
-      <Card styles={{ body: { padding: 0 } }}>
-        <Flex vertical gap="middle" style={{ padding: "8px 20px 16px" }}>
-          {selected.length > 0 && (
-            <Flex gap="small" wrap align="center">
-              <Typography.Text strong>
-                {t("selectedCount", { count: selected.length })}
-              </Typography.Text>
-              <Select
-                aria-label={t("category")}
-                showSearch
-                optionFilterProp="label"
-                value={bulkCategory}
-                onChange={setBulkCategory}
-                style={{ width: 190 }}
-                options={categories
-                  .filter((c) => !c.archived)
-                  .map((c) => ({ value: c.id, label: categoryName(c, t) }))}
-              />
-              <Button
-                loading={busy}
-                disabled={!bulkCategory}
-                onClick={() => {
-                  void mutate(() =>
-                    request(
-                      "transactions/bulk",
-                      "POST",
-                      toJson(
-                        BulkRequestSchema,
-                        create(BulkRequestSchema, {
-                          transactionIds: selected,
-                          categoryId: bulkCategory,
-                        }),
-                      ),
-                    ),
-                  );
-                }}
-              >
-                {t("recategorize")}
-              </Button>
-              <Button
-                loading={busy}
-                onClick={() => {
-                  void mutate(() =>
-                    request(
-                      "categorization-rules/preview",
-                      "POST",
-                      toJson(
-                        BulkRequestSchema,
-                        create(BulkRequestSchema, {
-                          transactionIds: selected,
-                          apply: true,
-                        }),
-                      ),
-                    ),
-                  );
-                }}
-              >
-                {t("reapplyRules")}
-              </Button>
-            </Flex>
-          )}
-          {error || query.error ? (
-            <ErrorNotice error={error ?? query.error} />
-          ) : null}
-        </Flex>
-        <TransactionTable
+        </div>
+      </section>
+      <section className="transactions-summary">
+        <Card className="finance-mini">
+          <span className="finance-muted">{t("income")}</span>
+          <strong className="finance-positive">{money(totals.income)}</strong>
+        </Card>
+        <Card className="finance-mini">
+          <span className="finance-muted">{t("expenses")}</span>
+          <strong className="finance-expense">{money(totals.expenses)}</strong>
+        </Card>
+        <Card className="finance-mini">
+          <span className="finance-muted">{t("netSavings")}</span>
+          <strong className="finance-positive">
+            {money(totals.income - totals.expenses)}
+          </strong>
+        </Card>
+      </section>
+      <Card className="finance-panel finance-transactions-panel">
+        {error || query.error ? (
+          <ErrorNotice error={error ?? query.error} />
+        ) : null}
+        <TransactionFeed
           rows={query.data?.transactions ?? []}
           loading={query.isPending}
           onView={setViewing}
-          selected={selected}
-          onSelectionChange={setSelected}
-          onPageChange={setPage}
           filters={filters}
           onChange={(next) => {
-            setFilters({ sort: "date", descending: "true", ...next });
+            setFilters(next);
             setPage(1);
-            setSelected([]);
           }}
           pagination={{
             current: page,
-            pageSize: 20,
             total: query.data?.pagination?.total ?? 0,
-            showSizeChanger: false,
-            responsive: true,
-            showTotal: (total) => t("transactionCount", { count: total }),
+            onChange: setPage,
           }}
         />
       </Card>
@@ -203,7 +169,11 @@ export function Transactions() {
         onCancel={() => setDeleting(undefined)}
         okText={t("delete")}
         cancelText={t("cancel")}
-        okButtonProps={{ danger: true, loading: busy }}
+        okButtonProps={{
+          id: "transaction-delete-confirm",
+          danger: true,
+          loading: busy,
+        }}
         onOk={() => {
           if (deleting)
             void mutate(() =>

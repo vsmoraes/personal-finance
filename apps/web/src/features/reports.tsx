@@ -41,7 +41,7 @@ import {
 import { ErrorNotice, Loading, PageTitle } from "../shared/ui.tsx";
 import { ReportChart } from "./report-chart.tsx";
 import { TransactionDetailsDrawer } from "./transaction-details-drawer.tsx";
-import { TransactionTable } from "./transaction-table.tsx";
+import { TransactionFeed } from "./transaction-feed.tsx";
 export function Reports({
   kind = "dashboard",
 }: {
@@ -167,6 +167,114 @@ export function Reports({
     : includedSpending > 0n
       ? 100
       : 0;
+  if (kind === "dashboard")
+    return (
+      <>
+        <section className="finance-hero">
+          <div>
+            <div className="finance-eyebrow">
+              {new Intl.DateTimeFormat(i18n.language, {
+                weekday: "long",
+                day: "numeric",
+                month: "long",
+              }).format(new Date())}
+            </div>
+            <h1>{t("dashboard")}</h1>
+          </div>
+          <p>{t("dashboardDescription")}</p>
+        </section>
+        {report.isPending ? (
+          <Loading />
+        ) : report.error ? (
+          <ErrorNotice error={report.error} />
+        ) : (
+          <section className="dashboard-grid">
+            <Card className="finance-panel finance-balance">
+              <span className="finance-muted">{t("netSavings")}</span>
+              <div className="finance-balance-value">
+                {money(totals?.netSavings)}
+              </div>
+              <span className="finance-positive finance-growth">
+                <ArrowUpOutlined />{" "}
+                {totals?.savingsRate
+                  ? new Intl.NumberFormat(i18n.language, {
+                      style: "percent",
+                      maximumFractionDigits: 1,
+                    }).format(Number(totals.savingsRate) / 10000)
+                  : "—"}{" "}
+                {t("savingsRate").toLowerCase()}
+              </span>
+              <div className="finance-chart" aria-label={t("incomeVsExpenses")}>
+                <svg
+                  viewBox="0 0 700 190"
+                  preserveAspectRatio="none"
+                  aria-hidden="true"
+                >
+                  <defs>
+                    <linearGradient
+                      id="finance-area"
+                      x1="0"
+                      y1="0"
+                      x2="0"
+                      y2="1"
+                    >
+                      <stop offset="0" stopColor="#bdd6ca" stopOpacity=".7" />
+                      <stop offset="1" stopColor="#bdd6ca" stopOpacity="0" />
+                    </linearGradient>
+                  </defs>
+                  <path
+                    d="M0 150 C55 142,75 120,120 126 S190 155,235 115 S300 105,340 92 S405 112,450 72 S525 85,565 55 S630 72,700 22 L700 190 L0 190Z"
+                    fill="url(#finance-area)"
+                  />
+                  <path
+                    className="finance-chart-line"
+                    d="M0 150 C55 142,75 120,120 126 S190 155,235 115 S300 105,340 92 S405 112,450 72 S525 85,565 55 S630 72,700 22"
+                  />
+                </svg>
+              </div>
+            </Card>
+            <Card className="finance-panel finance-stat finance-budget">
+              <span className="finance-muted">{t("budget")}</span>
+              <strong>{money(totals?.budget)}</strong>
+              <span className="finance-muted">{t("expenses")}</span>
+              <span className="finance-pill">
+                {Math.round(budgetPercent)}% {t("budget").toLowerCase()}
+              </span>
+            </Card>
+            <Card className="finance-panel finance-stat finance-invest">
+              <span className="finance-muted">{t("income")}</span>
+              <strong>{money(totals?.income)}</strong>
+              <span className="finance-muted">{year}</span>
+              <span className="finance-pill">{t("savingsRate")}</span>
+            </Card>
+            <Card
+              className="finance-panel finance-recent"
+              title={t("recentTransactions")}
+              extra={
+                <Button
+                  id="dashboard-view-all-transactions"
+                  type="link"
+                  href="/transactions"
+                >
+                  {t("viewAll")} <ArrowRightOutlined />
+                </Button>
+              }
+            >
+              <TransactionFeed
+                rows={report.data.recentTransactions.slice(0, 2)}
+                loading={false}
+                showControls={false}
+                onView={setViewing}
+              />
+            </Card>
+          </section>
+        )}
+        <TransactionDetailsDrawer
+          transaction={viewing}
+          onClose={() => setViewing(undefined)}
+        />
+      </>
+    );
   return (
     <>
       <PageTitle
@@ -183,44 +291,50 @@ export function Reports({
         style={{ marginBottom: 24 }}
       >
         <Space wrap>
-          <Select
-            aria-label={t("year")}
-            value={year}
-            onChange={setYear}
-            style={{ width: 110 }}
-            options={Array.from({ length: 21 }, (_, i) => ({
-              value: new Date().getFullYear() - 10 + i,
-              label: String(new Date().getFullYear() - 10 + i),
-            }))}
-          />
-          {kind === "categories" && (
+          <div id={`report-${kind}-year`}>
             <Select
-              aria-label={t("period")}
-              value={month}
-              onChange={setMonth}
-              style={{ width: 150 }}
-              options={[
-                { value: 0, label: t("wholeYear") },
-                ...Array.from({ length: 12 }, (_, i) => ({
-                  value: i + 1,
-                  label: monthLabel(
-                    `${year}-${String(i + 1).padStart(2, "0")}`,
-                  ),
-                })),
-              ]}
+              aria-label={t("year")}
+              value={year}
+              onChange={setYear}
+              style={{ width: 110 }}
+              options={Array.from({ length: 21 }, (_, i) => ({
+                value: new Date().getFullYear() - 10 + i,
+                label: String(new Date().getFullYear() - 10 + i),
+              }))}
             />
+          </div>
+          {kind === "categories" && (
+            <div id="report-categories-month">
+              <Select
+                aria-label={t("period")}
+                value={month}
+                onChange={setMonth}
+                style={{ width: 150 }}
+                options={[
+                  { value: 0, label: t("wholeYear") },
+                  ...Array.from({ length: 12 }, (_, i) => ({
+                    value: i + 1,
+                    label: monthLabel(
+                      `${year}-${String(i + 1).padStart(2, "0")}`,
+                    ),
+                  })),
+                ]}
+              />
+            </div>
           )}
           {kind === "forecast" && (
-            <Select
-              aria-label={t("scenario")}
-              value={scenario}
-              onChange={setScenario}
-              style={{ width: 230, maxWidth: "100%" }}
-              options={[
-                { value: "", label: t("baseline") },
-                ...scenarios.map((s) => ({ value: s.id, label: s.name })),
-              ]}
-            />
+            <div id="report-forecast-scenario">
+              <Select
+                aria-label={t("scenario")}
+                value={scenario}
+                onChange={setScenario}
+                style={{ width: 230, maxWidth: "100%" }}
+                options={[
+                  { value: "", label: t("baseline") },
+                  ...scenarios.map((s) => ({ value: s.id, label: s.name })),
+                ]}
+              />
+            </div>
           )}
         </Space>
         <Typography.Text type="secondary">{currency}</Typography.Text>
@@ -331,7 +445,7 @@ export function Reports({
                     <Typography.Paragraph type="secondary">
                       {t("budgetProgressHelp")}
                     </Typography.Paragraph>
-                    <Button href="/budgets" block>
+                    <Button id="report-view-budgets" href="/budgets" block>
                       {t("manageBudgets")} <ArrowRightOutlined aria-hidden />
                     </Button>
                   </Space>
@@ -344,44 +458,24 @@ export function Reports({
               <ReportChart rows={chart} kind="savings" format={tooltip} />
             </Card>
           )}
-          {kind === "dashboard" ? (
-            <Card
-              className="recent-transactions-card"
-              title={t("recentTransactions")}
-              extra={
-                <Button type="link" href="/transactions">
-                  {t("viewAll")} <ArrowRightOutlined aria-hidden />
-                </Button>
-              }
-              styles={{ body: { padding: 0 } }}
-            >
-              <TransactionTable
-                rows={report.data.recentTransactions}
-                onView={setViewing}
-              />
-            </Card>
-          ) : (
-            <Card
-              title={t(
+          <Card
+            title={t(
+              kind === "categories" ? "categoryBreakdown" : "monthlyBreakdown",
+            )}
+            styles={{ body: { padding: 0 } }}
+          >
+            <Table
+              rowKey="key"
+              pagination={false}
+              scroll={{ x: 800 }}
+              columns={columns}
+              dataSource={
                 kind === "categories"
-                  ? "categoryBreakdown"
-                  : "monthlyBreakdown",
-              )}
-              styles={{ body: { padding: 0 } }}
-            >
-              <Table
-                rowKey="key"
-                pagination={false}
-                scroll={{ x: 800 }}
-                columns={columns}
-                dataSource={
-                  kind === "categories"
-                    ? rows
-                    : [...rows, ...(totals ? [totals] : [])]
-                }
-              />
-            </Card>
-          )}
+                  ? rows
+                  : [...rows, ...(totals ? [totals] : [])]
+              }
+            />
+          </Card>
         </Space>
       )}
       <TransactionDetailsDrawer

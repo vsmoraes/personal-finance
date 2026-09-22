@@ -1,3 +1,4 @@
+import { CloseOutlined } from "@ant-design/icons";
 import { Button, ConfigProvider, Drawer, Grid, Space, Typography } from "antd";
 import { useTranslation } from "react-i18next";
 
@@ -9,9 +10,11 @@ import type { EntryDraft } from "./entry-draft.ts";
 export function EntryDrawer({
   draft,
   onClose,
+  onDelete,
 }: {
   draft: EntryDraft | undefined;
   onClose: () => void;
+  onDelete?: () => void;
 }) {
   const { t } = useTranslation();
   const screens = Grid.useBreakpoint();
@@ -19,14 +22,27 @@ export function EntryDrawer({
     <Drawer
       open={Boolean(draft)}
       onClose={onClose}
-      width={screens.sm ? 600 : "100%"}
+      width={screens.sm ? 470 : "100%"}
       destroyOnHidden
+      closable={false}
+      className="finance-entry-drawer"
       title={
-        draft?.resource === "transactions"
-          ? t(draft.entity ? "editTransaction" : "addTransaction")
-          : t(draft?.entity ? "edit" : "create")
+        <div className="finance-drawer-head">
+          <span className="finance-eyebrow">
+            {draft?.resource === "transactions"
+              ? t(draft.entity ? "editTransaction" : "addTransaction")
+              : t(draft?.entity ? "edit" : "create")}
+          </span>
+          <Button
+            id="entry-drawer-close"
+            type="text"
+            shape="circle"
+            icon={<CloseOutlined />}
+            onClick={onClose}
+            aria-label={t("cancel")}
+          />
+        </div>
       }
-      extra={<Button onClick={onClose}>{t("cancel")}</Button>}
     >
       {draft && (
         <ConfigProvider
@@ -55,6 +71,17 @@ export function EntryDrawer({
                 entity={draft.entity}
                 onSaved={onClose}
               />
+            )}
+            {draft.entity && onDelete && (
+              <Button
+                id="entry-delete-button"
+                danger
+                className="finance-danger-button"
+                block
+                onClick={onDelete}
+              >
+                {t("delete")}
+              </Button>
             )}
           </Space>
         </ConfigProvider>

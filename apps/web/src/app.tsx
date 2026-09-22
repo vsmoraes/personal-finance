@@ -1,32 +1,13 @@
 import {
-  BankOutlined,
+  AppstoreOutlined,
   BarChartOutlined,
   DashboardOutlined,
-  ExperimentOutlined,
-  FilterOutlined,
-  LineChartOutlined,
-  MenuFoldOutlined,
-  MenuUnfoldOutlined,
-  PieChartOutlined,
-  ReloadOutlined,
+  MenuOutlined,
   SettingOutlined,
   SwapOutlined,
-  TagsOutlined,
-  UploadOutlined,
   WalletOutlined,
 } from "@ant-design/icons";
-import {
-  App as AntApp,
-  Avatar,
-  ConfigProvider,
-  Drawer,
-  Flex,
-  Grid,
-  Layout,
-  Menu,
-  theme,
-  Typography,
-} from "antd";
+import { App as AntApp, ConfigProvider, theme } from "antd";
 import en from "antd/locale/en_US.js";
 import es from "antd/locale/es_ES.js";
 import pt from "antd/locale/pt_BR.js";
@@ -39,44 +20,9 @@ import { type EntryDraft, EntryDrawer } from "./features/entry-drawer.tsx";
 import { Imports } from "./features/imports.tsx";
 import { Reports } from "./features/reports.tsx";
 import { SettingsPage } from "./features/settings.tsx";
-import { TopBar } from "./features/top-bar.tsx";
 import { Transactions } from "./features/transactions.tsx";
 import { useSettings } from "./shared/api.ts";
 import { ErrorNotice, Loading, Retry } from "./shared/ui.tsx";
-const navigation = [
-  {
-    label: "workspace",
-    items: [
-      ["/", "dashboard", DashboardOutlined],
-      ["/transactions", "transactions", SwapOutlined],
-      ["/imports", "imports", UploadOutlined],
-    ],
-  },
-  {
-    label: "planning",
-    items: [
-      ["/budgets", "budgets", WalletOutlined],
-      ["/recurring-commitments", "recurring-commitments", ReloadOutlined],
-      ["/forecast", "forecast", LineChartOutlined],
-      ["/scenarios", "scenarios", ExperimentOutlined],
-    ],
-  },
-  {
-    label: "insights",
-    items: [
-      ["/monthly", "monthly", BarChartOutlined],
-      ["/category-report", "categoryReport", PieChartOutlined],
-    ],
-  },
-  {
-    label: "organization",
-    items: [
-      ["/categories", "categoriesTitle", TagsOutlined],
-      ["/categorization-rules", "categorization-rules", FilterOutlined],
-      ["/settings", "settings", SettingOutlined],
-    ],
-  },
-] as const;
 export function App() {
   const { t, i18n } = useTranslation();
   const settingsQuery = useSettings();
@@ -125,10 +71,10 @@ export function App() {
       theme={{
         algorithm: dark ? theme.darkAlgorithm : theme.defaultAlgorithm,
         token: {
-          borderRadius: 6,
-          borderRadiusLG: 6,
-          colorPrimary: "#5b63f6",
-          colorInfo: "#5b63f6",
+          borderRadius: 16,
+          borderRadiusLG: 28,
+          colorPrimary: dark ? "#67d6a5" : "#1f7a5b",
+          colorInfo: dark ? "#67d6a5" : "#1f7a5b",
           ...(dark
             ? {
                 colorBgLayout: "#10111f",
@@ -183,183 +129,209 @@ export function App() {
     </ConfigProvider>
   );
 }
-function Workspace({
-  dark,
-  sidebarAccent,
-}: {
-  dark: boolean;
-  sidebarAccent?: string;
-}) {
+function Workspace({ dark }: { dark: boolean; sidebarAccent?: string }) {
   const { t } = useTranslation();
-  const { token } = theme.useToken();
-  const screens = Grid.useBreakpoint();
   const location = useLocation();
-  const [open, setOpen] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
   const [draft, setDraft] = useState<EntryDraft>();
-  const [collapsed, setCollapsed] = useState(false);
-  const activeGroup = navigation.find((group) =>
-    group.items.some(([path]) => path === location.pathname),
-  )?.label;
-  const [openGroups, setOpenGroups] = useState<string[]>(
-    activeGroup ? [activeGroup] : [],
-  );
   useEffect(() => {
-    if (activeGroup) setOpenGroups([activeGroup]);
-  }, [activeGroup]);
-  const current = navigation
-    .map((group) => group.items.find(([path]) => path === location.pathname))
-    .find((item) => item !== undefined);
-  const menu = (
-    <Menu
-      mode="inline"
-      selectedKeys={[location.pathname]}
-      openKeys={openGroups}
-      onOpenChange={(keys) => setOpenGroups(keys.map(String))}
-      style={{ borderInlineEnd: 0 }}
-      items={navigation.map((group) => {
-        const GroupIcon = group.items[0]?.[2];
-        return {
-          key: group.label,
-          label: t(group.label),
-          ...(GroupIcon ? { icon: <GroupIcon /> } : {}),
-          children: group.items.map(([path, label, Icon]) => ({
-            key: path,
-            icon: <Icon />,
-            label: (
-              <Link to={path} onClick={() => setOpen(false)}>
-                {t(label)}
+    const createTransaction = () => setDraft({ resource: "transactions" });
+    window.addEventListener("finance:create-transaction", createTransaction);
+    return () =>
+      window.removeEventListener(
+        "finance:create-transaction",
+        createTransaction,
+      );
+  }, []);
+  const nav = [
+    {
+      label: t("workspace"),
+      icon: DashboardOutlined,
+      items: [
+        ["/", t("dashboard"), DashboardOutlined],
+        ["/transactions", t("transactions"), SwapOutlined],
+        ["/imports", t("imports"), AppstoreOutlined],
+      ],
+    },
+    {
+      label: t("planning"),
+      icon: WalletOutlined,
+      items: [
+        ["/budgets", t("budgets"), WalletOutlined],
+        ["/forecast", t("forecast"), BarChartOutlined],
+        ["/scenarios", t("scenarios"), AppstoreOutlined],
+      ],
+    },
+    {
+      label: t("insights"),
+      icon: BarChartOutlined,
+      items: [
+        ["/category-report", t("categoryReport"), BarChartOutlined],
+        ["/monthly", t("monthly"), BarChartOutlined],
+      ],
+    },
+    {
+      label: t("organization"),
+      icon: AppstoreOutlined,
+      items: [
+        ["/categories", t("categoriesTitle"), AppstoreOutlined],
+        ["/recurring-commitments", t("recurring-commitments"), SwapOutlined],
+        ["/categorization-rules", t("categorization-rules"), AppstoreOutlined],
+        ["/settings", t("settings"), SettingOutlined],
+      ],
+    },
+  ] as {
+    label: string;
+    icon: typeof DashboardOutlined;
+    items: [string, string, typeof DashboardOutlined][];
+  }[];
+  const desktopNavigation = (
+    <nav className="finance-nav finance-groups">
+      {nav.map((group) => (
+        <div
+          className={`finance-group ${group.items.some(([path]) => path === location.pathname) ? "active" : ""}`}
+          key={group.label}
+        >
+          <button id={`nav-group-${group.label.toLowerCase()}`} type="button">
+            <group.icon />
+            {group.label}
+          </button>
+          <div className="finance-drop">
+            {group.items.map(([path, label, Icon]) => (
+              <Link
+                id={`nav-link-${path === "/" ? "overview" : path.slice(1)}`}
+                key={path}
+                to={path}
+              >
+                <Icon />
+                {label}
               </Link>
-            ),
-          })),
-        };
-      })}
-    />
-  );
-  const brand = (
-    <Flex
-      className="finance-brand"
-      align="center"
-      justify={collapsed ? "center" : "flex-start"}
-      gap="middle"
-      style={{ padding: collapsed ? 16 : 24 }}
-    >
-      <Avatar
-        shape="square"
-        size={40}
-        icon={<BankOutlined />}
-        style={{ color: token.colorPrimary, background: token.colorPrimaryBg }}
-      />
-      {!collapsed && <Typography.Text strong>{t("appName")}</Typography.Text>}
-    </Flex>
+            ))}
+          </div>
+        </div>
+      ))}
+    </nav>
   );
   return (
-    <Layout className="finance-shell" style={{ minHeight: "100dvh" }}>
-      {screens.lg && (
-        <Layout.Sider
-          width={256}
-          className="finance-sider"
-          collapsed={collapsed}
-          collapsedWidth={72}
-          collapsible
-          onCollapse={setCollapsed}
-          trigger={
-            <span
-              aria-label={t("collapseSidebar")}
-              style={{ color: sidebarAccent ?? token.colorPrimary }}
-            >
-              {collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
-            </span>
-          }
-          theme={dark ? "dark" : "light"}
-          style={{
-            height: "100dvh",
-            position: "sticky",
-            top: 0,
-            display: "flex",
-            flexDirection: "column",
-            borderInlineEnd: `1px solid ${token.colorBorderSecondary}`,
-          }}
-        >
-          {brand}
-          <div style={{ flex: 1, minHeight: 0, overflow: "auto" }}>{menu}</div>
-          {!collapsed && (
-            <Flex style={{ padding: 24 }}>
-              <Typography.Text type="secondary">
-                {t("privateProfile")}
-              </Typography.Text>
-            </Flex>
-          )}
-        </Layout.Sider>
-      )}
-      <Layout style={{ minWidth: 0 }}>
-        <Layout.Header
-          className="finance-header"
-          style={{
-            paddingInline: screens.sm ? 32 : 16,
-            background: token.colorBgContainer,
-            borderBottom: `1px solid ${token.colorBorderSecondary}`,
-            position: "sticky",
-            top: 0,
-            zIndex: 20,
-          }}
-        >
-          <TopBar
-            currentLabel={t(current?.[1] ?? "dashboard")}
-            compact={!screens.lg}
-            onMenu={() => setOpen(true)}
-            onCreate={setDraft}
-          />
-        </Layout.Header>
-        <Layout.Content
-          className="finance-content"
-          style={{
-            padding: screens.sm ? 32 : 16,
-            minWidth: 0,
-            width: "100%",
-            maxWidth: 1660,
-            marginInline: "auto",
-          }}
-        >
-          <Routes>
-            <Route path="/" element={<Reports />} />
-            <Route path="/transactions" element={<Transactions />} />
-            <Route path="/monthly" element={<Reports kind="monthly" />} />
-            <Route
-              path="/category-report"
-              element={<Reports kind="categories" />}
-            />
-            <Route path="/forecast" element={<Reports kind="forecast" />} />
-            {(
-              [
-                "categories",
-                "budgets",
-                "recurring-commitments",
-                "categorization-rules",
-                "scenarios",
-              ] as const
-            ).map((resource) => (
-              <Route
-                key={resource}
-                path={`/${resource}`}
-                element={<Configuration resource={resource} />}
-              />
-            ))}
-            <Route path="/imports" element={<Imports />} />
-            <Route path="/settings" element={<SettingsPage />} />
-            <Route path="*" element={<Reports />} />
-          </Routes>
-        </Layout.Content>
-      </Layout>
-      <Drawer
-        title={t("appName")}
-        placement="left"
-        open={open}
-        onClose={() => setOpen(false)}
-        width={290}
+    <div className={`finance-shell ${dark ? "finance-dark" : ""}`}>
+      <header className="finance-topbar finance-glass">
+        <Link to="/" className="finance-brand">
+          <i />
+          {t("appName")}
+        </Link>
+        {desktopNavigation}
+        <div className="finance-topbar-spacer" aria-hidden="true" />
+      </header>
+      <main
+        id={`page-${location.pathname === "/" ? "overview" : location.pathname.slice(1)}`}
+        className="finance-content"
       >
-        {menu}
-      </Drawer>
+        <Routes>
+          <Route path="/" element={<Reports />} />
+          <Route path="/transactions" element={<Transactions />} />
+          <Route path="/monthly" element={<Reports kind="monthly" />} />
+          <Route
+            path="/category-report"
+            element={<Reports kind="categories" />}
+          />
+          <Route path="/forecast" element={<Reports kind="forecast" />} />
+          {(
+            [
+              "categories",
+              "budgets",
+              "recurring-commitments",
+              "categorization-rules",
+              "scenarios",
+            ] as const
+          ).map((resource) => (
+            <Route
+              key={resource}
+              path={`/${resource}`}
+              element={<Configuration resource={resource} />}
+            />
+          ))}
+          <Route path="/imports" element={<Imports />} />
+          <Route path="/settings" element={<SettingsPage />} />
+          <Route path="*" element={<Reports />} />
+        </Routes>
+      </main>
       <EntryDrawer draft={draft} onClose={() => setDraft(undefined)} />
-    </Layout>
+      <nav className="finance-mobilebar finance-glass">
+        {nav.slice(0, 3).map((group) => {
+          const Icon = group.icon;
+          const target = group.items[0]?.[0] ?? "/";
+          return (
+            <Link
+              id={`mobile-nav-${target === "/" ? "overview" : target.slice(1)}`}
+              key={group.label}
+              to={target}
+              className={
+                group.items.some(([path]) => path === location.pathname)
+                  ? "active"
+                  : ""
+              }
+            >
+              <Icon />
+              <span>{group.label}</span>
+            </Link>
+          );
+        })}
+        <button
+          id="mobile-more-button"
+          type="button"
+          onClick={() => setMoreOpen(true)}
+        >
+          <MenuOutlined />
+          <span>{t("more")}</span>
+        </button>
+      </nav>
+      {moreOpen && (
+        <div
+          className="finance-more-overlay"
+          role="button"
+          tabIndex={0}
+          onClick={() => setMoreOpen(false)}
+          onKeyDown={(event) => {
+            if (event.key === "Escape" || event.key === "Enter")
+              setMoreOpen(false);
+          }}
+        >
+          <section
+            id="mobile-more-sheet"
+            className="finance-more-sheet"
+            role="dialog"
+            aria-modal="true"
+            tabIndex={-1}
+          >
+            <div className="finance-sheet-head">
+              <strong>{t("more")}</strong>
+              <button onClick={() => setMoreOpen(false)}>×</button>
+            </div>
+            {nav.map((group) => {
+              const Icon = group.icon;
+              return (
+                <div key={group.label}>
+                  <div className="finance-section-label">
+                    <Icon /> {group.label}
+                  </div>
+                  <div className="finance-menu-grid">
+                    {group.items.map(([path, label, ItemIcon]) => (
+                      <Link
+                        id={`mobile-more-link-${path === "/" ? "overview" : path.slice(1)}`}
+                        key={path}
+                        to={path}
+                        onClick={() => setMoreOpen(false)}
+                      >
+                        <ItemIcon /> {label}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </section>
+        </div>
+      )}
+    </div>
   );
 }

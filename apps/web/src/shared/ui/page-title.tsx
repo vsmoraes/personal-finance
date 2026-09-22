@@ -7,20 +7,18 @@ export interface PageTitleProps {
   actions?: ReactNode;
 }
 
-export function PageTitle({ actions }: PageTitleProps) {
-  if (!actions) return null;
+export function PageTitle({ title, subtitle, actions }: PageTitleProps) {
   return (
-    <Flex
-      className="page-title"
-      justify="space-between"
-      align="center"
-      gap="middle"
-      wrap
-      style={{ marginBottom: 24 }}
-    >
-      <Flex className="page-title-actions" gap="small" align="center" wrap>
-        {actions}
-      </Flex>
-    </Flex>
+    <section className="finance-page-head">
+      <div>
+        {subtitle && <div className="finance-eyebrow">{subtitle}</div>}
+        <h1>{title}</h1>
+      </div>
+      {actions && (
+        <Flex className="page-title-actions" gap="small" align="center" wrap>
+          {actions}
+        </Flex>
+      )}
+    </section>
   );
 }

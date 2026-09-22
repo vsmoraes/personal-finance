@@ -1,16 +1,14 @@
 import {
   Checkbox,
-  Col,
   ColorPicker,
   DatePicker,
   Form,
   Input,
   InputNumber,
-  Row,
   Select,
 } from "antd";
 import dayjs from "dayjs";
-import { Children, isValidElement, type ReactNode } from "react";
+import { type ReactNode } from "react";
 import {
   type Control,
   Controller,
@@ -27,20 +25,9 @@ export type Option = { value: string; label: string };
 /** Keep React Hook Form as the state owner; Ant Design owns presentation. */
 export function FormFields({ children }: { children: ReactNode }) {
   return (
-    <Row gutter={[16, 0]}>
-      {Children.map(
-        children,
-        (child) =>
-          child && (
-            <Col
-              span={24}
-              sm={isValidElement(child) && child.type === Field ? 12 : 24}
-            >
-              {child}
-            </Col>
-          ),
-      )}
-    </Row>
+    <div className="finance-preference-card finance-form-fields">
+      {children}
+    </div>
   );
 }
 
@@ -70,6 +57,7 @@ export function Field<T extends FieldValues>({
       rules={rules}
       render={({ field, fieldState }) => (
         <Form.Item
+          className="finance-preference-row finance-form-field"
           label={type === "checkbox" ? undefined : t(label)}
           htmlFor={name}
           required={required}

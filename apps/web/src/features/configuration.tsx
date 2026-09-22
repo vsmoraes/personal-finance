@@ -1,9 +1,4 @@
-import {
-  DeleteOutlined,
-  EditOutlined,
-  ExperimentOutlined,
-  SearchOutlined,
-} from "@ant-design/icons";
+import { ExperimentOutlined, SearchOutlined } from "@ant-design/icons";
 import { create, fromJson, toJson } from "@bufbuild/protobuf";
 import {
   Alert,
@@ -13,7 +8,6 @@ import {
   Collapse,
   Flex,
   Form,
-  Grid,
   Input,
   Modal,
   Space,
@@ -41,7 +35,6 @@ import { type Entity, type Resource } from "./entity-form.tsx";
 import { EntryDrawer } from "./entry-drawer.tsx";
 export function Configuration({ resource }: { resource: Resource }) {
   const { t, i18n } = useTranslation();
-  const screens = Grid.useBreakpoint();
   const data = useResources(resource);
   const categories = useResources("categories").data?.categories ?? [];
   const refresh = useRefresh(resource);
@@ -101,7 +94,9 @@ export function Configuration({ resource }: { resource: Resource }) {
           {entity.$typeName === "finance.v1.Category" && (
             <CategoryIcon name={entity.icon} />
           )}
-          <Typography.Text strong>{label(entity)}</Typography.Text>
+          <Typography.Text id={`${resource}-row-${entity.id}`} strong>
+            {label(entity)}
+          </Typography.Text>
         </Space>
       ),
     },
@@ -209,7 +204,11 @@ export function Configuration({ resource }: { resource: Resource }) {
                 key: "forecast",
                 width: 140,
                 render: (_: unknown, e: Entity) => (
-                  <Button type="link" href={`/forecast?scenarioId=${e.id}`}>
+                  <Button
+                    id={`scenario-forecast-${e.id}`}
+                    type="link"
+                    href={`/forecast?scenarioId=${e.id}`}
+                  >
                     {t("viewForecast")}
                   </Button>
                 ),
@@ -251,33 +250,6 @@ export function Configuration({ resource }: { resource: Resource }) {
                   ),
               },
             ]),
-    {
-      title: t("actions"),
-      key: "actions",
-      ...(screens.md ? { fixed: "right" as const } : {}),
-      width: 170,
-      render: (_, entity) => (
-        <Space size={0}>
-          <Button
-            type="text"
-            size="small"
-            icon={<EditOutlined aria-hidden />}
-            onClick={() => setEdit(entity)}
-          >
-            {t("edit")}
-          </Button>
-          <Button
-            type="text"
-            size="small"
-            danger
-            icon={<DeleteOutlined aria-hidden />}
-            onClick={() => setDeleting(entity)}
-          >
-            {t(resource === "categories" ? "archive" : "delete")}
-          </Button>
-        </Space>
-      ),
-    },
   ];
   const visible = entities
     .filter((entity) =>
@@ -294,7 +266,15 @@ export function Configuration({ resource }: { resource: Resource }) {
       <PageTitle
         title={t(resource === "categories" ? "categoriesTitle" : resource)}
         subtitle={t(`${resource}Description`)}
-        actions={null}
+        actions={
+          <Button
+            id={`${resource}-create-button`}
+            type="primary"
+            onClick={() => setEdit("new")}
+          >
+            + {t("create")}
+          </Button>
+        }
       />
       <Space direction="vertical" size="large" style={{ width: "100%" }}>
         {resource === "scenarios" && (
@@ -318,6 +298,7 @@ export function Configuration({ resource }: { resource: Resource }) {
             style={{ padding: 20 }}
           >
             <Input
+              id={`${resource}-search`}
               aria-label={t("search")}
               placeholder={t("searchEntries")}
               prefix={<SearchOutlined aria-hidden />}
@@ -342,6 +323,10 @@ export function Configuration({ resource }: { resource: Resource }) {
               responsive: true,
             }}
             locale={{ emptyText: <EmptyState /> }}
+            onRow={(entity) => ({
+              onClick: () => setEdit(entity),
+              style: { cursor: "pointer" },
+            })}
           />
         </Card>
         {resource === "budgets" && (
@@ -349,7 +334,7 @@ export function Configuration({ resource }: { resource: Resource }) {
             items={[
               {
                 key: "copy",
-                label: t("copyBudgets"),
+                label: <span id="budget-copy-toggle">{t("copyBudgets")}</span>,
                 children: <BudgetCopy />,
               },
             ]}
@@ -360,7 +345,9 @@ export function Configuration({ resource }: { resource: Resource }) {
             items={[
               {
                 key: "preview",
-                label: t("previewRules"),
+                label: (
+                  <span id="rules-preview-toggle">{t("previewRules")}</span>
+                ),
                 children: <RulePreview />,
               },
             ]}
@@ -374,6 +361,12 @@ export function Configuration({ resource }: { resource: Resource }) {
             : undefined
         }
         onClose={() => setEdit(undefined)}
+        onDelete={() => {
+          if (edit && edit !== "new") {
+            setEdit(undefined);
+            setDeleting(edit);
+          }
+        }}
       />
       <Modal
         title={t(resource === "categories" ? "archive" : "delete")}
@@ -384,7 +377,11 @@ export function Configuration({ resource }: { resource: Resource }) {
         }}
         okText={t(resource === "categories" ? "archive" : "delete")}
         cancelText={t("cancel")}
-        okButtonProps={{ danger: true, loading: busy }}
+        okButtonProps={{
+          id: `${resource}-delete-confirm`,
+          danger: true,
+          loading: busy,
+        }}
       >
         <Typography.Paragraph>{t("deleteConfirmation")}</Typography.Paragraph>
       </Modal>
@@ -428,8 +425,9 @@ function BudgetCopy() {
     }
   });
   return (
-    <Card title={t("copyBudgets")}>
+    <Card className="finance-form-surface" title={t("copyBudgets")}>
       <Form
+        className="finance-standard-form"
         layout="vertical"
         onFinish={() => {
           void submit();
@@ -460,7 +458,11 @@ function BudgetCopy() {
             label="targetYear"
             type="number"
           />
-          <Button htmlType="submit" loading={form.formState.isSubmitting}>
+          <Button
+            id="budget-copy-submit"
+            htmlType="submit"
+            loading={form.formState.isSubmitting}
+          >
             {t("copy")}
           </Button>
         </FormFields>
@@ -499,9 +501,10 @@ function RulePreview() {
     }
   }
   return (
-    <Card title={t("previewRules")}>
+    <Card className="finance-form-surface" title={t("previewRules")}>
       <Form.Item>
         <Checkbox
+          id="rules-overwrite-manual"
           checked={overwrite}
           onChange={(e) => setOverwrite(e.target.checked)}
         >
@@ -510,6 +513,7 @@ function RulePreview() {
       </Form.Item>
       <Flex gap="small" wrap>
         <Button
+          id="rules-preview-button"
           onClick={() => {
             void run(false);
           }}
@@ -517,6 +521,7 @@ function RulePreview() {
           {t("preview")}
         </Button>
         <Button
+          id="rules-apply-button"
           disabled={!preview}
           onClick={() => {
             void run(true);
