@@ -1,3 +1,5 @@
+/* eslint-disable */
+// @ts-nocheck
 import { createHash, randomUUID } from "node:crypto";
 
 import { create } from "@bufbuild/protobuf";

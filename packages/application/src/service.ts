@@ -10,19 +10,20 @@ import {
 } from "../../domain/src/finance.js";
 import { assert, digits } from "../../domain/src/money.js";
 import type { FinanceStore, Runtime } from "./ports.js";
+
 export function service(store: FinanceStore, runtime: Runtime) {
-  const allCategories = () =>
-    store.repositories.categories
-      .list()
-      .sort((a, b) => a.position - b.position || a.id.localeCompare(b.id));
+  const allCategories = async () =>
+    (await store.repositories.categories.list()).sort(
+      (a, b) => a.position - b.position || a.id.localeCompare(b.id),
+    );
   const allRules = () => store.repositories.rules.list();
   const allTransactions = () => store.repositories.transactions.list();
-  function category(
+  async function category(
     id: string,
     type?: p.TransactionType,
     allowArchived = false,
   ) {
-    const c = allCategories().find((c) => c.id === id);
+    const c = (await allCategories()).find((value) => value.id === id);
     assert(c, "CATEGORY_NOT_FOUND", 404);
     assert(allowArchived || !c.archived, "CATEGORY_ARCHIVED");
     assert(type === undefined || c.type === type, "CATEGORY_TYPE_MISMATCH");
@@ -33,11 +34,11 @@ export function service(store: FinanceStore, runtime: Runtime) {
     digits(m.currencyCode);
     assert(m.minorUnits >= (positive ? 1n : 0n), "INVALID_AMOUNT");
   }
-  function normalizeTransaction(
+  async function normalizeTransaction(
     input: p.Transaction,
     previous?: p.Transaction,
     importing = false,
-  ): p.Transaction {
+  ): Promise<p.Transaction> {
     dateString(input.date);
     assert(input.counterparty.length <= 250 && input.note.length <= 4000);
     assert(
@@ -46,7 +47,7 @@ export function service(store: FinanceStore, runtime: Runtime) {
     );
     validateMoney(input.amount, true);
     assert(input.amount);
-    category(
+    await category(
       input.categoryId,
       input.type,
       previous?.categoryId === input.categoryId,
@@ -69,24 +70,24 @@ export function service(store: FinanceStore, runtime: Runtime) {
       externalId: previous?.externalId ?? (importing ? input.externalId : ""),
     });
     delete t.baseAmount;
-    if (importing) t = applyRules(t, allRules()).transaction;
-    category(t.categoryId, t.type, previous?.categoryId === t.categoryId);
+    if (importing) t = applyRules(t, await allRules()).transaction;
+    await category(t.categoryId, t.type, previous?.categoryId === t.categoryId);
     return t;
   }
-  function transaction(id: string): p.Transaction {
-    const row = store.repositories.transactions.get(id);
+  async function transaction(id: string) {
+    const row = await store.repositories.transactions.get(id);
     assert(row, "NOT_FOUND", 404);
     return row;
   }
-  function saveTransaction(
+  async function saveTransaction(
     t: p.Transaction,
     previous?: p.Transaction,
     dedup?: string,
   ) {
-    store.repositories.transactions.save(t, previous?.version, dedup);
-    store.audit("transaction", previous ? "update" : "create", t.id);
+    await store.repositories.transactions.save(t, previous?.version, dedup);
+    await store.audit("transaction", previous ? "update" : "create", t.id);
   }
-  function filterTransactions(filter: p.ListRequest) {
+  async function filterTransactions(filter: p.ListRequest) {
     assert(
       filter.page >= 0 && filter.pageSize >= 0 && filter.pageSize <= 100,
       "INVALID_PAGINATION",
@@ -98,7 +99,7 @@ export function service(store: FinanceStore, runtime: Runtime) {
         ["date", "amount", "counterparty", "createdAt"].includes(filter.sort),
       "INVALID_SORT",
     );
-    const list = allTransactions().filter(
+    const list = (await allTransactions()).filter(
       (t) =>
         (!filter.search ||
           `${t.counterparty} ${t.note}`
@@ -122,8 +123,8 @@ export function service(store: FinanceStore, runtime: Runtime) {
     list.sort((a, b) => {
       let compared: number;
       if (filter.sort === "amount") {
-        const aa = a.amount?.minorUnits ?? 0n;
-        const bb = b.amount?.minorUnits ?? 0n;
+        const aa = a.amount?.minorUnits ?? 0n,
+          bb = b.amount?.minorUnits ?? 0n;
         compared =
           (a.amount?.currencyCode ?? "").localeCompare(
             b.amount?.currencyCode ?? "",
@@ -139,17 +140,18 @@ export function service(store: FinanceStore, runtime: Runtime) {
     });
     return list;
   }
-  function reportData(currency = store.settings().defaultCurrency): ReportData {
-    digits(currency);
+  async function reportData(currency?: string): Promise<ReportData> {
+    const selected = currency ?? (await store.settings()).defaultCurrency;
+    digits(selected);
     return {
-      transactions: allTransactions(),
-      categories: allCategories(),
-      budgets: store.repositories.budgets.list(),
-      commitments: store.repositories.commitments.list(),
-      currency,
+      transactions: await allTransactions(),
+      categories: await allCategories(),
+      budgets: await store.repositories.budgets.list(),
+      commitments: await store.repositories.commitments.list(),
+      currency: selected,
     };
   }
-  function validateCategory(c: p.Category, previous?: p.Category) {
+  async function validateCategory(c: p.Category, previous?: p.Category) {
     assert(c.name.trim() || previous?.builtin, "NAME_REQUIRED");
     assert(
       c.name.length <= 100 &&
@@ -163,7 +165,7 @@ export function service(store: FinanceStore, runtime: Runtime) {
     if (previous) {
       assert(
         c.type === previous.type ||
-          !allTransactions().some((t) => t.categoryId === c.id),
+          !(await allTransactions()).some((t) => t.categoryId === c.id),
         "CATEGORY_IN_USE",
         409,
       );
@@ -175,15 +177,15 @@ export function service(store: FinanceStore, runtime: Runtime) {
     }
     if (c.defaultBudget) validateMoney(c.defaultBudget);
   }
-  function validateBudget(b: p.Budget) {
-    const c = category(b.categoryId);
+  async function validateBudget(b: p.Budget) {
+    const c = await category(b.categoryId);
     assert(c.budgetable, "NOT_BUDGETABLE");
     monthIndex(b.startMonth);
     if (b.endMonth) assert(monthIndex(b.endMonth) >= monthIndex(b.startMonth));
     validateMoney(b.amount);
   }
-  function validateCommitment(c: p.RecurringCommitment) {
-    category(c.categoryId);
+  async function validateCommitment(c: p.RecurringCommitment) {
+    await category(c.categoryId);
     assert(c.description.trim() && c.description.length <= 250);
     monthIndex(c.startMonth);
     if (c.endMonth) assert(monthIndex(c.endMonth) >= monthIndex(c.startMonth));
@@ -192,8 +194,8 @@ export function service(store: FinanceStore, runtime: Runtime) {
     assert(c.amount);
     c.exchangeRate = "";
   }
-  function validateRule(r: p.CategorizationRule) {
-    const c = category(r.categoryId);
+  async function validateRule(r: p.CategorizationRule) {
+    const c = await category(r.categoryId);
     assert(r.name.trim() && r.name.length <= 100);
     assert(!r.type || r.type === c.type, "CATEGORY_TYPE_MISMATCH");
     r.type = c.type;
@@ -209,12 +211,12 @@ export function service(store: FinanceStore, runtime: Runtime) {
       "CURRENCY_REQUIRED",
     );
   }
-  function validateScenario(s: p.Scenario) {
+  async function validateScenario(s: p.Scenario) {
     assert(s.name.trim() && s.name.length <= 100);
     assert(s.overrides.length <= 500);
     for (const o of s.overrides) {
       monthIndex(o.month);
-      category(o.categoryId);
+      await category(o.categoryId);
       validateMoney(o.amount);
     }
   }

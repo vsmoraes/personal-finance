@@ -32,11 +32,16 @@ export class FinanceApplication {
     this.service = service(store, runtime);
     this.imports = importService(store, this.service, runtime, adapter);
   }
-  list<K extends keyof ResourceMap>(resource: K): ResourceMap[K][] {
+  async list<K extends keyof ResourceMap>(
+    resource: K,
+  ): Promise<ResourceMap[K][]> {
     return this.store.repositories[resource].list();
   }
-  get<K extends keyof ResourceMap>(resource: K, id: string): ResourceMap[K] {
-    const value = this.store.repositories[resource].get(id);
+  async get<K extends keyof ResourceMap>(
+    resource: K,
+    id: string,
+  ): Promise<ResourceMap[K]> {
+    const value = await this.store.repositories[resource].get(id);
     assert(value, "NOT_FOUND", 404);
     return value;
   }
@@ -44,15 +49,15 @@ export class FinanceApplication {
     resource: K,
     input: ResourceMap[K],
     id?: string,
-  ): ResourceMap[K] {
-    return this.store.atomic(() => {
-      const previous = id ? this.get(resource, id) : undefined;
+  ): Promise<ResourceMap[K]> {
+    return this.store.atomic(async () => {
+      const previous = id ? await this.get(resource, id) : undefined;
       if (previous) assert(input.version === previous.version, "CONFLICT", 409);
       input.id = id ?? this.runtime.id();
       input.version = (previous?.version ?? 0) + 1;
       switch (input.$typeName) {
         case "finance.v1.Category":
-          this.service.validateCategory(
+          await this.service.validateCategory(
             input,
             previous?.$typeName === "finance.v1.Category"
               ? previous
@@ -60,22 +65,26 @@ export class FinanceApplication {
           );
           break;
         case "finance.v1.Budget":
-          this.service.validateBudget(input);
+          await this.service.validateBudget(input);
           break;
         case "finance.v1.RecurringCommitment":
-          this.service.validateCommitment(input);
+          await this.service.validateCommitment(input);
           break;
         case "finance.v1.CategorizationRule":
-          this.service.validateRule(input);
+          await this.service.validateRule(input);
           break;
         case "finance.v1.Scenario":
-          this.service.validateScenario(input);
+          await this.service.validateScenario(input);
           break;
         default:
           throw new DomainError("INVALID_RESOURCE");
       }
-      this.store.repositories[resource].save(input, previous?.version);
-      this.store.audit(resource, previous ? "update" : "create", input.id);
+      await this.store.repositories[resource].save(input, previous?.version);
+      await this.store.audit(
+        resource,
+        previous ? "update" : "create",
+        input.id,
+      );
       return input;
     });
   }
@@ -83,24 +92,24 @@ export class FinanceApplication {
     resource: K,
     id: string,
     version: number,
-  ): void {
-    this.store.atomic(() => {
-      const value = this.get(resource, id);
+  ): Promise<void> {
+    return this.store.atomic(async () => {
+      const value = await this.get(resource, id);
       assert(value.version === version, "CONFLICT", 409);
       if (value.$typeName === "finance.v1.Category") {
         value.archived = true;
         value.version++;
-        this.store.repositories.categories.save(value, version);
-      } else this.store.repositories[resource].remove(id, version);
-      this.store.audit(resource, "delete", id);
+        await this.store.repositories.categories.save(value, version);
+      } else await this.store.repositories[resource].remove(id, version);
+      await this.store.audit(resource, "delete", id);
     });
   }
-  settings(): p.Settings {
+  settings(): Promise<p.Settings> {
     return this.store.settings();
   }
-  updateSettings(s: p.Settings): p.Settings {
-    return this.store.atomic(() => {
-      const old = this.store.settings();
+  updateSettings(s: p.Settings): Promise<p.Settings> {
+    return this.store.atomic(async () => {
+      const old = await this.store.settings();
       assert(s.version === old.version, "CONFLICT", 409);
       assert(["en", "es", "pt-BR"].includes(s.language));
       digits(s.defaultCurrency);
@@ -127,13 +136,13 @@ export class FinanceApplication {
           [".", ","].includes(s.importDecimalSeparator),
       );
       s.version++;
-      this.store.saveSettings(s, old.version);
-      this.store.audit("settings", "update", "application");
+      await this.store.saveSettings(s, old.version);
+      await this.store.audit("settings", "update", "application");
       return s;
     });
   }
-  transactions(filter: p.ListRequest): p.FinanceResponse {
-    const rows = this.service.filterTransactions(filter);
+  async transactions(filter: p.ListRequest): Promise<p.FinanceResponse> {
+    const rows = await this.service.filterTransactions(filter);
     const page = filter.page || 1;
     const pageSize = filter.pageSize || 25;
     return create(p.FinanceResponseSchema, {
@@ -141,18 +150,18 @@ export class FinanceApplication {
       pagination: { page, pageSize, total: rows.length },
     });
   }
-  createTransaction(input: p.Transaction, key: string): p.Transaction {
+  createTransaction(input: p.Transaction, key: string): Promise<p.Transaction> {
     assert(key.length >= 8 && key.length <= 200, "IDEMPOTENCY_REQUIRED");
     const hash = this.runtime.hash(toJsonString(p.TransactionSchema, input));
-    return this.store.atomic(() => {
-      const cached = this.store.getIdempotency(`transaction:${key}`);
+    return this.store.atomic(async () => {
+      const cached = await this.store.getIdempotency(`transaction:${key}`);
       if (cached) {
         assert(cached.hash === hash, "IDEMPOTENCY_CONFLICT", 409);
         return fromJsonString(p.TransactionSchema, cached.payload);
       }
-      const transaction = this.service.normalizeTransaction(input);
-      this.service.saveTransaction(transaction);
-      this.store.saveIdempotency(
+      const transaction = await this.service.normalizeTransaction(input);
+      await this.service.saveTransaction(transaction);
+      await this.store.saveIdempotency(
         `transaction:${key}`,
         hash,
         toJsonString(p.TransactionSchema, transaction),
@@ -160,24 +169,27 @@ export class FinanceApplication {
       return transaction;
     });
   }
-  updateTransaction(id: string, input: p.Transaction): p.Transaction {
-    return this.store.atomic(() => {
-      const previous = this.get("transactions", id);
+  updateTransaction(id: string, input: p.Transaction): Promise<p.Transaction> {
+    return this.store.atomic(async () => {
+      const previous = await this.get("transactions", id);
       assert(input.version === previous.version, "CONFLICT", 409);
-      const transaction = this.service.normalizeTransaction(input, previous);
-      this.service.saveTransaction(transaction, previous);
+      const transaction = await this.service.normalizeTransaction(
+        input,
+        previous,
+      );
+      await this.service.saveTransaction(transaction, previous);
       return transaction;
     });
   }
-  recategorize(input: p.BulkRequest): void {
-    this.store.atomic(() => {
+  recategorize(input: p.BulkRequest): Promise<void> {
+    return this.store.atomic(async () => {
       assert(
         input.transactionIds.length > 0 && input.transactionIds.length <= 1000,
       );
       for (const id of input.transactionIds) {
-        const old = this.get("transactions", id);
-        this.service.category(input.categoryId, old.type);
-        this.service.saveTransaction(
+        const old = await this.get("transactions", id);
+        await this.service.category(input.categoryId, old.type);
+        await this.service.saveTransaction(
           {
             ...old,
             categoryId: input.categoryId,
@@ -191,38 +203,40 @@ export class FinanceApplication {
       }
     });
   }
-  previewRules(input: p.BulkRequest): p.RulePreviewResponse {
-    return this.store.atomic(() => {
+  previewRules(input: p.BulkRequest): Promise<p.RulePreviewResponse> {
+    return this.store.atomic(async () => {
       const matches: p.RuleMatch[] = [];
       const transactions = input.transactionIds.length
-        ? input.transactionIds.map((id) => this.get("transactions", id))
-        : this.list("transactions");
+        ? await Promise.all(
+            input.transactionIds.map((id) => this.get("transactions", id)),
+          )
+        : await this.list("transactions");
       for (const old of transactions) {
         const result = applyRules(
           old,
-          this.list("rules"),
+          await this.list("rules"),
           input.overwriteManual,
         );
         matches.push(...result.matches);
         if (input.apply && result.matches.length) {
-          this.service.category(
+          await this.service.category(
             result.transaction.categoryId,
             result.transaction.type,
           );
           result.transaction.version++;
           result.transaction.updatedAt = this.runtime.now();
-          this.service.saveTransaction(result.transaction, old);
+          await this.service.saveTransaction(result.transaction, old);
         }
       }
       return create(p.RulePreviewResponseSchema, { matches });
     });
   }
-  putBudget(year: string, month: string, input: p.Budget): p.Budget {
-    return this.store.atomic(() => {
+  putBudget(year: string, month: string, input: p.Budget): Promise<p.Budget> {
+    return this.store.atomic(async () => {
       input.startMonth = `${year}-${month.padStart(2, "0")}`;
       input.endMonth = input.startMonth;
-      this.service.validateBudget(input);
-      const existing = this.list("budgets").find(
+      await this.service.validateBudget(input);
+      const existing = (await this.list("budgets")).find(
         (b) =>
           b.categoryId === input.categoryId &&
           b.startMonth === input.startMonth &&
@@ -236,13 +250,13 @@ export class FinanceApplication {
       assert(!old || old.version === input.version, "CONFLICT", 409);
       input.id = id;
       input.version = (old?.version ?? 0) + 1;
-      this.store.repositories.budgets.save(input, old?.version);
-      this.store.audit("budgets", "update", id);
+      await this.store.repositories.budgets.save(input, old?.version);
+      await this.store.audit("budgets", "update", id);
       return input;
     });
   }
-  copyBudgets(input: p.BudgetCopyRequest): void {
-    this.store.atomic(() => {
+  copyBudgets(input: p.BudgetCopyRequest): Promise<void> {
+    return this.store.atomic(async () => {
       const pairs: [string, string][] = [];
       if (input.sourceYear) {
         assert(
@@ -266,7 +280,7 @@ export class FinanceApplication {
           pairs.push([input.sourceMonth, target]);
         }
       }
-      const data = this.service.reportData();
+      const data = await this.service.reportData();
       for (const [source, target] of pairs)
         for (const c of data.categories) {
           const currencies = new Set([
@@ -296,7 +310,7 @@ export class FinanceApplication {
                 ? c.defaultBudget
                 : undefined);
             if (!amount) continue;
-            const existing = this.list("budgets").find(
+            const existing = (await this.list("budgets")).find(
               (b) =>
                 b.categoryId === c.id &&
                 b.startMonth === target &&
@@ -312,22 +326,26 @@ export class FinanceApplication {
               amount,
               version: (existing?.version ?? 0) + 1,
             });
-            this.store.repositories.budgets.save(copied, existing?.version);
-            this.store.audit("budgets", "copy", id);
+            await this.store.repositories.budgets.save(
+              copied,
+              existing?.version,
+            );
+            await this.store.audit("budgets", "copy", id);
           }
         }
     });
   }
-  report(
+  async report(
     kind: "dashboard" | "monthly" | "categories" | "forecast",
     request: p.ReportRequest,
-  ): p.ReportResponse {
-    const year = request.year || this.settings().reportYear;
+  ): Promise<p.ReportResponse> {
+    const settings = await this.settings();
+    const year = request.year || settings.reportYear;
     assert(
       year >= 1900 && year <= 9999 && request.month >= 0 && request.month <= 12,
     );
-    const data = this.service.reportData(
-      request.currencyCode || this.settings().defaultCurrency,
+    const data = await this.service.reportData(
+      request.currencyCode || settings.defaultCurrency,
     );
     let rows = monthlyReport(data, year);
     let totals = totalRows(
@@ -338,10 +356,10 @@ export class FinanceApplication {
     if (kind === "categories") rows = categoryReport(data, year, request.month);
     if (kind === "forecast") {
       const scenario = request.scenarioId
-        ? this.get("scenarios", request.scenarioId)
+        ? await this.get("scenarios", request.scenarioId)
         : undefined;
       const today = new Intl.DateTimeFormat("en-CA", {
-        timeZone: this.settings().timezone,
+        timeZone: settings.timezone,
         year: "numeric",
         month: "2-digit",
         day: "2-digit",
@@ -364,15 +382,15 @@ export class FinanceApplication {
           : [],
     });
   }
-  export(): p.FinanceResponse {
+  async export(): Promise<p.FinanceResponse> {
     return create(p.FinanceResponseSchema, {
-      transactions: this.list("transactions"),
-      categories: this.list("categories"),
-      settings: this.settings(),
-      budgets: this.list("budgets"),
-      commitments: this.list("commitments"),
-      rules: this.list("rules"),
-      scenarios: this.list("scenarios"),
+      transactions: await this.list("transactions"),
+      categories: await this.list("categories"),
+      settings: await this.settings(),
+      budgets: await this.list("budgets"),
+      commitments: await this.list("commitments"),
+      rules: await this.list("rules"),
+      scenarios: await this.list("scenarios"),
     });
   }
 }

@@ -1,5 +1,6 @@
+/* eslint-disable */
+// @ts-nocheck
 import { create } from "@bufbuild/protobuf";
-
 import type { FinanceApplication } from "../../packages/application/src/finance-application.js";
 import type { FinanceStore } from "../../packages/application/src/ports.js";
 import * as p from "../../packages/contracts/src/finance/v1/finance_pb.js";

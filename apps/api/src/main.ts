@@ -1,9 +1,8 @@
+import { databaseConfig } from "../../../packages/database/src/config.js";
 import { buildApp } from "./app.js";
 
 async function main(): Promise<void> {
-  const database =
-    process.env["DATABASE_URL"]?.replace(/^file:/, "") ?? "data/finance.db";
-  const { app } = await buildApp({ database, logger: true });
+  const { app } = await buildApp({ config: databaseConfig(), logger: true });
   for (const signal of ["SIGINT", "SIGTERM"]) {
     process.once(signal, () => {
       void app.close().then(() => {
