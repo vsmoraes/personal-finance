@@ -11,8 +11,6 @@ export default defineConfig({
   },
   use: {
     baseURL: process.env["E2E_BASE_URL"] ?? "http://127.0.0.1:8081",
-    actionTimeout: 5_000,
-    navigationTimeout: 10_000,
     trace: "retain-on-failure",
   },
   webServer: process.env["E2E_BASE_URL"]

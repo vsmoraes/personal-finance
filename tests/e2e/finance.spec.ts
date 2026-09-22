@@ -237,14 +237,22 @@ test("CSV preview and confirmation preserve original currency", async ({
     ),
   });
   await page.getByLabel("Import source", { exact: true }).fill(source);
-  await page
-    .getByRole("button", { name: "Detect columns", exact: true })
-    .click();
+  const inspect = page.getByRole("button", {
+    name: "Detect columns",
+    exact: true,
+  });
+  await expect(inspect).toBeEnabled({ timeout: 10_000 });
+  await inspect.click();
   await expect(page.getByText(/Encoding:/)).toBeVisible();
-  await page.getByRole("button", { name: "Preview", exact: true }).click();
-  await page
-    .getByRole("button", { name: "Confirm import", exact: true })
-    .click();
+  const preview = page.getByRole("button", { name: "Preview", exact: true });
+  await expect(preview).toBeEnabled({ timeout: 10_000 });
+  await preview.click();
+  const confirm = page.getByRole("button", {
+    name: "Confirm import",
+    exact: true,
+  });
+  await expect(confirm).toBeEnabled({ timeout: 10_000 });
+  await confirm.click();
   await expect(
     page.getByRole("button", { name: "Import complete", exact: true }),
   ).toBeVisible();
