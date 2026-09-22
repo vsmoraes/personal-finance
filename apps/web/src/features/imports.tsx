@@ -225,8 +225,13 @@ export function Imports() {
                 { value: "\t", label: t("tab") },
               ]}
             />
-            <Button htmlType="submit" disabled={!file} loading={busy}>
-              {t(preview ? "preview" : "detectColumns")}
+            <Button
+              data-testid="import-detect"
+              htmlType="submit"
+              disabled={!file}
+              loading={busy}
+            >
+              {t("detectColumns")}
             </Button>
           </FormFields>
         </Form>
@@ -267,6 +272,17 @@ export function Imports() {
             ))}
           </Flex>
           <Typography.Paragraph>{t("importSignedHelp")}</Typography.Paragraph>
+          <Button
+            data-testid="import-preview"
+            type="primary"
+            loading={busy}
+            disabled={busy || !mapping["date"] || !mapping["amount"]}
+            onClick={() => {
+              void inspect();
+            }}
+          >
+            {t("preview")}
+          </Button>
         </Card>
       )}
       {preview && preview.rows.length > 0 && (
@@ -323,6 +339,7 @@ export function Imports() {
               {t("downloadErrors")}
             </Button>
             <Button
+              data-testid="import-confirm"
               type="primary"
               loading={busy}
               disabled={

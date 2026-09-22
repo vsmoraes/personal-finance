@@ -237,20 +237,14 @@ test("CSV preview and confirmation preserve original currency", async ({
     ),
   });
   await page.getByLabel("Import source", { exact: true }).fill(source);
-  const inspect = page.getByRole("button", {
-    name: "Detect columns",
-    exact: true,
-  });
+  const inspect = page.getByTestId("import-detect");
   await expect(inspect).toBeEnabled({ timeout: 10_000 });
   await inspect.click();
   await expect(page.getByText(/Encoding:/)).toBeVisible();
-  const preview = page.getByRole("button", { name: "Preview", exact: true });
+  const preview = page.getByTestId("import-preview");
   await expect(preview).toBeEnabled({ timeout: 10_000 });
   await preview.click();
-  const confirm = page.getByRole("button", {
-    name: "Confirm import",
-    exact: true,
-  });
+  const confirm = page.getByTestId("import-confirm");
   await expect(confirm).toBeEnabled({ timeout: 10_000 });
   await confirm.click();
   await expect(

@@ -402,20 +402,19 @@ it("uploads, maps, previews and confirms an atomic CSV import", async () => {
     target: { value: "generic-test" },
   });
   await waitFor(() =>
-    expect(
-      screen.getByRole("button", { name: "Detect columns" }),
-    ).toBeEnabled(),
+    expect(screen.getByTestId("import-detect")).toBeEnabled(),
   );
-  fireEvent.click(screen.getByRole("button", { name: "Detect columns" }));
+  fireEvent.click(screen.getByTestId("import-detect"));
   await screen.findByText(/Encoding:/);
-  fireEvent.click(screen.getByRole("button", { name: "Preview" }));
+  await waitFor(() =>
+    expect(screen.getByTestId("import-preview")).toBeEnabled(),
+  );
+  fireEvent.click(screen.getByTestId("import-preview"));
   await screen.findByText(/Generic CSV entry/);
   await waitFor(() =>
-    expect(
-      screen.getByRole("button", { name: "Confirm import" }),
-    ).toBeEnabled(),
+    expect(screen.getByTestId("import-confirm")).toBeEnabled(),
   );
-  fireEvent.click(screen.getByRole("button", { name: "Confirm import" }));
+  fireEvent.click(screen.getByTestId("import-confirm"));
   await screen.findByRole(
     "button",
     { name: "Import complete" },
