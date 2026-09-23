@@ -114,7 +114,11 @@ The API composition root is [`apps/api/src/app.ts`](apps/api/src/app.ts). See th
 
 Pull requests and pushes to `main` run the same dependency-aware pipeline: contracts; formatting/lint/types and audit; unit, integration, and E2E tests in parallel; production build; then Docker persistence checks. The browser suite uses one desktop and one generic mobile project, with a thirty-second per-test timeout.
 
-Dependabot runs daily for npm and GitHub Actions updates. Patch and minor updates can be auto-merged after CI passes.
+Dependabot runs daily for npm and GitHub Actions updates. Once CI passes, any
+open Dependabot pull request to `main` is squash-merged directly; an approval
+is not required. The `DEPENDABOT_AUTOMERGE_TOKEN` repository secret must have
+contents and pull-request write access and be allowed to bypass `main` branch
+protection rules.
 
 ## License
 
