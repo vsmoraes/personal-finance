@@ -118,6 +118,7 @@ function SettingsForm({ settings }: { settings: Settings }) {
                       control={form.control}
                       name="language"
                       label="language"
+                      presentation="control"
                       options={[
                         { value: "en", label: "English" },
                         { value: "es", label: "Español" },
@@ -133,6 +134,7 @@ function SettingsForm({ settings }: { settings: Settings }) {
                       control={form.control}
                       name="timezone"
                       label="timezone"
+                      presentation="control"
                       options={[
                         "UTC",
                         ...Intl.supportedValuesOf("timeZone"),
@@ -154,6 +156,7 @@ function SettingsForm({ settings }: { settings: Settings }) {
                       control={form.control}
                       name="theme"
                       label="theme"
+                      presentation="control"
                       options={["light", "dark", "custom"].map((value) => ({
                         value,
                         label: t(value),
@@ -171,6 +174,7 @@ function SettingsForm({ settings }: { settings: Settings }) {
                           name="customBackground"
                           label="customBackground"
                           type="color"
+                          presentation="control"
                         />
                       </Preference>
                       <Preference
@@ -182,6 +186,7 @@ function SettingsForm({ settings }: { settings: Settings }) {
                           name="customSurface"
                           label="customSurface"
                           type="color"
+                          presentation="control"
                         />
                       </Preference>
                       <Preference
@@ -193,6 +198,7 @@ function SettingsForm({ settings }: { settings: Settings }) {
                           name="customAccent"
                           label="customAccent"
                           type="color"
+                          presentation="control"
                         />
                       </Preference>
                     </>
@@ -212,6 +218,7 @@ function SettingsForm({ settings }: { settings: Settings }) {
                       control={form.control}
                       name="defaultCurrency"
                       label="defaultCurrency"
+                      presentation="control"
                       options={currencies}
                     />
                   </Preference>
@@ -223,6 +230,7 @@ function SettingsForm({ settings }: { settings: Settings }) {
                       control={form.control}
                       name="dateFormat"
                       label="dateFormat"
+                      presentation="control"
                       options={["yyyy-MM-dd", "dd/MM/yyyy", "MM/dd/yyyy"].map(
                         (value) => ({ value, label: value }),
                       )}
@@ -237,6 +245,7 @@ function SettingsForm({ settings }: { settings: Settings }) {
                       name="reportYear"
                       label="reportYear"
                       type="number"
+                      presentation="control"
                     />
                   </Preference>
                 </SettingsSection>
@@ -254,6 +263,7 @@ function SettingsForm({ settings }: { settings: Settings }) {
                       control={form.control}
                       name="importCurrency"
                       label="importCurrency"
+                      presentation="control"
                       options={currencies}
                     />
                   </Preference>
@@ -265,6 +275,7 @@ function SettingsForm({ settings }: { settings: Settings }) {
                       control={form.control}
                       name="importDateFormat"
                       label="importDateFormat"
+                      presentation="control"
                       options={["yyyy-MM-dd", "dd/MM/yyyy", "MM/dd/yyyy"].map(
                         (value) => ({ value, label: value }),
                       )}
@@ -278,6 +289,7 @@ function SettingsForm({ settings }: { settings: Settings }) {
                       control={form.control}
                       name="importDecimalSeparator"
                       label="importDecimalSeparator"
+                      presentation="control"
                       options={[
                         { value: ".", label: t("decimalDot") },
                         { value: ",", label: t("decimalComma") },

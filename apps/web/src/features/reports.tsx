@@ -39,6 +39,7 @@ import {
   useSettings,
 } from "../shared/api.ts";
 import { ErrorNotice, Loading, PageTitle } from "../shared/ui.tsx";
+import { OverviewTrendChart } from "./overview-trend-chart.tsx";
 import { ReportChart } from "./report-chart.tsx";
 import { TransactionDetailsDrawer } from "./transaction-details-drawer.tsx";
 import { TransactionFeed } from "./transaction-feed.tsx";
@@ -204,33 +205,8 @@ export function Reports({
                   : "—"}{" "}
                 {t("savingsRate").toLowerCase()}
               </span>
-              <div className="finance-chart" aria-label={t("incomeVsExpenses")}>
-                <svg
-                  viewBox="0 0 700 190"
-                  preserveAspectRatio="none"
-                  aria-hidden="true"
-                >
-                  <defs>
-                    <linearGradient
-                      id="finance-area"
-                      x1="0"
-                      y1="0"
-                      x2="0"
-                      y2="1"
-                    >
-                      <stop offset="0" stopColor="#bdd6ca" stopOpacity=".7" />
-                      <stop offset="1" stopColor="#bdd6ca" stopOpacity="0" />
-                    </linearGradient>
-                  </defs>
-                  <path
-                    d="M0 150 C55 142,75 120,120 126 S190 155,235 115 S300 105,340 92 S405 112,450 72 S525 85,565 55 S630 72,700 22 L700 190 L0 190Z"
-                    fill="url(#finance-area)"
-                  />
-                  <path
-                    className="finance-chart-line"
-                    d="M0 150 C55 142,75 120,120 126 S190 155,235 115 S300 105,340 92 S405 112,450 72 S525 85,565 55 S630 72,700 22"
-                  />
-                </svg>
+              <div className="finance-chart" aria-label={t("netSavings")}>
+                <OverviewTrendChart rows={report.data.rows} />
               </div>
             </Card>
             <Card className="finance-panel finance-stat finance-budget">

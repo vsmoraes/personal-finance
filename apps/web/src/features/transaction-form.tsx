@@ -1,5 +1,5 @@
 import { create } from "@bufbuild/protobuf";
-import { App as AntApp, Button, Collapse, Form } from "antd";
+import { App as AntApp, Button, Form } from "antd";
 import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -129,76 +129,57 @@ export function TransactionForm({
       aria-label={t(transaction ? "editTransaction" : "quickAdd")}
     >
       {error ? <ErrorNotice error={error} /> : null}
-      <Collapse
-        defaultActiveKey={["details", "context"]}
-        items={[
-          {
-            key: "details",
-            label: t("transactionDetails"),
-            children: (
-              <FormFields>
-                <Field
-                  control={form.control}
-                  name="date"
-                  label="date"
-                  type="date"
-                  required
-                />
-                <Field
-                  control={form.control}
-                  name="type"
-                  label="type"
-                  options={[
-                    { value: "1", label: t("income") },
-                    { value: "2", label: t("expenses") },
-                  ]}
-                />
-                <Field
-                  control={form.control}
-                  name="categoryId"
-                  label="category"
-                  options={categories
-                    .filter(
-                      (c) =>
-                        String(c.type) === selectedType &&
-                        (!c.archived || c.id === transaction?.categoryId),
-                    )
-                    .sort((a, b) => a.position - b.position)
-                    .map((c) => ({ value: c.id, label: categoryName(c, t) }))}
-                  required
-                />
-                <Field
-                  control={form.control}
-                  name="amount"
-                  label="amount"
-                  type="decimal"
-                  required
-                />
-                <Field
-                  control={form.control}
-                  name="counterparty"
-                  label="counterparty"
-                />
-              </FormFields>
-            ),
-          },
-          {
-            key: "context",
-            label: t("transactionContext"),
-            children: (
-              <FormFields>
-                <Field control={form.control} name="note" label="note" />
-                <Field
-                  control={form.control}
-                  name="includeInBudget"
-                  label="includeInBudget"
-                  type="checkbox"
-                />
-              </FormFields>
-            ),
-          },
-        ]}
-      />
+      <FormFields>
+        <Field
+          control={form.control}
+          name="date"
+          label="date"
+          type="date"
+          required
+        />
+        <Field
+          control={form.control}
+          name="type"
+          label="type"
+          options={[
+            { value: "1", label: t("income") },
+            { value: "2", label: t("expenses") },
+          ]}
+        />
+        <Field
+          control={form.control}
+          name="categoryId"
+          label="category"
+          options={categories
+            .filter(
+              (c) =>
+                String(c.type) === selectedType &&
+                (!c.archived || c.id === transaction?.categoryId),
+            )
+            .sort((a, b) => a.position - b.position)
+            .map((c) => ({ value: c.id, label: categoryName(c, t) }))}
+          required
+        />
+        <Field
+          control={form.control}
+          name="amount"
+          label="amount"
+          type="decimal"
+          required
+        />
+        <Field
+          control={form.control}
+          name="counterparty"
+          label="counterparty"
+        />
+        <Field control={form.control} name="note" label="note" />
+        <Field
+          control={form.control}
+          name="includeInBudget"
+          label="includeInBudget"
+          type="checkbox"
+        />
+      </FormFields>
       <Button
         id={transaction ? "transaction-form-save" : "transaction-form-create"}
         type="primary"

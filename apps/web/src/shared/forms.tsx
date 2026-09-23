@@ -1,11 +1,11 @@
 import {
-  Checkbox,
   ColorPicker,
   DatePicker,
   Form,
   Input,
   InputNumber,
   Select,
+  Switch,
 } from "antd";
 import dayjs from "dayjs";
 import { type ReactNode } from "react";
@@ -25,9 +25,30 @@ export type Option = { value: string; label: string };
 /** Keep React Hook Form as the state owner; Ant Design owns presentation. */
 export function FormFields({ children }: { children: ReactNode }) {
   return (
-    <div className="finance-preference-card finance-form-fields">
+    <div className="finance-form-surface finance-form-fields">{children}</div>
+  );
+}
+
+export function FormField({
+  label,
+  help,
+  required = false,
+  children,
+}: {
+  label?: string;
+  help?: string;
+  required?: boolean;
+  children: ReactNode;
+}) {
+  const { t } = useTranslation();
+  return (
+    <Form.Item
+      className="finance-form-field"
+      {...(label ? { label: t(label), htmlFor: label, required } : {})}
+      {...(help ? { extra: help } : {})}
+    >
       {children}
-    </div>
+    </Form.Item>
   );
 }
 
@@ -38,6 +59,7 @@ export function Field<T extends FieldValues>({
   type = "text",
   options,
   required = false,
+  presentation = "field",
 }: {
   name: Path<T>;
   label: string;
@@ -45,6 +67,8 @@ export function Field<T extends FieldValues>({
   type?: string;
   options?: Option[];
   required?: boolean;
+  /** Use when an enclosing preference row already owns the label and help text. */
+  presentation?: "field" | "control";
 }) {
   const { t } = useTranslation();
   const rules: RegisterOptions<T, Path<T>> = {
@@ -57,22 +81,19 @@ export function Field<T extends FieldValues>({
       rules={rules}
       render={({ field, fieldState }) => (
         <Form.Item
-          className="finance-preference-row finance-form-field"
-          label={type === "checkbox" ? undefined : t(label)}
-          htmlFor={name}
-          required={required}
+          className={`finance-form-field ${type === "checkbox" ? "finance-toggle-field" : ""} ${presentation === "control" ? "finance-form-control" : ""}`}
+          {...(presentation === "control"
+            ? {}
+            : { label: t(label), htmlFor: name, required })}
           validateStatus={fieldState.error ? "error" : ""}
           help={fieldState.error?.message}
         >
           {type === "checkbox" ? (
-            <Checkbox
+            <Switch
               id={name}
               checked={Boolean(field.value)}
-              onChange={(event) => field.onChange(event.target.checked)}
-              onBlur={field.onBlur}
-            >
-              {t(label)}
-            </Checkbox>
+              onChange={field.onChange}
+            />
           ) : type === "icon" ? (
             <Select
               {...field}

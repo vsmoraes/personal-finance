@@ -361,20 +361,125 @@ body {
   height: 48px;
   padding-inline: 18px;
 }
-.finance-transaction-drawer .ant-drawer-content,
-.finance-entry-drawer .ant-drawer-content {
-  background: rgba(250, 251, 252, 0.94);
-  backdrop-filter: blur(30px);
+.finance-frosted-modal .ant-modal-content {
+  overflow: hidden;
+  padding: 0;
+  background: rgba(250, 251, 252, 0.38);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  border-radius: 28px;
+  box-shadow:
+    0 30px 90px rgba(20, 28, 38, 0.18),
+    inset 0 1px rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(38px) saturate(175%);
+  -webkit-backdrop-filter: blur(38px) saturate(175%);
 }
-.finance-transaction-drawer .ant-drawer-header,
-.finance-entry-drawer .ant-drawer-header {
+.finance-frosted-modal .ant-modal-header {
   padding: 26px 26px 0;
+  margin-bottom: 0;
   border: 0;
   background: transparent;
 }
-.finance-transaction-drawer .ant-drawer-body,
-.finance-entry-drawer .ant-drawer-body {
+.finance-frosted-modal .ant-modal-body {
+  max-height: min(68dvh, 680px);
+  overflow: auto;
   padding: 18px 26px 26px;
+}
+.finance-frosted-modal .finance-form-fields {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+.finance-frosted-modal .finance-form-surface.finance-form-fields {
+  margin-inline: 18px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent !important;
+}
+.finance-frosted-modal .finance-form-fields .finance-form-field {
+  gap: 0;
+  padding: 12px 0;
+}
+.finance-frosted-modal .finance-form-field .ant-form-item-label > label {
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+}
+.finance-frosted-modal .finance-form-field .ant-form-item-label {
+  margin-bottom: 6px;
+}
+.finance-frosted-modal .ant-input,
+.finance-frosted-modal .ant-input-number,
+.finance-frosted-modal .ant-picker,
+.finance-frosted-modal .ant-select-selector {
+  min-height: 44px !important;
+  border-color: rgba(20, 25, 30, 0.1) !important;
+  border-radius: 12px !important;
+  background: rgba(255, 255, 255, 0.14) !important;
+  box-shadow: none !important;
+  font-size: 14px;
+}
+.finance-frosted-modal .ant-select,
+.finance-frosted-modal .ant-picker,
+.finance-frosted-modal .ant-input-number {
+  width: 100%;
+}
+.finance-frosted-modal .ant-select-selection-item,
+.finance-frosted-modal .ant-picker-input > input,
+.finance-frosted-modal .ant-input {
+  font-size: 14px;
+}
+.finance-frosted-modal .ant-select-single .ant-select-selector {
+  display: flex !important;
+  align-items: center !important;
+}
+.finance-frosted-modal .ant-select-single .ant-select-selection-search-input,
+.finance-frosted-modal .ant-select-single .ant-select-selection-item {
+  height: 42px !important;
+  line-height: 42px !important;
+}
+.finance-frosted-modal .ant-select-arrow {
+  top: 50%;
+  margin-top: 0;
+  transform: translateY(-50%);
+}
+.finance-toggle-field {
+  grid-template-columns: 1fr auto;
+  align-items: center;
+}
+.finance-toggle-field .ant-form-item-label {
+  margin: 0 !important;
+}
+.finance-toggle-field .ant-form-item-control {
+  justify-self: end;
+}
+.finance-form-field .ant-switch {
+  min-width: 46px;
+  height: 27px;
+  background: rgba(120, 125, 130, 0.22);
+}
+.finance-form-field .ant-switch.ant-switch-checked {
+  background: #1d7658;
+}
+.finance-form-field .ant-switch .ant-switch-handle {
+  width: 21px;
+  height: 21px;
+  top: 3px;
+}
+.finance-form-field .ant-switch .ant-switch-handle::before {
+  border-radius: 50%;
+}
+.finance-form-field .ant-switch.ant-switch-checked .ant-switch-handle {
+  inset-inline-start: calc(100% - 24px);
+}
+.finance-frosted-modal .ant-collapse-item {
+  border-color: rgba(20, 25, 30, 0.08) !important;
+  background: rgba(255, 255, 255, 0.12);
+}
+.ant-modal-mask {
+  background: rgba(5, 8, 12, 0.26);
+  backdrop-filter: blur(7px);
 }
 .finance-drawer-head {
   display: flex;
@@ -522,9 +627,27 @@ body {
 .finance-dark .finance-transaction {
   border-color: rgba(255, 255, 255, 0.065);
 }
-.finance-dark .finance-transaction-drawer .ant-drawer-content,
-.finance-dark .finance-entry-drawer .ant-drawer-content {
-  background: rgba(18, 21, 25, 0.96);
+.finance-dark .finance-frosted-modal .ant-modal-content,
+.finance-dark-mode .finance-frosted-modal .ant-modal-content {
+  background: rgba(18, 21, 25, 0.4);
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.42);
+}
+.finance-dark .finance-frosted-modal .ant-input,
+.finance-dark .finance-frosted-modal .ant-input-number,
+.finance-dark .finance-frosted-modal .ant-picker,
+.finance-dark .finance-frosted-modal .ant-select-selector,
+.finance-dark-mode .finance-frosted-modal .ant-input,
+.finance-dark-mode .finance-frosted-modal .ant-input-number,
+.finance-dark-mode .finance-frosted-modal .ant-picker,
+.finance-dark-mode .finance-frosted-modal .ant-select-selector {
+  border-color: rgba(255, 255, 255, 0.11) !important;
+  background: rgba(255, 255, 255, 0.06) !important;
+}
+.finance-dark .finance-frosted-modal .ant-collapse-item,
+.finance-dark-mode .finance-frosted-modal .ant-collapse-item {
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  background: rgba(255, 255, 255, 0.035);
 }
 @media (min-width: 801px) {
   .finance-topbar {
@@ -856,35 +979,56 @@ body {
     min-width: 0;
   }
 }
+.finance-form-surface:not(.ant-card),
+.finance-form-fields {
+  border: 1px solid rgba(20, 25, 30, 0.07);
+  border-radius: 21px;
+  background: rgba(255, 255, 255, 0.18);
+}
 .finance-form-fields {
   padding: 4px 18px;
 }
 .finance-form-fields .finance-form-field {
   display: grid;
-  grid-template-columns: minmax(130px, 1fr) minmax(180px, 1fr);
-  gap: 20px;
-  align-items: center;
-  padding: 16px 0;
+  gap: 6px;
+  padding: 15px 0;
   margin: 0 !important;
   border-bottom: 1px solid rgba(20, 25, 30, 0.07);
 }
 .finance-form-fields .finance-form-field:last-child {
   border: 0;
 }
-.finance-form-fields .finance-form-field .ant-form-item-label {
+.finance-form-field .ant-form-item-label {
   padding: 0;
   text-align: left;
 }
-.finance-form-fields .finance-form-field .ant-form-item-control {
+.finance-form-field .ant-form-item-label > label {
+  height: auto;
+  font-size: 12px;
+  color: #737b86;
+}
+.finance-form-field .ant-form-item-control {
   min-width: 0;
 }
-.finance-form-fields .finance-form-field .ant-form-item-control-input {
+.finance-form-field .ant-form-item-control-input {
   min-height: 44px;
 }
-.finance-form-fields .ant-checkbox-wrapper {
+.finance-form-field .ant-checkbox-wrapper {
   min-height: 44px;
   display: flex;
   align-items: center;
+}
+/* Settings rows already provide their own label and help text. */
+.finance-preference-control .finance-form-control {
+  margin: 0 !important;
+}
+.finance-preference-control .finance-form-control .ant-form-item-control-input {
+  min-height: 44px;
+}
+.finance-dark .finance-form-surface:not(.ant-card),
+.finance-dark .finance-form-fields {
+  background: rgba(255, 255, 255, 0.025);
+  border-color: rgba(255, 255, 255, 0.075);
 }
 .finance-dark .finance-form-fields .finance-form-field {
   border-color: rgba(255, 255, 255, 0.075);
@@ -892,11 +1036,6 @@ body {
 @media (max-width: 800px) {
   .finance-form-fields {
     padding: 4px 14px;
-  }
-  .finance-form-fields .finance-form-field {
-    grid-template-columns: 1fr;
-    gap: 6px;
-    padding: 14px 0;
   }
 }
 .finance-form-surface .ant-card-body {
@@ -1116,14 +1255,16 @@ body {
     text-decoration: none;
     font-size: 13px;
   }
-  .finance-transaction-drawer .ant-drawer-content-wrapper,
-  .finance-entry-drawer .ant-drawer-content-wrapper {
-    top: 10% !important;
-    height: 90% !important;
+  .finance-frosted-modal {
+    width: calc(100vw - 30px) !important;
+    max-width: calc(100vw - 30px);
   }
-  .finance-transaction-drawer .ant-drawer-content,
-  .finance-entry-drawer .ant-drawer-content {
-    border-radius: 28px 28px 0 0;
+  .finance-frosted-modal .ant-modal-body {
+    max-height: min(72dvh, 680px);
+    padding: 16px 18px 20px;
+  }
+  .finance-frosted-modal .ant-modal-header {
+    padding: 20px 18px 0;
   }
   .finance-dark .finance-more-sheet {
     background: rgba(20, 23, 28, 0.94);

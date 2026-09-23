@@ -16,6 +16,10 @@ import { http, HttpResponse } from "msw";
 import { setupServer } from "msw/node";
 import { afterAll, afterEach, beforeAll, expect, it, vi } from "vitest";
 
+import {
+  cumulativeSavings,
+  overviewTrendPaths,
+} from "../apps/web/src/features/overview-trend-chart.js";
 import { TransactionForm } from "../apps/web/src/features/transaction-form.js";
 import {
   ApiError,
@@ -111,6 +115,19 @@ it("shows translated validation feedback for invalid money", async () => {
   });
   fireEvent.click(screen.getByRole("button", { name: "Add transaction" }));
   await waitFor(() => expect(screen.getByRole("alert")).toBeVisible());
+});
+it("derives the overview trend from monthly net savings", () => {
+  const values = cumulativeSavings([
+    { netSavings: 120n },
+    { netSavings: -20n },
+    { netSavings: 80n },
+  ] as p.ReportRow[]);
+  expect(values).toEqual([120n, 100n, 180n]);
+  const first = overviewTrendPaths(values);
+  const second = overviewTrendPaths([120n, 100n, 100n]);
+  expect(first.line).toContain("M");
+  expect(first.area).toContain("Z");
+  expect(first.line).not.toBe(second.line);
 });
 it("maps API problems, network errors, empty deletion responses and category labels", async () => {
   server.use(

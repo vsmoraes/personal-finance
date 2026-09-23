@@ -1,5 +1,5 @@
 import { CloseOutlined, DeleteOutlined, EditOutlined } from "@ant-design/icons";
-import { Button, Drawer, Grid } from "antd";
+import { Button, Modal } from "antd";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -23,7 +23,6 @@ export function TransactionDetailsDrawer({
   onDelete?: (transaction: Transaction) => void;
 }) {
   const { t, i18n } = useTranslation();
-  const screens = Grid.useBreakpoint();
   const settings = useSettings().data;
   const categories = useResources("categories").data?.categories ?? [];
   const [editing, setEditing] = useState(false);
@@ -32,13 +31,15 @@ export function TransactionDetailsDrawer({
     onClose();
   };
   return (
-    <Drawer
+    <Modal
       open={Boolean(transaction)}
-      onClose={close}
-      width={screens.sm ? 470 : "100%"}
+      onCancel={close}
+      centered
+      width={520}
       destroyOnHidden
       closable={false}
-      className="finance-transaction-drawer"
+      footer={null}
+      className="finance-frosted-modal finance-transaction-modal"
       title={
         <div className="finance-drawer-head">
           <span className="finance-eyebrow">
@@ -149,7 +150,7 @@ export function TransactionDetailsDrawer({
             </div>
           </div>
         ))}
-    </Drawer>
+    </Modal>
   );
 }
 

@@ -28,7 +28,7 @@ import {
   useResources,
   useSettings,
 } from "../shared/api.ts";
-import { Field, FormFields, type Option } from "../shared/forms.tsx";
+import { Field, FormField, FormFields, type Option } from "../shared/forms.tsx";
 import { ErrorNotice } from "../shared/ui.tsx";
 export type Resource =
   | "categories"
@@ -362,10 +362,7 @@ export function EntityForm({
                       </Typography.Paragraph>
                       {overrides.map((o, index) => (
                         <Flex vertical gap="middle" key={index}>
-                          <Form.Item
-                            label={t("month")}
-                            htmlFor={`override-month-${index}`}
-                          >
+                          <FormField label="month">
                             <DatePicker
                               id={`override-month-${index}`}
                               picker="month"
@@ -384,11 +381,8 @@ export function EntityForm({
                                 )
                               }
                             />
-                          </Form.Item>
-                          <Form.Item
-                            label={t("category")}
-                            htmlFor={`override-category-${index}`}
-                          >
+                          </FormField>
+                          <FormField label="category">
                             <Select
                               id={`override-category-${index}`}
                               value={o.categoryId || null}
@@ -404,11 +398,8 @@ export function EntityForm({
                                 )
                               }
                             />
-                          </Form.Item>
-                          <Form.Item
-                            label={t("amount")}
-                            htmlFor={`override-amount-${index}`}
-                          >
+                          </FormField>
+                          <FormField label="amount">
                             <Input
                               id={`override-amount-${index}`}
                               inputMode="decimal"
@@ -423,21 +414,23 @@ export function EntityForm({
                                 )
                               }
                             />
-                          </Form.Item>
-                          <Checkbox
-                            checked={o.additional}
-                            onChange={(e) =>
-                              setOverrides((old) =>
-                                old.map((v, i) =>
-                                  i === index
-                                    ? { ...v, additional: e.target.checked }
-                                    : v,
-                                ),
-                              )
-                            }
-                          >
-                            {t("additional")}
-                          </Checkbox>
+                          </FormField>
+                          <FormField>
+                            <Checkbox
+                              checked={o.additional}
+                              onChange={(e) =>
+                                setOverrides((old) =>
+                                  old.map((v, i) =>
+                                    i === index
+                                      ? { ...v, additional: e.target.checked }
+                                      : v,
+                                  ),
+                                )
+                              }
+                            >
+                              {t("additional")}
+                            </Checkbox>
+                          </FormField>
                           <Button
                             danger
                             onClick={() =>

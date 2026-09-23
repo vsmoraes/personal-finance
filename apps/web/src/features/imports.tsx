@@ -24,7 +24,7 @@ import {
   ImportResponseSchema,
 } from "../../../../packages/contracts/src/finance/v1/finance_pb.ts";
 import { request, useRefresh, useSettings } from "../shared/api.ts";
-import { Field, FormFields } from "../shared/forms.tsx";
+import { Field, FormField, FormFields } from "../shared/forms.tsx";
 import { ErrorNotice, PageTitle } from "../shared/ui.tsx";
 export function Imports() {
   const { t } = useTranslation();
@@ -245,7 +245,7 @@ export function Imports() {
           <Typography.Paragraph>
             {t("encoding")}: {preview.encoding}
           </Typography.Paragraph>
-          <div className="finance-form-fields">
+          <FormFields>
             {[
               "date",
               "amount",
@@ -255,7 +255,7 @@ export function Imports() {
               "note",
               "externalId",
             ].map((key) => (
-              <Form.Item key={key} label={t(key)} htmlFor={`map-${key}`}>
+              <FormField key={key} label={key}>
                 <Select
                   id={`map-${key}`}
                   value={mapping[key] ?? ""}
@@ -270,9 +270,9 @@ export function Imports() {
                     })),
                   ]}
                 />
-              </Form.Item>
+              </FormField>
             ))}
-          </div>
+          </FormFields>
           <Typography.Paragraph>{t("importSignedHelp")}</Typography.Paragraph>
           <Button
             id="import-preview"

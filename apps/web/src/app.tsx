@@ -42,6 +42,15 @@ export function App() {
     document.documentElement.lang = i18n.language;
     document.title = t("appName");
   }, [settings?.language, i18n, i18n.language, t]);
+  const custom = settings?.theme === "custom";
+  const dark =
+    settings?.theme === "dark" ||
+    (custom && settings?.customMode === "dark") ||
+    (settings?.theme === "system" && systemDark);
+  useEffect(() => {
+    document.documentElement.classList.toggle("finance-dark-mode", dark);
+    return () => document.documentElement.classList.remove("finance-dark-mode");
+  }, [dark]);
   if (settingsQuery.isPending) return <Loading />;
   if (settingsQuery.error)
     return (
@@ -54,11 +63,6 @@ export function App() {
         />
       </>
     );
-  const custom = settings?.theme === "custom";
-  const dark =
-    settings?.theme === "dark" ||
-    (custom && settings?.customMode === "dark") ||
-    (settings?.theme === "system" && systemDark);
   return (
     <ConfigProvider
       locale={

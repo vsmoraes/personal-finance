@@ -1,5 +1,5 @@
 import { CloseOutlined } from "@ant-design/icons";
-import { Button, ConfigProvider, Drawer, Grid, Space, Typography } from "antd";
+import { Button, ConfigProvider, Modal, Space, Typography } from "antd";
 import { useTranslation } from "react-i18next";
 
 import { EntityForm } from "../entity-form.tsx";
@@ -17,15 +17,16 @@ export function EntryDrawer({
   onDelete?: () => void;
 }) {
   const { t } = useTranslation();
-  const screens = Grid.useBreakpoint();
   return (
-    <Drawer
+    <Modal
       open={Boolean(draft)}
-      onClose={onClose}
-      width={screens.sm ? 470 : "100%"}
+      onCancel={onClose}
+      centered
+      width={620}
       destroyOnHidden
       closable={false}
-      className="finance-entry-drawer"
+      footer={null}
+      className="finance-frosted-modal finance-entry-modal"
       title={
         <div className="finance-drawer-head">
           <span className="finance-eyebrow">
@@ -86,6 +87,6 @@ export function EntryDrawer({
           </Space>
         </ConfigProvider>
       )}
-    </Drawer>
+    </Modal>
   );
 }

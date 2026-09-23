@@ -29,7 +29,7 @@ import {
   useResources,
 } from "../shared/api.ts";
 import { CategoryIcon } from "../shared/category-icons.tsx";
-import { Field, FormFields } from "../shared/forms.tsx";
+import { Field, FormField, FormFields } from "../shared/forms.tsx";
 import { EmptyState, ErrorNotice, PageTitle } from "../shared/ui.tsx";
 import { type Entity, type Resource } from "./entity-form.tsx";
 import { EntryDrawer } from "./entry-drawer.tsx";
@@ -502,7 +502,7 @@ function RulePreview() {
   }
   return (
     <Card className="finance-form-surface" title={t("previewRules")}>
-      <Form.Item>
+      <FormField>
         <Checkbox
           id="rules-overwrite-manual"
           checked={overwrite}
@@ -510,7 +510,7 @@ function RulePreview() {
         >
           {t("overwriteManual")}
         </Checkbox>
-      </Form.Item>
+      </FormField>
       <Flex gap="small" wrap>
         <Button
           id="rules-preview-button"
