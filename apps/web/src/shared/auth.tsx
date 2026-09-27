@@ -225,9 +225,13 @@ export function SignOutButton({ id = "sign-out-button" }: { id?: string }) {
 export function UserPhoto({
   user,
   compact = false,
+  expanded = false,
+  onOpen,
 }: {
   user: AuthUser;
   compact?: boolean;
+  expanded?: boolean;
+  onOpen?: () => void;
 }) {
   const { t } = useTranslation();
   const avatar = (
@@ -237,21 +241,27 @@ export function UserPhoto({
   );
   if (compact)
     return (
-      <div className="finance-user-menu">
+      <div className="finance-user-menu" onMouseEnter={onOpen} onFocus={onOpen}>
         <div className="finance-user-menu-panel">
           <Button
             id="user-profile-button"
             type="text"
             htmlType="button"
             aria-label={t("accountMenu")}
+            aria-expanded={expanded}
+            aria-controls="account-actions"
             title={user.displayName}
+            onClick={onOpen}
           >
             {avatar}
           </Button>
-          <div className="finance-user-menu-details">
-            <span title={user.displayName}>{user.displayName}</span>
-            <SignOutButton />
-          </div>
+        </div>
+        <div
+          id="account-actions"
+          className={`finance-drop finance-user-menu-details ${expanded ? "is-open" : ""}`}
+        >
+          <span title={user.displayName}>{user.displayName}</span>
+          <SignOutButton />
         </div>
       </div>
     );

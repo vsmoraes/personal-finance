@@ -1540,7 +1540,10 @@
           "includeInBudget": { "type": "boolean" },
           "createdAt": { "type": "string" },
           "updatedAt": { "type": "string" },
-          "version": { "type": "integer" }
+          "version": { "type": "integer" },
+          "createdByUserId": { "type": "string" },
+          "creatorDisplayName": { "type": "string" },
+          "creatorPictureUrl": { "type": "string" }
         }
       },
       "Budget": {

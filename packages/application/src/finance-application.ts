@@ -118,12 +118,13 @@ export class FinanceApplication implements FinanceUseCases {
       }
       const transaction = await this.service.normalizeTransaction(input);
       await this.service.saveTransaction(transaction);
+      const saved = await this.service.transaction(transaction.id);
       await this.store.saveIdempotency(
         `transaction:${key}`,
         hash,
-        toJsonString(p.TransactionSchema, transaction),
+        toJsonString(p.TransactionSchema, saved),
       );
-      return transaction;
+      return saved;
     });
   }
   updateTransaction(id: string, input: p.Transaction): Promise<p.Transaction> {
@@ -135,7 +136,7 @@ export class FinanceApplication implements FinanceUseCases {
         previous,
       );
       await this.service.saveTransaction(transaction, previous);
-      return transaction;
+      return this.service.transaction(transaction.id);
     });
   }
   recategorize(input: p.BulkRequest): Promise<void> {

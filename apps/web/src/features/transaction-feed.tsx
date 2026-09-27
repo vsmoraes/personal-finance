@@ -7,9 +7,9 @@ import {
 } from "../../../../packages/contracts/src/finance/v1/finance_pb.ts";
 import { formatMoney } from "../../../../packages/domain/src/money.ts";
 import { categoryName, useResources, useSettings } from "../shared/api.ts";
-import { CategoryIcon } from "../shared/category-icons.tsx";
 import { formatDate } from "../shared/dates.ts";
 import {
+  Avatar,
   Button,
   Empty,
   Input,
@@ -117,6 +117,10 @@ export function TransactionFeed({
               (item) => item.id === row.categoryId,
             );
             const income = row.type === TransactionType.INCOME;
+            const creator =
+              row.createdByUserId === "system"
+                ? t("systemUser")
+                : row.creatorDisplayName || t("unknownUser");
             return (
               <Button
                 id={`transaction-row-${row.id}`}
@@ -126,8 +130,14 @@ export function TransactionFeed({
                 key={row.id}
                 onClick={() => onView(row)}
               >
-                <span className="finance-transaction-icon">
-                  <CategoryIcon name={category?.icon ?? ""} />
+                <span className="finance-transaction-icon" title={creator}>
+                  <Avatar
+                    src={row.creatorPictureUrl || undefined}
+                    size={38}
+                    alt={creator}
+                  >
+                    {creator.charAt(0).toUpperCase()}
+                  </Avatar>
                 </span>
                 <span className="finance-transaction-main">
                   <b>{row.counterparty || categoryName(category, t)}</b>

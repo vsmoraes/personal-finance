@@ -43,14 +43,38 @@ export function createSqliteAdapter(
       );
       return value as Entity;
     }
+    type CreatorRow = {
+      payload: string;
+      creatorId: string;
+      creatorName: string | null;
+      creatorPicture: string | null;
+    };
+    const transactionSelect =
+      "SELECT transactions.payload AS payload, transactions.created_by_user_id AS creatorId, users.display_name AS creatorName, users.picture_url AS creatorPicture FROM transactions LEFT JOIN users ON users.id = transactions.created_by_user_id";
+    const withCreator = (row: CreatorRow): Entity =>
+      Object.assign(deserialize(row.payload), {
+        createdByUserId: row.creatorId,
+        creatorDisplayName: row.creatorName ?? "",
+        creatorPictureUrl: row.creatorPicture ?? "",
+      });
     return {
       list: async () =>
-        store.db
-          .select()
-          .from(table)
-          .all()
-          .map((row) => deserialize(row.payload)),
+        table === t.transactions
+          ? (store.sqlite.prepare(transactionSelect).all() as CreatorRow[]).map(
+              withCreator,
+            )
+          : store.db
+              .select()
+              .from(table)
+              .all()
+              .map((row) => deserialize(row.payload)),
       get: async (id) => {
+        if (table === t.transactions) {
+          const row = store.sqlite
+            .prepare(`${transactionSelect} WHERE transactions.id = ?`)
+            .get(id) as CreatorRow | undefined;
+          return row ? withCreator(row) : undefined;
+        }
         const row = store.db.select().from(table).where(eq(table.id, id)).get();
         return row ? deserialize(row.payload) : undefined;
       },

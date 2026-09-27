@@ -59,6 +59,9 @@ export function service(store: FinanceStore, runtime: Runtime) {
       createdAt: previous?.createdAt ?? runtime.now(),
       updatedAt: runtime.now(),
       version: (previous?.version ?? 0) + 1,
+      createdByUserId: previous?.createdByUserId ?? "",
+      creatorDisplayName: previous?.creatorDisplayName ?? "",
+      creatorPictureUrl: previous?.creatorPictureUrl ?? "",
       categorizationSource: importing
         ? p.CategorizationSource.IMPORT
         : previous?.categoryId === input.categoryId

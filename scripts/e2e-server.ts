@@ -14,6 +14,7 @@ const { app } = await buildApp({
       iss: "https://accounts.google.com",
       exp: Math.floor(Date.now() / 1000) + 3600,
       name: "E2E Tester",
+      picture: "https://lh3.googleusercontent.com/e2e-avatar.svg",
     });
   },
 });

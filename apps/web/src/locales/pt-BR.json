@@ -1,6 +1,9 @@
 {
   "appName": "Finanças pessoais",
   "appSubtitle": "Uma visão clara do seu dinheiro",
+  "systemUser": "Sistema",
+  "unknownUser": "Usuário desconhecido",
+  "addedBy": "Adicionada por {{name}}",
   "loginTitle": "Suas finanças, com clareza.",
   "loginDescription": "Entre com segurança no seu espaço privado.",
   "loginNote": "Apenas o login com Google é permitido. Nenhum dado financeiro é compartilhado com o Google.",

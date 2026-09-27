@@ -56,6 +56,10 @@ message Transaction {
   string created_at = 15;
   string updated_at = 16;
   int32 version = 17;
+  // Read-only attribution, populated from the server's user record.
+  string created_by_user_id = 18;
+  string creator_display_name = 19;
+  string creator_picture_url = 20;
 }
 message Budget {
   string id = 1;

@@ -128,6 +128,7 @@ function Workspace({
   const [moreOpen, setMoreOpen] = useState(false);
   const [draft, setDraft] = useState<EntryDraft>();
   const [openNavGroup, setOpenNavGroup] = useState<string | null>(null);
+  const [profileOpen, setProfileOpen] = useState(false);
   useEffect(() => {
     const createTransaction = () => setDraft({ resource: "transactions" });
     window.addEventListener("finance:create-transaction", createTransaction);
@@ -205,19 +206,26 @@ function Workspace({
         <div
           className={`finance-group ${group.items.some(([path]) => path === location.pathname) ? "active" : ""}`}
           key={group.label}
-          onMouseEnter={() => setOpenNavGroup(group.label)}
-          onFocus={() => setOpenNavGroup(group.label)}
+          onMouseEnter={() => {
+            setProfileOpen(false);
+            setOpenNavGroup(group.label);
+          }}
+          onFocus={() => {
+            setProfileOpen(false);
+            setOpenNavGroup(group.label);
+          }}
         >
           <Button
             id={`nav-group-${group.label.toLowerCase()}`}
             type="text"
             htmlType="button"
             aria-expanded={openNavGroup === group.label}
-            onClick={() =>
+            onClick={() => {
+              setProfileOpen(false);
               setOpenNavGroup((open) =>
                 open === group.label ? null : group.label,
-              )
-            }
+              );
+            }}
           >
             <group.icon />
             {group.label}
@@ -246,11 +254,16 @@ function Workspace({
       className={`finance-shell ${dark ? "finance-dark" : ""} ${location.pathname === "/" ? "finance-overview-shell" : ""}`}
     >
       <header
-        className={`finance-topbar finance-glass ${openNavGroup ? "is-expanded" : ""}`}
-        onMouseLeave={() => setOpenNavGroup(null)}
+        className={`finance-topbar finance-glass ${openNavGroup || profileOpen ? "is-expanded" : ""}`}
+        onMouseLeave={() => {
+          setOpenNavGroup(null);
+          setProfileOpen(false);
+        }}
         onBlur={(event) => {
-          if (!event.currentTarget.contains(event.relatedTarget))
+          if (!event.currentTarget.contains(event.relatedTarget)) {
             setOpenNavGroup(null);
+            setProfileOpen(false);
+          }
         }}
       >
         <Link to="/" className="finance-brand">
@@ -259,7 +272,15 @@ function Workspace({
         </Link>
         {desktopNavigation}
         <div className="finance-topbar-spacer" aria-hidden="true" />
-        <UserPhoto user={user} compact />
+        <UserPhoto
+          user={user}
+          compact
+          expanded={profileOpen}
+          onOpen={() => {
+            setOpenNavGroup(null);
+            setProfileOpen(true);
+          }}
+        />
       </header>
       <main
         id={`page-${location.pathname === "/" ? "overview" : location.pathname.slice(1)}`}

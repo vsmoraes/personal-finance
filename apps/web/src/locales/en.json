@@ -1,6 +1,9 @@
 {
   "appName": "Personal Finance",
   "appSubtitle": "A clear view of your money",
+  "systemUser": "System",
+  "unknownUser": "Unknown user",
+  "addedBy": "Added by {{name}}",
   "loginTitle": "Your finances, clearly.",
   "loginDescription": "Sign in securely to your private workspace.",
   "loginNote": "Only Google sign-in is supported. No financial data is shared with Google.",

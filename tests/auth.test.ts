@@ -187,13 +187,49 @@ describe("Google sign-in and shared finance access", () => {
         categoryId,
         amount: { minorUnits: "100", currencyCode: "EUR" },
         includeInBudget: true,
+        createdByUserId: "forged-creator",
+        creatorDisplayName: "Forged name",
+        creatorPictureUrl: "https://example.invalid/forged.png",
       },
     });
     expect(created.statusCode, created.body).toBe(201);
-    const id = (JSON.parse(created.body) as { id: string }).id;
+    const createdBody = JSON.parse(created.body) as {
+      id: string;
+      createdByUserId: string;
+      creatorDisplayName: string;
+      creatorPictureUrl: string;
+    };
+    const id = createdBody.id;
     const bob = await signIn("bob");
     const bobCookie = firstCookie(bob.headers["set-cookie"], "finance_session");
     const aliceUser = (JSON.parse(alice.body) as { user: { id: string } }).user;
+    expect(createdBody).toMatchObject({
+      createdByUserId: aliceUser.id,
+      creatorDisplayName: "alice",
+      creatorPictureUrl: "https://lh3.googleusercontent.com/test-photo",
+    });
+    const bobRead = await context.app.inject({
+      url: `/api/v1/transactions/${id}`,
+      headers: { cookie: bobCookie },
+    });
+    expect(JSON.parse(bobRead.body)).toMatchObject({
+      createdByUserId: aliceUser.id,
+      creatorDisplayName: "alice",
+      creatorPictureUrl: "https://lh3.googleusercontent.com/test-photo",
+    });
+    const bobList = await context.app.inject({
+      url: "/api/v1/transactions",
+      headers: { cookie: bobCookie },
+    });
+    expect(
+      (JSON.parse(bobList.body) as { transactions: unknown[] }).transactions,
+    ).toContainEqual(
+      expect.objectContaining({
+        id,
+        createdByUserId: aliceUser.id,
+        creatorDisplayName: "alice",
+      }),
+    );
     expect(
       (
         await context.app.inject({

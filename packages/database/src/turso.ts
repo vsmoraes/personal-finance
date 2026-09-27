@@ -141,15 +141,44 @@ export function createTursoAdapter(
   client: Client,
   actorId = "system",
 ): FinanceStore {
+  const transactionSelect =
+    "SELECT transactions.payload AS payload, transactions.created_by_user_id AS creatorId, users.display_name AS creatorName, users.picture_url AS creatorPicture FROM transactions LEFT JOIN users ON users.id = transactions.created_by_user_id";
   const repo = <T extends Entity>(
     table: string,
     schema: Parameters<typeof fromJsonString>[0],
   ): Repository<T> => ({
     list: async () =>
-      (await client.execute(`SELECT payload FROM ${table}`)).rows.map(
-        (row) => fromJsonString(schema, String(row["payload"])) as unknown as T,
-      ),
+      table === tables.transactions
+        ? (await client.execute(transactionSelect)).rows.map(
+            (row) =>
+              ({
+                ...fromJsonString(schema, String(row["payload"])),
+                createdByUserId: String(row["creatorId"]),
+                creatorDisplayName: String(row["creatorName"] ?? ""),
+                creatorPictureUrl: String(row["creatorPicture"] ?? ""),
+              }) as unknown as T,
+          )
+        : (await client.execute(`SELECT payload FROM ${table}`)).rows.map(
+            (row) =>
+              fromJsonString(schema, String(row["payload"])) as unknown as T,
+          ),
     get: async (id) => {
+      if (table === tables.transactions) {
+        const row = (
+          await client.execute({
+            sql: `${transactionSelect} WHERE transactions.id = ?`,
+            args: [id],
+          })
+        ).rows[0];
+        return row
+          ? ({
+              ...fromJsonString(schema, String(row["payload"])),
+              createdByUserId: String(row["creatorId"]),
+              creatorDisplayName: String(row["creatorName"] ?? ""),
+              creatorPictureUrl: String(row["creatorPicture"] ?? ""),
+            } as unknown as T)
+          : undefined;
+      }
       const row = (
         await client.execute({
           sql: `SELECT payload FROM ${table} WHERE id = ?`,

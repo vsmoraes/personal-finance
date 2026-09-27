@@ -9,6 +9,15 @@ import {
 import { FinanceResponseSchema } from "../../packages/contracts/src/finance/v1/finance_pb.js";
 
 test.beforeEach(async ({ request, page, baseURL }) => {
+  await page.route(
+    "https://lh3.googleusercontent.com/e2e-avatar.svg",
+    async (route) => {
+      await route.fulfill({
+        contentType: "image/svg+xml",
+        body: '<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40"><circle cx="20" cy="20" r="20" fill="#1d7658"/></svg>',
+      });
+    },
+  );
   const origin = new URL(baseURL ?? "http://127.0.0.1:8083").origin;
   const csrf = await request.get("/api/v1/auth/csrf");
   const csrfBody = (await csrf.json()) as { csrfToken: string };
@@ -62,7 +71,7 @@ async function expectFrostedModal(page: Page) {
   expect(styles.blur).toContain("blur(");
 }
 
-test("the account control expands from the right edge on hover", async ({
+test("the account control expands the top bar downward on hover", async ({
   page,
 }) => {
   await page.goto("/");
@@ -77,9 +86,32 @@ test("the account control expands from the right edge on hover", async ({
   expect(bar!.x + bar!.width - (photo!.x + photo!.width)).toBeLessThan(30);
   await profile.hover();
   await expect(signOut).toBeVisible();
+  await expect(page.locator(".finance-topbar")).toHaveClass(/is-expanded/);
+  await expect
+    .poll(
+      async () => (await page.locator(".finance-topbar").boundingBox())?.height,
+    )
+    .toBeGreaterThan(bar!.height + 50);
+  const expandedBar = await page.locator(".finance-topbar").boundingBox();
+  const signOutPosition = await signOut.boundingBox();
+  expect(expandedBar!.height).toBeGreaterThan(bar!.height + 50);
+  expect(signOutPosition!.y).toBeGreaterThan(photo!.y + photo!.height);
+  expect(signOutPosition!.x).toBeGreaterThan(
+    expandedBar!.x + expandedBar!.width / 2,
+  );
+  expect(
+    expandedBar!.x +
+      expandedBar!.width -
+      (signOutPosition!.x + signOutPosition!.width),
+  ).toBeLessThan(40);
   await expect(page.locator(".finance-user-menu-details > span")).toHaveText(
     "E2E Tester",
   );
+  if ((page.viewportSize()?.width ?? 0) > 800) {
+    await page.locator("#nav-group-workspace").hover();
+    await expect(signOut).toBeHidden();
+    await expect(page.locator("#nav-link-overview")).toBeVisible();
+  }
 });
 
 test("the login language selector translates the page and persists", async ({
@@ -118,7 +150,16 @@ test("transaction create, filter, edit and delete use stable IDs", async ({
   ).transactions[0];
   expect(created?.amount?.minorUnits).toBe(1234n);
   await page.locator("#transaction-filter-search").fill(note);
+  await expect(
+    page.locator(
+      `#transaction-row-${created?.id} .finance-transaction-icon img`,
+    ),
+  ).toHaveAttribute("src", "https://lh3.googleusercontent.com/e2e-avatar.svg");
   await page.locator(`#transaction-row-${created?.id}`).click();
+  await expect(page.locator(".finance-tx-icon img")).toHaveAttribute(
+    "src",
+    "https://lh3.googleusercontent.com/e2e-avatar.svg",
+  );
   await page.locator("#transaction-edit-button").click();
   await page.locator("#amount").fill("13.45");
   await page.locator("#transaction-form-save").click();

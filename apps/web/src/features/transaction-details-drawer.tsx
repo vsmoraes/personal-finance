@@ -8,9 +8,8 @@ import {
 } from "../../../../packages/contracts/src/finance/v1/finance_pb.ts";
 import { formatMoney } from "../../../../packages/domain/src/money.ts";
 import { categoryName, useResources, useSettings } from "../shared/api.ts";
-import { CategoryIcon } from "../shared/category-icons.tsx";
 import { formatDate } from "../shared/dates.ts";
-import { Button, Modal } from "../shared/design-system.tsx";
+import { Avatar, Button, Modal } from "../shared/design-system.tsx";
 import { TransactionForm } from "./transaction-form.tsx";
 
 export function TransactionDetailsDrawer({
@@ -26,6 +25,10 @@ export function TransactionDetailsDrawer({
   const settings = useSettings().data;
   const categories = useResources("categories").data?.categories ?? [];
   const [editing, setEditing] = useState(false);
+  const creator =
+    transaction?.createdByUserId === "system"
+      ? t("systemUser")
+      : transaction?.creatorDisplayName || t("unknownUser");
   const close = () => {
     setEditing(false);
     onClose();
@@ -68,14 +71,14 @@ export function TransactionDetailsDrawer({
         ) : (
           <div className="finance-transaction-detail">
             <div className="finance-merchant">
-              <div className="finance-tx-icon">
-                <CategoryIcon
-                  name={
-                    categories.find(
-                      (category) => category.id === transaction.categoryId,
-                    )?.icon ?? ""
-                  }
-                />
+              <div className="finance-tx-icon" title={creator}>
+                <Avatar
+                  src={transaction.creatorPictureUrl || undefined}
+                  size={50}
+                  alt={creator}
+                >
+                  {creator.charAt(0).toUpperCase()}
+                </Avatar>
               </div>
               <div>
                 <h2>{transaction.counterparty || t("unknown")}</h2>
@@ -85,6 +88,8 @@ export function TransactionDetailsDrawer({
                       ? "income"
                       : "expenses",
                   )}
+                  {" · "}
+                  {t("addedBy", { name: creator })}
                 </span>
               </div>
             </div>
