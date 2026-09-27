@@ -21,6 +21,7 @@ type Entity = {
   date?: p.Date;
   type?: number;
   counterparty?: string;
+  createdAt?: string;
 };
 const tables = {
   categories: "categories",
@@ -42,6 +43,7 @@ export async function openTurso(
   for (const [version, filename] of [
     [1, "0001_initial.sql"],
     [2, "0002_native_currency.sql"],
+    [3, "0003_users.sql"],
   ] as const) {
     const migration = readFileSync(
       resolve("packages/database/migrations", filename),
@@ -98,8 +100,13 @@ export async function openTurso(
     });
     const rows = [
       {
-        sql: "INSERT INTO application_settings VALUES (?, ?, ?)",
-        args: ["application", toJsonString(p.SettingsSchema, settings), 1],
+        sql: "INSERT INTO application_settings (id, payload, version, created_at) VALUES (?, ?, ?, ?)",
+        args: [
+          "application",
+          toJsonString(p.SettingsSchema, settings),
+          1,
+          new Date().toISOString(),
+        ],
       },
     ];
     for (const [position, slug] of categorySlugs.entries()) {
@@ -116,8 +123,13 @@ export async function openTurso(
         version: 1,
       });
       rows.push({
-        sql: "INSERT INTO categories VALUES (?, ?, ?)",
-        args: [category.id, toJsonString(p.CategorySchema, category), 1],
+        sql: "INSERT INTO categories (id, payload, version, created_at) VALUES (?, ?, ?, ?)",
+        args: [
+          category.id,
+          toJsonString(p.CategorySchema, category),
+          1,
+          new Date().toISOString(),
+        ],
       });
     }
     await client.batch(rows, "write");
@@ -125,7 +137,10 @@ export async function openTurso(
   return { client, close: () => client.close() };
 }
 
-export function createTursoAdapter(client: Client): FinanceStore {
+export function createTursoAdapter(
+  client: Client,
+  actorId = "system",
+): FinanceStore {
   const repo = <T extends Entity>(
     table: string,
     schema: Parameters<typeof fromJsonString>[0],
@@ -159,7 +174,7 @@ export function createTursoAdapter(client: Client): FinanceStore {
       if (table === "transactions") {
         const tx = value as Entity;
         await client.execute({
-          sql: "INSERT INTO transactions (id, category_id, date, type, currency, amount, counterparty, payload, version, dedup) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+          sql: "INSERT INTO transactions (id, category_id, date, type, currency, amount, counterparty, payload, version, dedup, created_by_user_id, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
           args: [
             tx.id,
             tx.categoryId ?? "",
@@ -171,6 +186,8 @@ export function createTursoAdapter(client: Client): FinanceStore {
             payload,
             tx.version,
             deduplicationKey ?? null,
+            actorId,
+            tx.createdAt ?? new Date().toISOString(),
           ],
         });
       } else if (
@@ -179,13 +196,20 @@ export function createTursoAdapter(client: Client): FinanceStore {
         )
       )
         await client.execute({
-          sql: `INSERT INTO ${table} (id, category_id, payload, version) VALUES (?, ?, ?, ?)`,
-          args: [value.id, value.categoryId ?? "", payload, value.version],
+          sql: `INSERT INTO ${table} (id, category_id, payload, version, created_by_user_id, created_at) VALUES (?, ?, ?, ?, ?, ?)`,
+          args: [
+            value.id,
+            value.categoryId ?? "",
+            payload,
+            value.version,
+            actorId,
+            new Date().toISOString(),
+          ],
         });
       else
         await client.execute({
-          sql: `INSERT INTO ${table} (id, payload, version) VALUES (?, ?, ?)`,
-          args: common,
+          sql: `INSERT INTO ${table} (id, payload, version, created_by_user_id, created_at) VALUES (?, ?, ?, ?, ?)`,
+          args: [...common, actorId, new Date().toISOString()],
         });
     },
     remove: async (id, version) => {
@@ -224,13 +248,14 @@ export function createTursoAdapter(client: Client): FinanceStore {
     },
     audit: async (entity, action, entityId) => {
       await client.execute({
-        sql: "INSERT INTO audit_events VALUES (?, ?, ?, ?, ?)",
+        sql: "INSERT INTO audit_events (id, entity, action, entity_id, created_at, created_by_user_id) VALUES (?, ?, ?, ?, ?, ?)",
         args: [
           randomUUID(),
           entity,
           action,
           entityId,
           new Date().toISOString(),
+          actorId,
         ],
       });
     },
@@ -244,7 +269,7 @@ export function createTursoAdapter(client: Client): FinanceStore {
       const row = (
         await client.execute({
           sql: "SELECT hash, payload FROM idempotency_keys WHERE id = ?",
-          args: [id],
+          args: [actorId === "system" ? id : `${actorId}:${id}`],
         })
       ).rows[0];
       return row
@@ -253,8 +278,14 @@ export function createTursoAdapter(client: Client): FinanceStore {
     },
     saveIdempotency: async (id, hash, payload) => {
       await client.execute({
-        sql: "INSERT INTO idempotency_keys VALUES (?, ?, ?)",
-        args: [id, hash, payload],
+        sql: "INSERT INTO idempotency_keys (id, hash, payload, created_by_user_id, created_at) VALUES (?, ?, ?, ?, ?)",
+        args: [
+          actorId === "system" ? id : `${actorId}:${id}`,
+          hash,
+          payload,
+          actorId,
+          new Date().toISOString(),
+        ],
       });
     },
     getImport: async (id) => {
@@ -272,22 +303,26 @@ export function createTursoAdapter(client: Client): FinanceStore {
       const payload = toJsonString(p.ImportResponseSchema, value);
       if (request) {
         await client.execute({
-          sql: "INSERT INTO imports VALUES (?, ?, ?, ?, ?)",
+          sql: "INSERT INTO imports (id, payload, request, status, created_at, created_by_user_id, created_at_metadata) VALUES (?, ?, ?, ?, ?, ?, ?)",
           args: [
             value.id,
             payload,
             toJsonString(p.ImportRequestSchema, request),
             value.status,
             value.createdAt,
+            actorId,
+            value.createdAt,
           ],
         });
         for (const row of value.rows)
           await client.execute({
-            sql: "INSERT INTO import_rows VALUES (?, ?, ?)",
+            sql: "INSERT INTO import_rows (id, import_id, payload, created_by_user_id, created_at) VALUES (?, ?, ?, ?, ?)",
             args: [
               `${value.id}:${row.rowNumber}`,
               value.id,
               toJsonString(p.ImportRowSchema, row),
+              actorId,
+              value.createdAt,
             ],
           });
       } else

@@ -7,6 +7,8 @@ import {
 } from "drizzle-orm/sqlite-core";
 export const categories = sqliteTable("categories", {
   id: text("id").primaryKey(),
+  createdByUserId: text("created_by_user_id").notNull(),
+  createdAt: text("created_at"),
   payload: text("payload").notNull(),
   version: integer("version").notNull(),
 });
@@ -14,6 +16,8 @@ export const transactions = sqliteTable(
   "transactions",
   {
     id: text("id").primaryKey(),
+    createdByUserId: text("created_by_user_id").notNull(),
+    createdAt: text("created_at"),
     categoryId: text("category_id")
       .notNull()
       .references(() => categories.id),
@@ -34,6 +38,8 @@ export const transactions = sqliteTable(
 );
 export const budgets = sqliteTable("budgets", {
   id: text("id").primaryKey(),
+  createdByUserId: text("created_by_user_id").notNull(),
+  createdAt: text("created_at"),
   categoryId: text("category_id")
     .notNull()
     .references(() => categories.id),
@@ -42,6 +48,8 @@ export const budgets = sqliteTable("budgets", {
 });
 export const commitments = sqliteTable("recurring_commitments", {
   id: text("id").primaryKey(),
+  createdByUserId: text("created_by_user_id").notNull(),
+  createdAt: text("created_at"),
   categoryId: text("category_id")
     .notNull()
     .references(() => categories.id),
@@ -50,6 +58,8 @@ export const commitments = sqliteTable("recurring_commitments", {
 });
 export const rules = sqliteTable("categorization_rules", {
   id: text("id").primaryKey(),
+  createdByUserId: text("created_by_user_id").notNull(),
+  createdAt: text("created_at"),
   categoryId: text("category_id")
     .notNull()
     .references(() => categories.id),
@@ -58,16 +68,22 @@ export const rules = sqliteTable("categorization_rules", {
 });
 export const scenarios = sqliteTable("scenarios", {
   id: text("id").primaryKey(),
+  createdByUserId: text("created_by_user_id").notNull(),
+  createdAt: text("created_at"),
   payload: text("payload").notNull(),
   version: integer("version").notNull(),
 });
 export const settings = sqliteTable("application_settings", {
   id: text("id").primaryKey(),
+  createdByUserId: text("created_by_user_id").notNull(),
+  createdAt: text("created_at"),
   payload: text("payload").notNull(),
   version: integer("version").notNull(),
 });
 export const imports = sqliteTable("imports", {
   id: text("id").primaryKey(),
+  createdByUserId: text("created_by_user_id").notNull(),
+  createdAtMetadata: text("created_at_metadata"),
   payload: text("payload").notNull(),
   request: text("request").notNull(),
   status: text("status").notNull(),
@@ -75,6 +91,8 @@ export const imports = sqliteTable("imports", {
 });
 export const importRows = sqliteTable("import_rows", {
   id: text("id").primaryKey(),
+  createdByUserId: text("created_by_user_id").notNull(),
+  createdAt: text("created_at"),
   importId: text("import_id")
     .notNull()
     .references(() => imports.id),
@@ -82,6 +100,7 @@ export const importRows = sqliteTable("import_rows", {
 });
 export const audit = sqliteTable("audit_events", {
   id: text("id").primaryKey(),
+  createdByUserId: text("created_by_user_id").notNull(),
   entity: text("entity").notNull(),
   action: text("action").notNull(),
   entityId: text("entity_id").notNull(),
@@ -89,6 +108,8 @@ export const audit = sqliteTable("audit_events", {
 });
 export const idempotency = sqliteTable("idempotency_keys", {
   id: text("id").primaryKey(),
+  createdByUserId: text("created_by_user_id").notNull(),
+  createdAt: text("created_at"),
   hash: text("hash").notNull(),
   payload: text("payload").notNull(),
 });

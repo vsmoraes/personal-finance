@@ -143,7 +143,7 @@ it("migrates conversion-era records without changing original money, identity, o
           migrated.sqlite
             .prepare("SELECT count(*) AS count FROM schema_migrations")
             .get(),
-        ).toEqual({ count: 2 });
+        ).toEqual({ count: 3 });
         expect(
           migrated.sqlite.pragma("integrity_check", { simple: true }),
         ).toBe("ok");

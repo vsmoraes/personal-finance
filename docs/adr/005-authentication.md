@@ -1,5 +1,5 @@
-# ADR 005 — Authentication is deferred
+# ADR 005 — Google sign-in and private data
 
 Status: accepted.
 
-Authentication is explicitly out of scope. The service is suitable for local use or a trusted private network. Bind to loopback by default. External access must pass through an authenticated proxy, VPN, or equivalent access control. Same-origin checks, CSP, request limits, and financial log redaction are defense in depth; they are not authentication and do not make a public unauthenticated deployment acceptable.
+Google Identity Services is the only login method. The Fastify backend verifies ID tokens, identifies accounts by `sub`, and issues opaque, revocable sessions. Authentication gates every finance API route, but signed-in users share all finance resources. A `created_by_user_id` field is attribution, not an authorization boundary. The migration creates a system user and attributes pre-authentication records to it. HTTPS is required at the public reverse proxy.

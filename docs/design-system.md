@@ -39,3 +39,7 @@ Charts derive a twelve-shade palette from the active accent hue and page backgro
 Light and dark palettes are selected with `data-ds-tone` on the document root. The `system` setting follows the operating system. A custom theme uses its saved background, surface, primary and secondary accents, navigation accents, and light/dark mode. CSS variables reach custom layouts and portaled popups while the Ant Design theme supplies component tokens. Foreground text on primary buttons is calculated from the chosen accent for contrast.
 
 When adding UI, import components from `shared/design-system.tsx`, compose forms with `shared/forms.tsx`, and use existing design tokens for any new layout-specific SCSS. Vite compiles `styles.scss` and `design-system.scss` with Dart Sass in local development and production. Do not introduce feature-local button, input, or surface styling.
+
+# Authentication surface
+
+The sign-in page uses the same frosted surface, theme tokens, blur, border, and responsive sizing as the rest of the design system. The Google sign-in control is rendered by Google Identity Services inside the design-system login card; it is intentionally not recreated with local button styles. The sign-out control uses the shared `Button` component.

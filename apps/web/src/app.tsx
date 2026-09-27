@@ -7,6 +7,7 @@ import {
   SwapOutlined,
   WalletOutlined,
 } from "@ant-design/icons";
+import { useQuery } from "@tanstack/react-query";
 import en from "antd/locale/en_US.js";
 import es from "antd/locale/es_ES.js";
 import pt from "antd/locale/pt_BR.js";
@@ -22,6 +23,13 @@ import { SettingsPage } from "./features/settings.tsx";
 import { Transactions } from "./features/transactions.tsx";
 import { useSettings } from "./shared/api.ts";
 import {
+  type AuthUser,
+  currentSession,
+  LoginPage,
+  SignOutButton,
+  UserPhoto,
+} from "./shared/auth.tsx";
+import {
   App as AntApp,
   Button,
   ConfigProvider,
@@ -32,6 +40,16 @@ import {
 } from "./shared/design-system.tsx";
 import { ErrorNotice, Loading, Retry } from "./shared/ui.tsx";
 export function App() {
+  const session = useQuery({
+    queryKey: ["session"],
+    queryFn: currentSession,
+    retry: false,
+  });
+  if (session.isPending) return <Loading />;
+  if (session.isError) return <LoginPage />;
+  return <AuthenticatedApp user={session.data.user} />;
+}
+function AuthenticatedApp({ user }: { user: AuthUser }) {
   const { t, i18n } = useTranslation();
   const settingsQuery = useSettings();
   const settings = settingsQuery.data;
@@ -88,6 +106,7 @@ export function App() {
       <AntApp>
         <Workspace
           dark={dark}
+          user={user}
           {...(custom
             ? { sidebarAccent: settings?.customSidebarAccent || "#1677FF" }
             : {})}
@@ -96,7 +115,14 @@ export function App() {
     </ConfigProvider>
   );
 }
-function Workspace({ dark }: { dark: boolean; sidebarAccent?: string }) {
+function Workspace({
+  dark,
+  user,
+}: {
+  dark: boolean;
+  user: AuthUser;
+  sidebarAccent?: string;
+}) {
   const { t } = useTranslation();
   const location = useLocation();
   const [moreOpen, setMoreOpen] = useState(false);
@@ -233,6 +259,7 @@ function Workspace({ dark }: { dark: boolean; sidebarAccent?: string }) {
         </Link>
         {desktopNavigation}
         <div className="finance-topbar-spacer" aria-hidden="true" />
+        <UserPhoto user={user} compact />
       </header>
       <main
         id={`page-${location.pathname === "/" ? "overview" : location.pathname.slice(1)}`}
@@ -348,6 +375,8 @@ function Workspace({ dark }: { dark: boolean; sidebarAccent?: string }) {
                 </div>
               );
             })}
+            <UserPhoto user={user} />
+            <SignOutButton id="mobile-sign-out-button" />
           </section>
         </div>
       )}

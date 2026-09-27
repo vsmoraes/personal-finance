@@ -29,7 +29,7 @@ Every financial mutation and its audit event share one immediate SQLite transact
 
 SQLite access is synchronous and deliberately short-lived. This is a local single-profile application, not a high-throughput hosted service. Filtered reports currently load the profile's records into the application layer so that exact bigint aggregation is independent of SQLite numeric coercion. For very large datasets, replace the query side with indexed projections behind the same ports, preserving exact arithmetic and currency isolation.
 
-The trusted profile is application-wide. Future authentication belongs in a driving adapter. Future tenancy would require a deliberate repository scope and migration; no imaginary user columns or identity services exist today.
+Google sign-in is verified at the Fastify boundary. Every finance API request requires a session. All signed-in users share the application-wide finance profile; repository writes record the creator's internal user ID and creation time. Pre-authentication rows are attributed to the system user.
 
 ## Shared UI entry boundary
 

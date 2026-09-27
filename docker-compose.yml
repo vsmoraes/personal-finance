@@ -9,6 +9,8 @@ services:
       DATABASE_URL: file:/data/finance.db
       HOST: 0.0.0.0
       PORT: 8080
+      APP_ORIGIN: ${APP_ORIGIN:-http://localhost:8080}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:?Set the Google web client ID in .env}
     user: "${FINANCE_UID:-1000}:${FINANCE_GID:-1000}"
     read_only: true
     tmpfs:

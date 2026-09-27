@@ -1,4 +1,5 @@
 import { defineConfig, devices } from "@playwright/test";
+const e2eBaseUrl = process.env["E2E_BASE_URL"] ?? "http://127.0.0.1:8083";
 export default defineConfig({
   testDir: "tests/e2e",
   fullyParallel: false,
@@ -10,15 +11,15 @@ export default defineConfig({
     timeout: 5_000,
   },
   use: {
-    baseURL: process.env["E2E_BASE_URL"] ?? "http://127.0.0.1:8081",
+    baseURL: e2eBaseUrl,
+    extraHTTPHeaders: { origin: new URL(e2eBaseUrl).origin },
     trace: "retain-on-failure",
   },
   webServer: process.env["E2E_BASE_URL"]
     ? []
     : {
-        command:
-          "PORT=8081 DATABASE_URL=file:./data/e2e.db node dist/apps/api/src/main.js",
-        url: "http://127.0.0.1:8081/readyz",
+        command: "corepack pnpm exec tsx scripts/e2e-server.ts",
+        url: "http://127.0.0.1:8083/readyz",
         reuseExistingServer: !process.env["CI"],
       },
   projects: [

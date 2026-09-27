@@ -1,9 +1,7 @@
 import { execFileSync, spawnSync } from "node:child_process";
-import { randomUUID } from "node:crypto";
 
-import { fromJsonString } from "@bufbuild/protobuf";
+import Database from "better-sqlite3";
 
-import { TransactionSchema } from "../packages/contracts/src/finance/v1/finance_pb.js";
 const dockerPlugin = spawnSync("docker", ["compose", "version"]).status === 0;
 const compose = (...args: string[]) =>
   execFileSync(
@@ -23,40 +21,41 @@ async function ready() {
   }
   throw new Error("Container did not become ready");
 }
+function databaseState() {
+  const db = new Database("data/finance.db", { readonly: true });
+  try {
+    const system = db
+      .prepare("SELECT count(*) AS n FROM users WHERE id = 'system'")
+      .get() as { n: number };
+    const transactions = db
+      .prepare("SELECT count(*) AS n FROM transactions")
+      .get() as { n: number };
+    return { system: system.n, transactions: transactions.n };
+  } finally {
+    db.close();
+  }
+}
+async function protectedApi() {
+  const response = await fetch(`${base}/api/v1/transactions`);
+  if (response.status !== 401)
+    throw new Error(`Unauthenticated API returned ${response.status}`);
+}
 compose("up", "-d", "--build");
 await ready();
-const response = await fetch(`${base}/api/v1/transactions`, {
-  method: "POST",
-  headers: {
-    "content-type": "application/json",
-    "idempotency-key": randomUUID(),
-  },
-  body: JSON.stringify({
-    date: { year: 2026, month: 1, day: 1 },
-    type: "TRANSACTION_TYPE_EXPENSE",
-    categoryId: "groceries",
-    amount: { minorUnits: "1", currencyCode: "EUR" },
-    note: "Automated persistence smoke test",
-    includeInBudget: true,
-  }),
-});
-if (response.status !== 201)
-  throw new Error(`Create failed: ${response.status}`);
-const saved = fromJsonString(TransactionSchema, await response.text());
+await protectedApi();
+const before = databaseState();
+if (before.system !== 1) throw new Error("System user missing");
 for (const args of [["restart"], ["up", "-d", "--force-recreate"]]) {
   compose(...args);
   await ready();
-  const restored = await fetch(`${base}/api/v1/transactions/${saved.id}`);
-  if (!restored.ok) throw new Error("Persistence verification failed");
-  const transaction = fromJsonString(TransactionSchema, await restored.text());
-  if (transaction.amount?.minorUnits !== 1n)
-    throw new Error("Persisted amount changed");
+  await protectedApi();
+  const after = databaseState();
+  if (
+    after.system !== before.system ||
+    after.transactions !== before.transactions
+  )
+    throw new Error("Docker persistence verification failed");
 }
-const deleted = await fetch(`${base}/api/v1/transactions/${saved.id}`, {
-  method: "DELETE",
-  headers: { "if-match": String(saved.version) },
-});
-if (deleted.status !== 204) throw new Error("Smoke cleanup failed");
 process.stdout.write(
-  "Docker health, restart, recreation and database persistence verified.\n",
+  "Docker authentication gate, restart, recreation and database persistence verified.\n",
 );

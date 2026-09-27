@@ -3,11 +3,11 @@
 [![CI](https://github.com/vsmoraes/personal-finance/actions/workflows/ci.yml/badge.svg)](https://github.com/vsmoraes/personal-finance/actions/workflows/ci.yml)
 [![Release](https://github.com/vsmoraes/personal-finance/actions/workflows/release.yml/badge.svg)](https://github.com/vsmoraes/personal-finance/actions/workflows/release.yml)
 
-A private, single-profile finance app for transactions, budgets, forecasts, reports, and CSV imports. It keeps every amount in its original currency—there is no exchange-rate conversion.
+A private finance app for transactions, budgets, forecasts, reports, and CSV imports. It keeps every amount in its original currency—there is no exchange-rate conversion.
 
 The UI is React, TypeScript, and Ant Design. The API is Fastify, the database is SQLite, and the API contracts are generated from Protobuf.
 
-> **No built-in authentication.** Run it locally or behind a trusted VPN/reverse proxy. Do not expose it directly to the public internet.
+Sign-in uses Google Identity Services and a server-side session. For internet access, terminate HTTPS at a trusted reverse proxy and set `APP_ORIGIN` to its public HTTPS origin.
 
 ## Try it with Docker
 
@@ -26,6 +26,8 @@ curl --fail http://localhost:8080/readyz
 ```
 
 The database is stored at `./data/finance.db`, outside the container. Removing or updating the image does not remove your data. Keep the `data/` directory and back it up.
+
+Copy `.env.example` to `.env` and set `GOOGLE_CLIENT_ID` to your web client ID. `.env` is ignored by git. In Google Cloud Console, configure these exact Authorized JavaScript origins for local development: `http://localhost:8080`, `http://127.0.0.1:8080`, and (if running Vite) `http://127.0.0.1:5173`. This implementation uses the GIS popup callback, so no Authorized redirect URI is needed. Set `APP_ORIGIN` to the exact browser origin you use when deploying; configure that same HTTPS origin as an Authorized JavaScript origin. The production origin cannot be listed here until its actual HTTPS URL is supplied. A Google OAuth client secret is **not** an origin and is not needed for this flow; rotate any secret accidentally shared.
 
 ## Develop locally
 
@@ -75,10 +77,18 @@ chmod 700 /volume1/docker/personal-finance/data
 export FINANCE_IMAGE=ghcr.io/OWNER/personal-finance
 export FINANCE_TAG=v1.2.3
 export SYNOLOGY_DATA_DIR=/volume1/docker/personal-finance/data
+export APP_ORIGIN=https://your-actual-finance-domain.example
+export GOOGLE_CLIENT_ID=your-google-web-client-id
 docker compose -f docker-compose.synology.yml up -d
 ```
 
 Use a pinned version tag for upgrades. Keep the NAS port private and place Synology Reverse Proxy or a VPN in front of the app.
+
+`GOOGLE_CLIENT_ID` is required via the environment; it is never hard-coded in tracked source. The browser must receive this public OAuth client identifier to render the Google Identity Services button, so it cannot be kept secret from a visitor. Google ID tokens are never persisted or logged. `APP_ORIGIN` is required for production and must match the browser's HTTPS origin. `DATABASE_URL` controls the persisted SQLite file; `DATABASE_DRIVER=turso`, `DATABASE_URL`, and `TURSO_AUTH_TOKEN` can select the existing Turso option. No Google client secret, API scopes beyond identity, or external auth service is required. Session tokens are random, stored only as hashes in the database, and sent as Secure (for HTTPS), HttpOnly, SameSite=Strict cookies. Keep the data directory private and backed up.
+
+All signed-in users share the same resources and settings. The migration creates a `system` user and attributes existing records to it; new records store their creator's internal user ID and creation time. Legacy creation times are copied from record payloads where available; otherwise the migration time is recorded. No per-user access restriction or ownership claim is inferred from the old data.
+
+All finance API routes require a valid session. The minimal sign-in bootstrap (`/api/v1/auth/config`, `/api/v1/auth/csrf`, `/api/v1/auth/google`) must be reachable before authentication; `/healthz` and `/readyz` remain data-free operational probes. Unauthenticated visitors see only the login page. There is no unauthenticated finance data access.
 
 ## Data and backups
 

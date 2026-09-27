@@ -77,10 +77,11 @@ export function TransactionForm({
   });
   const selectedType = useWatch({ control: form.control, name: "type" });
   useEffect(() => {
+    if (!categories.length) return;
     const current = categories.find(
       (c) => c.id === form.getValues("categoryId"),
     );
-    if (current && String(current.type) !== selectedType) {
+    if (!current || String(current.type) !== selectedType) {
       const next = categories.find(
         (c) => String(c.type) === selectedType && !c.archived,
       );
@@ -94,7 +95,12 @@ export function TransactionForm({
         ...create(TransactionSchema, transaction),
         date: parseDate(values.date),
         type: Number(values.type),
-        categoryId: values.categoryId,
+        categoryId:
+          categories.find(
+            (category) =>
+              category.id === values.categoryId ||
+              category.slug === values.categoryId,
+          )?.id ?? values.categoryId,
         amount: money(
           parseAmount(values.amount, settings?.defaultCurrency ?? "EUR"),
           settings?.defaultCurrency ?? "EUR",

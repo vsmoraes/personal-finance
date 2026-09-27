@@ -11,6 +11,8 @@ services:
       HOST: 0.0.0.0
       PORT: 8080
       NODE_ENV: production
+      APP_ORIGIN: ${APP_ORIGIN:?Set the public HTTPS origin}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:?Set the Google web client ID}
     read_only: true
     tmpfs:
       - /tmp:size=16m,mode=1777

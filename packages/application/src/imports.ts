@@ -80,7 +80,8 @@ export function importService(
                   ? p.TransactionType.EXPENSE
                   : p.TransactionType.INCOME;
           const categoryText = cell("category");
-          const category = (await svc.allCategories()).find(
+          const categories = await svc.allCategories();
+          const category = categories.find(
             (c) =>
               Boolean(categoryText) &&
               (c.id === categoryText ||
@@ -92,9 +93,14 @@ export function importService(
             type,
             categoryId:
               category?.id ??
-              (type === p.TransactionType.INCOME
-                ? "other-income"
-                : "other-expenses"),
+              categories.find(
+                (candidate) =>
+                  candidate.slug ===
+                  (type === p.TransactionType.INCOME
+                    ? "other-income"
+                    : "other-expenses"),
+              )?.id ??
+              "",
             amount: money(parseAmount(amount, currency), currency),
             counterparty: cell("counterparty"),
             note: cell("note"),

@@ -67,10 +67,11 @@ export async function saveMessage<D extends DescMessage>(
     await request(path, method, toJson(schema, message), headers),
   );
 }
-export function useSettings() {
+export function useSettings(enabled = true) {
   return useQuery({
     queryKey: ["settings"],
     queryFn: () => getMessage("settings", SettingsSchema),
+    enabled,
   });
 }
 export function useResources(path: string) {

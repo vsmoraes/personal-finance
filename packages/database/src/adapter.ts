@@ -1,4 +1,6 @@
 /* eslint-disable @typescript-eslint/require-await */
+import { randomUUID } from "node:crypto";
+
 import {
   type DescMessage,
   fromJsonString,
@@ -13,8 +15,13 @@ import { dateString } from "../../domain/src/finance.js";
 import { assert, DomainError } from "../../domain/src/money.js";
 import { type Store } from "./index.js";
 import * as t from "./schema.js";
-export function createSqliteAdapter(store: Store): FinanceStore {
-  let tail = Promise.resolve();
+const atomicTails = new WeakMap<Store, Promise<void>>();
+export function createSqliteAdapter(
+  store: Store,
+  actorId = "system",
+): FinanceStore {
+  const scopedId = (id: string) =>
+    actorId === "system" ? id : `${actorId}:${id}`;
   function repository<D extends DescMessage>(
     schema: D,
     table:
@@ -53,6 +60,10 @@ export function createSqliteAdapter(store: Store): FinanceStore {
           payload: toJsonString(schema, value),
           version: value.version,
         };
+        const metadata = {
+          createdByUserId: actorId,
+          createdAt: new Date().toISOString(),
+        };
         if (table === t.transactions) {
           const transaction = fromJsonString(
             p.TransactionSchema,
@@ -82,7 +93,12 @@ export function createSqliteAdapter(store: Store): FinanceStore {
           } else
             store.db
               .insert(t.transactions)
-              .values({ ...values, dedup: deduplicationKey ?? null })
+              .values({
+                ...values,
+                ...metadata,
+                createdAt: transaction.createdAt || metadata.createdAt,
+                dedup: deduplicationKey ?? null,
+              })
               .run();
         } else if ("categoryId" in table) {
           assert("categoryId" in value && typeof value.categoryId === "string");
@@ -96,7 +112,11 @@ export function createSqliteAdapter(store: Store): FinanceStore {
               )
               .run();
             assert(result.changes === 1, "CONFLICT", 409);
-          } else store.db.insert(table).values(values).run();
+          } else
+            store.db
+              .insert(table)
+              .values({ ...values, ...metadata })
+              .run();
         } else {
           if (expectedVersion !== undefined) {
             const result = store.db
@@ -107,7 +127,11 @@ export function createSqliteAdapter(store: Store): FinanceStore {
               )
               .run();
             assert(result.changes === 1, "CONFLICT", 409);
-          } else store.db.insert(table).values(fields).run();
+          } else
+            store.db
+              .insert(table)
+              .values({ ...fields, ...metadata })
+              .run();
         }
       },
       remove: async (id, version) => {
@@ -132,11 +156,14 @@ export function createSqliteAdapter(store: Store): FinanceStore {
       scenarios: repository(p.ScenarioSchema, t.scenarios),
     },
     atomic: async (operation) => {
-      const previous = tail;
+      const previous = atomicTails.get(store) ?? Promise.resolve();
       let release!: () => void;
-      tail = new Promise<void>((resolve) => {
-        release = resolve;
-      });
+      atomicTails.set(
+        store,
+        new Promise<void>((resolve) => {
+          release = resolve;
+        }),
+      );
       await previous;
       try {
         // better-sqlite3 stays on this connection while awaits yield. The
@@ -167,9 +194,21 @@ export function createSqliteAdapter(store: Store): FinanceStore {
         release();
       }
     },
-    settings: async () => store.settings(),
+    settings: async () => {
+      return store.settings();
+    },
     audit: async (entity, action, entityId) => {
-      store.audit(entity, action, entityId);
+      store.db
+        .insert(t.audit)
+        .values({
+          id: randomUUID(),
+          createdByUserId: actorId,
+          entity,
+          action,
+          entityId,
+          createdAt: new Date().toISOString(),
+        })
+        .run();
     },
     saveSettings: async (settings, version) => {
       assert(
@@ -200,10 +239,19 @@ export function createSqliteAdapter(store: Store): FinanceStore {
       store.db
         .select({ hash: t.idempotency.hash, payload: t.idempotency.payload })
         .from(t.idempotency)
-        .where(eq(t.idempotency.id, key))
+        .where(eq(t.idempotency.id, scopedId(key)))
         .get(),
     saveIdempotency: async (id, hash, payload) => {
-      store.db.insert(t.idempotency).values({ id, hash, payload }).run();
+      store.db
+        .insert(t.idempotency)
+        .values({
+          id: scopedId(id),
+          createdByUserId: actorId,
+          createdAt: new Date().toISOString(),
+          hash,
+          payload,
+        })
+        .run();
     },
     getImport: async (id) => {
       const row = store.db
@@ -222,6 +270,8 @@ export function createSqliteAdapter(store: Store): FinanceStore {
           .insert(t.imports)
           .values({
             id: value.id,
+            createdByUserId: actorId,
+            createdAtMetadata: value.createdAt,
             payload,
             request: toJsonString(p.ImportRequestSchema, request),
             status: value.status,
@@ -233,6 +283,8 @@ export function createSqliteAdapter(store: Store): FinanceStore {
             .insert(t.importRows)
             .values({
               id: `${value.id}:${row.rowNumber}`,
+              createdByUserId: actorId,
+              createdAt: value.createdAt,
               importId: value.id,
               payload: toJsonString(p.ImportRowSchema, row),
             })

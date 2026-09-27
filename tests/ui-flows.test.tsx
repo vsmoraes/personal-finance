@@ -13,6 +13,7 @@ import {
   within,
 } from "@testing-library/react";
 import { App as AntApp, ConfigProvider } from "antd";
+import type { InjectOptions } from "fastify";
 import { http, HttpResponse } from "msw";
 import { setupServer } from "msw/node";
 import { type ReactNode } from "react";
@@ -37,6 +38,15 @@ import { Transactions } from "../apps/web/src/features/transactions.js";
 import i18n from "../apps/web/src/i18n.js";
 import { ErrorNotice, Retry } from "../apps/web/src/shared/ui.js";
 let backend: Awaited<ReturnType<typeof buildApp>>;
+let sessionCookie = "";
+const origin = "http://localhost:8080";
+const clientId = "test-web-client.apps.googleusercontent.com";
+function authenticatedInject(options: InjectOptions) {
+  return backend.app.inject({
+    ...options,
+    headers: { origin, cookie: sessionCookie, ...options.headers },
+  });
+}
 const server = setupServer(
   http.all("*/api/v1/*", async ({ request }) => {
     const url = new URL(request.url);
@@ -53,7 +63,11 @@ const server = setupServer(
     const response = await backend.app.inject({
       method,
       url: url.pathname + url.search,
-      headers: Object.fromEntries(request.headers.entries()),
+      headers: {
+        origin,
+        cookie: sessionCookie,
+        ...Object.fromEntries(request.headers.entries()),
+      },
       ...(body ? { payload: body } : {}),
     });
     if (response.statusCode >= 400) process.stderr.write(response.body + "\n");
@@ -95,7 +109,32 @@ beforeAll(() => {
   );
 });
 beforeEach(async () => {
-  backend = await buildApp({ database: ":memory:" });
+  backend = await buildApp({
+    database: ":memory:",
+    origin,
+    clientId,
+    verifyGoogle: () =>
+      Promise.resolve({
+        sub: "ui-flow",
+        aud: clientId,
+        iss: "https://accounts.google.com",
+        exp: Math.floor(Date.now() / 1000) + 3600,
+        name: "UI Tester",
+      }),
+  });
+  const csrf = await backend.app.inject("/api/v1/auth/csrf");
+  const csrfBody = JSON.parse(csrf.body) as { csrfToken: string };
+  const login = await backend.app.inject({
+    method: "POST",
+    url: "/api/v1/auth/google",
+    headers: {
+      origin,
+      cookie: String(csrf.headers["set-cookie"]).split(";")[0] ?? "",
+      "x-csrf-token": csrfBody.csrfToken,
+    },
+    payload: { credential: "test" },
+  });
+  sessionCookie = String(login.headers["set-cookie"]).split(";")[0] ?? "";
   await i18n.changeLanguage("en");
 });
 afterEach(async () => {
@@ -126,7 +165,7 @@ function openCreate(resource: Parameters<typeof Configuration>[0]["resource"]) {
   fireEvent.click(document.getElementById(`${resource}-create-button`)!);
 }
 async function seed() {
-  const response = await backend.app.inject({
+  const response = await authenticatedInject({
     method: "POST",
     url: "/api/v1/transactions",
     headers: { "idempotency-key": "test-transaction" },
@@ -299,6 +338,7 @@ it("renders import controls, application navigation, and recoverable errors", as
     </MemoryRouter>,
   );
   await screen.findByRole("heading", { name: "Overview" });
+  expect(screen.getByTitle("UI Tester")).toBeVisible();
   expect(document.getElementById("page-overview")).toBeVisible();
   cleanup();
   const retry = vi.fn();
@@ -364,7 +404,7 @@ it("renders network failures for reports, history, settings and configuration", 
 
 it("uses the configured report currency without combining original amounts", async () => {
   await seed();
-  const response = await backend.app.inject({
+  const response = await authenticatedInject({
     method: "POST",
     url: "/api/v1/transactions",
     headers: { "idempotency-key": "native-currency-ui" },
@@ -381,9 +421,10 @@ it("uses the configured report currency without combining original amounts", asy
   await screen.findAllByText("€12.34");
   cleanup();
   const settings = JSON.parse(
-    (await backend.app.inject({ method: "GET", url: "/api/v1/settings" })).body,
+    (await authenticatedInject({ method: "GET", url: "/api/v1/settings" }))
+      .body,
   ) as Record<string, unknown>;
-  const updated = await backend.app.inject({
+  const updated = await authenticatedInject({
     method: "PATCH",
     url: "/api/v1/settings",
     payload: { ...settings, language: "en", defaultCurrency: "USD" },
@@ -432,7 +473,7 @@ it("opens the same entry drawer for transactions and categories", async () => {
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument(),
   );
   expect(
-    (await backend.app.inject({ method: "GET", url: "/api/v1/categories" }))
+    (await authenticatedInject({ method: "GET", url: "/api/v1/categories" }))
       .body,
   ).toContain("Overview category");
 });

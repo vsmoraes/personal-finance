@@ -8,12 +8,31 @@ import {
 
 import { FinanceResponseSchema } from "../../packages/contracts/src/finance/v1/finance_pb.js";
 
-test.beforeEach(async ({ request }) => {
+test.beforeEach(async ({ request, page, baseURL }) => {
+  const origin = new URL(baseURL ?? "http://127.0.0.1:8083").origin;
+  const csrf = await request.get("/api/v1/auth/csrf");
+  const csrfBody = (await csrf.json()) as { csrfToken: string };
+  const login = await request.post("/api/v1/auth/google", {
+    headers: { origin, "x-csrf-token": csrfBody.csrfToken },
+    data: { credential: "synthetic-e2e-credential" },
+  });
+  expect(login.ok()).toBe(true);
+  const cookies = (await request.storageState()).cookies.filter(
+    (cookie) => cookie.name === "finance_session",
+  );
+  await page.context().addCookies(
+    cookies.map((cookie) => ({
+      name: cookie.name,
+      value: cookie.value,
+      url: origin,
+    })),
+  );
   const settings: unknown = await (
     await request.get("/api/v1/settings")
   ).json();
   if (typeof settings === "object" && settings !== null)
     await request.patch("/api/v1/settings", {
+      headers: { origin },
       data: { ...settings, language: "en" },
     });
 });
@@ -42,6 +61,44 @@ async function expectFrostedModal(page: Page) {
   expect(styles.background).toMatch(/(?:\/|,)\s*0\./);
   expect(styles.blur).toContain("blur(");
 }
+
+test("the account control expands from the right edge on hover", async ({
+  page,
+}) => {
+  await page.goto("/");
+  const profile = page.locator("#user-profile-button");
+  const signOut = page.locator("#sign-out-button");
+  await expect(profile).toBeVisible();
+  await expect(signOut).toBeHidden();
+  const bar = await page.locator(".finance-topbar").boundingBox();
+  const photo = await profile.boundingBox();
+  expect(bar).not.toBeNull();
+  expect(photo).not.toBeNull();
+  expect(bar!.x + bar!.width - (photo!.x + photo!.width)).toBeLessThan(30);
+  await profile.hover();
+  await expect(signOut).toBeVisible();
+  await expect(page.locator(".finance-user-menu-details > span")).toHaveText(
+    "E2E Tester",
+  );
+});
+
+test("the login language selector translates the page and persists", async ({
+  page,
+}) => {
+  await page.context().clearCookies();
+  await page.goto("/login", { waitUntil: "domcontentloaded" });
+  await page.locator("#login-language-select").click();
+  await page
+    .locator('.finance-login-language .ant-select-item-option[title="Español"]')
+    .click();
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText(
+    "Tus finanzas, con claridad.",
+  );
+  await page.reload({ waitUntil: "domcontentloaded" });
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText(
+    "Tus finanzas, con claridad.",
+  );
+});
 
 test("transaction create, filter, edit and delete use stable IDs", async ({
   page,

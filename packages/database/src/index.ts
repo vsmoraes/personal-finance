@@ -50,6 +50,7 @@ export function openDatabase(filename: string) {
   for (const [version, filename] of [
     [1, "0001_initial.sql"],
     [2, "0002_native_currency.sql"],
+    [3, "0003_users.sql"],
   ] as const) {
     const migration = readFileSync(
       resolve("packages/database/migrations", filename),
@@ -103,6 +104,8 @@ export function openDatabase(filename: string) {
         db.insert(schema.settings)
           .values({
             id: "application",
+            createdByUserId: "system",
+            createdAt: new Date().toISOString(),
             payload: toJsonString(SettingsSchema, defaults),
             version: 1,
           })
@@ -123,6 +126,8 @@ export function openDatabase(filename: string) {
           db.insert(schema.categories)
             .values({
               id: c.id,
+              createdByUserId: "system",
+              createdAt: new Date().toISOString(),
               payload: toJsonString(CategorySchema, c),
               version: 1,
             })
@@ -148,6 +153,7 @@ export function openDatabase(filename: string) {
         .insert(schema.audit)
         .values({
           id: randomUUID(),
+          createdByUserId: "system",
           entity,
           action,
           entityId,

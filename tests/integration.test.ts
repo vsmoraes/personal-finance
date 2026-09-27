@@ -9,18 +9,54 @@ import {
   toJson,
   toJsonString,
 } from "@bufbuild/protobuf";
+import type { InjectOptions } from "fastify";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { buildApp } from "../apps/api/src/app.js";
 import * as p from "../packages/contracts/src/finance/v1/finance_pb.js";
 let context: Awaited<ReturnType<typeof buildApp>>;
 let directory: string;
+let sessionCookie = "";
+const origin = "http://localhost:8080";
+const clientId = "test-web-client.apps.googleusercontent.com";
+const builtin = (slug: string) => slug;
+async function inject(options: string | InjectOptions) {
+  const input = typeof options === "string" ? { url: options } : options;
+  return context.app.inject({
+    ...input,
+    headers: { origin, cookie: sessionCookie, ...input.headers },
+  });
+}
 beforeEach(async () => {
   directory = mkdtempSync(join(tmpdir(), "finance-"));
   context = await buildApp({
     database: join(directory, "test.db"),
     webRoot: join(directory, "missing"),
+    origin,
+    clientId,
+    verifyGoogle: () =>
+      Promise.resolve({
+        sub: "integration",
+        aud: clientId,
+        iss: "https://accounts.google.com",
+        exp: Math.floor(Date.now() / 1000) + 3600,
+      }),
   });
+  const csrf = await context.app.inject("/api/v1/auth/csrf");
+  const csrfBody = JSON.parse(csrf.body) as { csrfToken: string };
+  const csrfCookie = String(csrf.headers["set-cookie"]).split(";")[0];
+  const login = await context.app.inject({
+    method: "POST",
+    url: "/api/v1/auth/google",
+    headers: {
+      origin,
+      cookie: csrfCookie,
+      "x-csrf-token": csrfBody.csrfToken,
+    },
+    payload: { credential: "test" },
+  });
+  expect(login.statusCode, login.body).toBe(200);
+  sessionCookie = String(login.headers["set-cookie"]).split(";")[0] ?? "";
 });
 afterEach(async () => {
   await context.app.close();
@@ -29,7 +65,7 @@ afterEach(async () => {
 const transaction = (overrides: JsonObject = {}): JsonObject => ({
   date: { year: 2026, month: 1, day: 15 },
   type: "TRANSACTION_TYPE_EXPENSE",
-  categoryId: "groceries",
+  categoryId: builtin("groceries"),
   amount: { minorUnits: "12345", currencyCode: "EUR" },
   includeInBudget: true,
   ...overrides,
@@ -39,7 +75,7 @@ async function post(
   payload: JsonObject,
   headers: Record<string, string> = {},
 ) {
-  return context.app.inject({
+  return inject({
     method: "POST",
     url: `/api/v1/${path}`,
     payload,
@@ -47,7 +83,7 @@ async function post(
   });
 }
 async function get(path: string) {
-  return context.app.inject({ method: "GET", url: `/api/v1/${path}` });
+  return inject({ method: "GET", url: `/api/v1/${path}` });
 }
 async function makeTransaction(overrides: JsonObject = {}) {
   const response = await post("transactions", transaction(overrides));
@@ -59,7 +95,7 @@ async function updateCategory(id: string, overrides: JsonObject) {
     p.CategorySchema,
     (await get(`categories/${id}`)).json(),
   );
-  const response = await context.app.inject({
+  const response = await inject({
     method: "PATCH",
     headers: { "content-type": "application/json" },
     url: `/api/v1/categories/${id}`,
@@ -82,7 +118,11 @@ describe("HTTP contracts and SQLite persistence", () => {
     ).toHaveLength(22);
     const saved = await makeTransaction();
     await context.app.close();
-    context = await buildApp({ database: join(directory, "test.db") });
+    context = await buildApp({
+      database: join(directory, "test.db"),
+      clientId,
+      origin,
+    });
     expect(
       fromJson(
         p.TransactionSchema,
@@ -98,7 +138,7 @@ describe("HTTP contracts and SQLite persistence", () => {
     const payload = JSON.stringify(
       toJson(p.TransactionSchema, { ...tx, note: "changed" }),
     );
-    const updated = await context.app.inject({
+    const updated = await inject({
       method: "PATCH",
       headers: { "content-type": "application/json" },
       url: `/api/v1/transactions/${tx.id}`,
@@ -107,7 +147,7 @@ describe("HTTP contracts and SQLite persistence", () => {
     expect(updated.statusCode).toBe(200);
     expect(
       (
-        await context.app.inject({
+        await inject({
           method: "PATCH",
           headers: { "content-type": "application/json" },
           url: `/api/v1/transactions/${tx.id}`,
@@ -117,7 +157,7 @@ describe("HTTP contracts and SQLite persistence", () => {
     ).toBe(409);
     expect(
       (
-        await context.app.inject({
+        await inject({
           method: "DELETE",
           url: `/api/v1/transactions/${tx.id}`,
           headers: { "if-match": "1" },
@@ -126,7 +166,7 @@ describe("HTTP contracts and SQLite persistence", () => {
     ).toBe(409);
     expect(
       (
-        await context.app.inject({
+        await inject({
           method: "DELETE",
           url: `/api/v1/transactions/${tx.id}`,
           headers: { "if-match": "2" },
@@ -162,7 +202,7 @@ describe("HTTP contracts and SQLite persistence", () => {
     { date: { year: 2026, month: 2, day: 30 } },
     { date: { year: 2026, month: 13, day: 1 } },
     { categoryId: "missing" },
-    { categoryId: "salary" },
+    { categoryId: builtin("salary") },
     { amount: { minorUnits: "1", currencyCode: "ZZZ" } },
     { amount: { minorUnits: "1", currencyCode: "XYZ" } },
     { extra: "not allowed" },
@@ -173,13 +213,13 @@ describe("HTTP contracts and SQLite persistence", () => {
     expect(response.body).not.toContain(directory);
   });
   it("protects same origin, sends health and security headers", async () => {
-    const response = await context.app.inject("/healthz");
+    const response = await inject("/healthz");
     expect(response.statusCode).toBe(200);
     expect(response.headers["content-security-policy"]).toContain(
       "default-src 'self'",
     );
     expect(response.headers["x-request-id"]).toBeTruthy();
-    expect((await context.app.inject("/readyz")).statusCode).toBe(200);
+    expect((await inject("/readyz")).statusCode).toBe(200);
     expect(
       (
         await post("transactions", transaction(), {
@@ -213,7 +253,7 @@ describe("HTTP contracts and SQLite persistence", () => {
       ).totals?.expenses,
     ).toBe(10000n);
     const settings = fromJson(p.SettingsSchema, (await get("settings")).json());
-    const response = await context.app.inject({
+    const response = await inject({
       method: "PATCH",
       url: "/api/v1/settings",
       headers: { "content-type": "application/json" },
@@ -250,7 +290,7 @@ describe("HTTP contracts and SQLite persistence", () => {
     const tx = await makeTransaction({ categoryId: c.id });
     expect(
       (
-        await context.app.inject({
+        await inject({
           method: "DELETE",
           url: `/api/v1/categories/${c.id}`,
           headers: { "if-match": "1" },
@@ -300,12 +340,12 @@ describe("HTTP contracts and SQLite persistence", () => {
     expect((await get("transactions?pageSize=101")).statusCode).toBe(400);
   });
   it("exposes monthly detail separately and includes exactly twelve rows", async () => {
-    await updateCategory("groceries", {
+    await updateCategory(builtin("groceries"), {
       defaultBudget: { minorUnits: "0", currencyCode: "EUR" },
     });
     await makeTransaction();
     await makeTransaction({
-      categoryId: "salary",
+      categoryId: builtin("salary"),
       type: 1,
       amount: { minorUnits: "20000", currencyCode: "EUR" },
     });
@@ -326,7 +366,7 @@ describe("HTTP contracts and SQLite persistence", () => {
   });
   it("copies budgets for months and years and stores commitments and scenarios", async () => {
     const b = await post("budgets", {
-      categoryId: "groceries",
+      categoryId: builtin("groceries"),
       startMonth: "2026-01",
       endMonth: "2026-01",
       amount: { minorUnits: "1000", currencyCode: "EUR" },
@@ -345,7 +385,7 @@ describe("HTTP contracts and SQLite persistence", () => {
         .statusCode,
     ).toBe(200);
     const c = await post("recurring-commitments", {
-      categoryId: "salary",
+      categoryId: builtin("salary"),
       description: "Recurring income",
       amount: { minorUnits: "2000", currencyCode: "EUR" },
       startMonth: "2026-01",
@@ -357,7 +397,7 @@ describe("HTTP contracts and SQLite persistence", () => {
       overrides: [
         {
           month: "2026-03",
-          categoryId: "groceries",
+          categoryId: builtin("groceries"),
           amount: { minorUnits: "500", currencyCode: "EUR" },
         },
       ],
@@ -382,7 +422,7 @@ describe("HTTP contracts and SQLite persistence", () => {
       priority: 1,
       enabled: true,
       counterpartyContains: "match",
-      categoryId: "dining",
+      categoryId: builtin("dining"),
     });
     expect(rule.statusCode, rule.body).toBe(201);
     expect(
@@ -410,10 +450,10 @@ describe("HTTP contracts and SQLite persistence", () => {
     expect(
       fromJson(p.TransactionSchema, (await get(`transactions/${tx.id}`)).json())
         .categoryId,
-    ).toBe("dining");
+    ).toBe(builtin("dining"));
     await post("transactions/bulk", {
       transactionIds: [tx.id],
-      categoryId: "groceries",
+      categoryId: builtin("groceries"),
     });
     expect(
       fromJson(p.TransactionSchema, (await get(`transactions/${tx.id}`)).json())
@@ -430,7 +470,7 @@ describe("HTTP contracts and SQLite persistence", () => {
   });
   it.each(["en", "es", "pt-BR"])("persists language %s", async (language) => {
     const settings = fromJson(p.SettingsSchema, (await get("settings")).json());
-    const result = await context.app.inject({
+    const result = await inject({
       method: "PATCH",
       headers: { "content-type": "application/json" },
       url: "/api/v1/settings",
@@ -524,7 +564,7 @@ describe("atomic CSV import", () => {
         )
       ).json(),
     );
-    await updateCategory("other-expenses", { archived: true });
+    await updateCategory(builtin("other-expenses"), { archived: true });
     expect((await post(`imports/${preview.id}/confirm`, {})).statusCode).toBe(
       400,
     );
@@ -576,7 +616,7 @@ it("keeps native money when editing notes and ignores legacy conversion input", 
     amount: { minorUnits: "1000", currencyCode: "USD" },
     exchangeRate: "0.9",
   });
-  const response = await context.app.inject({
+  const response = await inject({
     method: "PATCH",
     url: `/api/v1/transactions/${saved.id}`,
     headers: { "content-type": "application/json" },
@@ -602,18 +642,18 @@ it("keeps budgets, forecasts, scenarios and budget copies isolated by currency",
     ["EUR", "2000"],
     ["USD", "900"],
   ]) {
-    const response = await context.app.inject({
+    const response = await inject({
       method: "PUT",
       url: "/api/v1/budgets/2026/01",
       payload: {
-        categoryId: "groceries",
+        categoryId: builtin("groceries"),
         amount: { minorUnits, currencyCode },
       },
     });
     expect(response.statusCode, response.body).toBe(200);
   }
   const commitment = await post("recurring-commitments", {
-    categoryId: "groceries",
+    categoryId: builtin("groceries"),
     description: "Native USD subscription",
     amount: { minorUnits: "200", currencyCode: "USD" },
     startMonth: "2026-01",
@@ -626,7 +666,7 @@ it("keeps budgets, forecasts, scenarios and budget copies isolated by currency",
     overrides: [
       {
         month: "2026-01",
-        categoryId: "groceries",
+        categoryId: builtin("groceries"),
         amount: { minorUnits: "1500", currencyCode: "USD" },
       },
     ],
@@ -641,12 +681,16 @@ it("keeps budgets, forecasts, scenarios and budget copies isolated by currency",
     p.ReportResponseSchema,
     (await get("reports/categories?year=2026&month=1&currencyCode=USD")).json(),
   );
-  expect(eur.rows.find((row) => row.key === "groceries")).toMatchObject({
+  expect(
+    eur.rows.find((row) => row.key === builtin("groceries")),
+  ).toMatchObject({
     expenses: 1000n,
     budget: 2000n,
     variance: 1000n,
   });
-  expect(usd.rows.find((row) => row.key === "groceries")).toMatchObject({
+  expect(
+    usd.rows.find((row) => row.key === builtin("groceries")),
+  ).toMatchObject({
     expenses: 700n,
     budget: 1100n,
     variance: 400n,
