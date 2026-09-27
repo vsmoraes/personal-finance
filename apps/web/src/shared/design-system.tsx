@@ -7,6 +7,44 @@ export * from "antd";
 
 export type DesignMode = "light" | "dark" | "custom";
 
+/** A single accent hue with distinct, readable shades for chart items. */
+export function chartAccentColors(
+  accent: string,
+  background: string,
+): string[] {
+  const raw = accent.replace("#", "");
+  const hex = /^[\da-f]{6}$/i.test(raw) ? raw : "1d7658";
+  const [red, green, blue] = [0, 2, 4].map(
+    (offset) => parseInt(hex.slice(offset, offset + 2), 16) / 255,
+  ) as [number, number, number];
+  const maximum = Math.max(red, green, blue);
+  const minimum = Math.min(red, green, blue);
+  const difference = maximum - minimum;
+  const lightness = (maximum + minimum) / 2;
+  const saturation =
+    difference < 0.08
+      ? 0
+      : Math.min(
+          78,
+          Math.max(
+            45,
+            Math.round((difference / (1 - Math.abs(2 * lightness - 1))) * 100),
+          ),
+        );
+  let hue = 0;
+  if (difference) {
+    if (maximum === red) hue = ((green - blue) / difference) % 6;
+    else if (maximum === green) hue = (blue - red) / difference + 2;
+    else hue = (red - green) / difference + 4;
+  }
+  hue = Math.round((hue * 60 + 360) % 360);
+  const shades =
+    onAccent(background) === "#ffffff"
+      ? [66, 48, 75, 57, 69, 52, 79, 61, 72, 46, 64, 54]
+      : [36, 59, 43, 66, 31, 53, 39, 63, 34, 57, 46, 69];
+  return shades.map((shade) => `hsl(${hue}, ${saturation}%, ${shade}%)`);
+}
+
 function onAccent(hex: string) {
   const value = hex.replace("#", "");
   if (!/^[\da-f]{6}$/i.test(value)) return "#ffffff";

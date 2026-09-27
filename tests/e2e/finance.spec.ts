@@ -1,5 +1,10 @@
 import { fromJsonString } from "@bufbuild/protobuf";
-import { type APIRequestContext, expect, test } from "@playwright/test";
+import {
+  type APIRequestContext,
+  expect,
+  type Page,
+  test,
+} from "@playwright/test";
 
 import { FinanceResponseSchema } from "../../packages/contracts/src/finance/v1/finance_pb.js";
 
@@ -24,6 +29,20 @@ async function removeTransactions(request: APIRequestContext, search: string) {
     });
 }
 
+async function expectFrostedModal(page: Page) {
+  const surface = page
+    .getByRole("dialog")
+    .last()
+    .locator(":is(.ant-modal-container, .ant-modal-content)");
+  await expect(surface).toBeVisible();
+  const styles = await surface.evaluate((element) => {
+    const style = getComputedStyle(element);
+    return { background: style.backgroundColor, blur: style.backdropFilter };
+  });
+  expect(styles.background).toMatch(/(?:\/|,)\s*0\./);
+  expect(styles.blur).toContain("blur(");
+}
+
 test("transaction create, filter, edit and delete use stable IDs", async ({
   page,
   request,
@@ -32,6 +51,7 @@ test("transaction create, filter, edit and delete use stable IDs", async ({
   await page.goto("/transactions");
   await expect(page.locator("#page-transactions")).toBeVisible();
   await page.locator("#transaction-create-button").click();
+  await expectFrostedModal(page);
   await page.locator("#amount").fill("12.34");
   await page.locator("#note").fill(note);
   await page.locator("#transaction-form-create").click();
@@ -47,6 +67,7 @@ test("transaction create, filter, edit and delete use stable IDs", async ({
   await page.locator("#transaction-form-save").click();
   await page.locator(`#transaction-row-${created?.id}`).click();
   await page.locator("#transaction-delete-button").click();
+  await expectFrostedModal(page);
   await page.locator("#transaction-delete-confirm").click();
   await expect(page.locator(`#transaction-row-${created?.id}`)).toHaveCount(0);
 });
@@ -84,6 +105,52 @@ test("transaction filter, sorting and pagination controls are ID-addressable", a
   await page.locator("#transaction-page-2").click();
   await expect(page.locator("#transaction-pagination")).toBeVisible();
   await removeTransactions(request, prefix);
+});
+
+test("report bars and lines use distinct accent shades", async ({
+  page,
+  request,
+}) => {
+  const prefix = `chart-shades-${crypto.randomUUID()}`;
+  const settings = (await (await request.get("/api/v1/settings")).json()) as {
+    reportYear?: number;
+  };
+  try {
+    for (let month = 1; month <= 3; month++)
+      expect(
+        (
+          await request.post("/api/v1/transactions", {
+            headers: { "idempotency-key": crypto.randomUUID() },
+            data: {
+              date: { year: settings.reportYear ?? 2026, month, day: 1 },
+              type: "TRANSACTION_TYPE_EXPENSE",
+              categoryId: "groceries",
+              amount: { minorUnits: String(month * 100), currencyCode: "EUR" },
+              note: `${prefix}-${month}`,
+              includeInBudget: true,
+            },
+          })
+        ).ok(),
+      ).toBe(true);
+    await page.goto("/monthly");
+    await expect(
+      page
+        .locator("#report-cashflow-chart .recharts-bar-rectangle path")
+        .first(),
+    ).toBeVisible();
+    const barColors = await page
+      .locator("#report-cashflow-chart .recharts-bar-rectangle path")
+      .evaluateAll((bars) => bars.map((bar) => getComputedStyle(bar).fill));
+    const lineColors = await page
+      .locator("#report-savings-chart .recharts-line-curve")
+      .evaluateAll((lines) =>
+        lines.map((line) => getComputedStyle(line).stroke),
+      );
+    expect(new Set(barColors).size).toBeGreaterThan(2);
+    expect(new Set(lineColors).size).toBe(2);
+  } finally {
+    await removeTransactions(request, prefix);
+  }
 });
 
 test("every route, report filter, and settings section is stable-ID covered", async ({
@@ -308,6 +375,27 @@ test("mobile More sheet exposes destinations by ID", async ({ page }) => {
   await expect(page.locator("#mobile-more-sheet")).toBeVisible();
   await page.locator("#mobile-more-link-settings").click();
   await expect(page.locator("#page-settings")).toBeVisible();
+});
+
+test("touch form fields and dropdowns keep a non-zooming font size", async ({
+  page,
+}) => {
+  test.skip(test.info().project.name !== "mobile", "Touch-only behavior");
+  const expectReadableSize = async (selector: string) => {
+    const size = await page
+      .locator(selector)
+      .evaluate((element) =>
+        Number.parseFloat(getComputedStyle(element).fontSize),
+      );
+    expect(size, selector).toBeGreaterThanOrEqual(16);
+  };
+  await page.goto("/transactions");
+  await expectReadableSize("#transaction-filter-search");
+  await expectReadableSize("#transaction-filter-type input");
+  await page.locator("#transaction-create-button").click();
+  await expectReadableSize("#amount");
+  await page.goto("/imports");
+  await expectReadableSize("#source");
 });
 
 test("desktop navigation, exports, and rule preview actions have ID contracts", async ({

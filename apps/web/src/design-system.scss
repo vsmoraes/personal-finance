@@ -283,17 +283,6 @@ body {
 .finance-dark .finance-form-surface .ant-card-body {
   background: transparent;
 }
-.finance-frosted-modal .ant-modal-content,
-.finance-dark-mode .finance-frosted-modal .ant-modal-content {
-  background: var(--ds-glass-strong);
-  border: 1px solid var(--ds-border);
-  border-radius: var(--ds-radius-panel);
-  box-shadow:
-    0 30px 90px color-mix(in srgb, var(--ds-ink) 18%, transparent),
-    inset 0 1px var(--ds-border);
-  backdrop-filter: blur(38px) saturate(175%);
-  -webkit-backdrop-filter: blur(38px) saturate(175%);
-}
 .finance-frosted-modal .ant-input,
 .finance-frosted-modal .ant-input-number,
 .finance-frosted-modal .ant-picker,
@@ -941,13 +930,19 @@ body {
   }
 }
 
+.ant-modal :is(.ant-modal-container, .ant-modal-content) {
+  overflow: hidden;
+  background: var(--ds-glass) !important;
+  border: 1px solid var(--ds-border) !important;
+  border-radius: var(--ds-radius-panel);
+  box-shadow:
+    0 30px 90px color-mix(in srgb, var(--ds-ink) 18%, transparent),
+    inset 0 1px var(--ds-border);
+  backdrop-filter: blur(42px) saturate(170%);
+  -webkit-backdrop-filter: blur(42px) saturate(170%);
+}
+
 .finance-frosted-modal {
-  .ant-modal-content {
-    background: var(--ds-glass) !important;
-    border-color: var(--ds-border);
-    backdrop-filter: blur(42px) saturate(170%);
-    -webkit-backdrop-filter: blur(42px) saturate(170%);
-  }
   .ant-modal-header {
     padding: 25px 28px 0;
   }
@@ -1159,7 +1154,7 @@ body {
     max-width: 100vw;
     margin: 0;
     padding: 0;
-    .ant-modal-content {
+    :is(.ant-modal-container, .ant-modal-content) {
       border-radius: 27px 27px 0 0;
     }
     .ant-modal-header {
@@ -1631,5 +1626,21 @@ body {
       line-height: 1.2;
       font-size: 11px;
     }
+  }
+}
+
+// iOS Safari zooms the viewport when an editable control has text below 16px.
+// Keep this at the design-system layer so page forms, modals, and portaled
+// dropdowns all retain the same viewport scale when focused.
+@media (pointer: coarse) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="color"]):not(
+      [type="file"]
+    ):not([type="hidden"]),
+  textarea,
+  select,
+  .ant-select-selection-item,
+  .ant-select-selection-placeholder,
+  .ant-select-item-option-content {
+    font-size: 16px !important;
   }
 }

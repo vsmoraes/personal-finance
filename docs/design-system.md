@@ -22,6 +22,8 @@ For forms, the stacked labels, visible focus treatment, and mobile sheet layout 
 
 Panels use a translucent surface, a light edge, a soft shadow, and 28px blur. Modals use a lighter surface and 42px blur; mobile modals sit at the bottom of the viewport and scroll internally. Form labels sit above their controls at every viewport size. Labels use the main text color and helper text uses the muted token; errors use the danger token. Focus has a visible accent ring, and reduced-motion preferences disable button transitions.
 
+On touch devices, editable controls and dropdown text use at least 16px type so mobile Safari does not zoom the page when a field receives focus. The viewport remains user-scalable for accessibility.
+
 Buttons use the shared Ant Design `Button`: primary for the main action, default for secondary actions, text for navigation or icon controls, and `danger` for destructive actions. Each has the same height, corner radius, focus state, and theme colors. Transaction rows are text buttons with a full-width row layout.
 
 Inputs, number and date fields, selects, switches, color pickers, search controls, and fields inside modals share the same control scale and translucent surface. Modal forms use the edit-transaction pattern: a flat single-column field stack, a 620px maximum width, and side-by-side primary and cancel actions. Forms on normal pages, including Settings and Imports, fill the page panel with descriptions or labels beside controls when space allows and stack responsively in narrow containers. Search and filter controls directly above a list or table belong inside its glass panel as a unified toolbar with consistent control heights. Tables, dropdowns, pagination, cards, and menus inherit the same theme tokens. The top bar itself expands to reveal centered sub-items in a second row; there is no detached submenu surface or overlay.
@@ -29,6 +31,8 @@ Inputs, number and date fields, selects, switches, color pickers, search control
 The Overview route uses the layout and layered-glass treatment of the [CodeFronts crypto-finance reference](https://codefronts.com/design-styles/css-frosted-glass-effect/glassmorphism-crypto-finance-dashboard/): an accent-lit backdrop, one large glass dashboard surface, an accent-colored trend line, recent transactions in the activity column, and three subdued financial stat cards. Its colors come from the same light, dark, or custom theme tokens as the other routes, and the layout stacks without horizontal scrolling on mobile.
 
 Other pages use the same ambient backdrop and layered glass tokens. Category spending is a ranked list with budget progress. Monthly and Forecast reports use month cards and a distinct annual total instead of a dense data table; Forecast cards also identify actual and projected months.
+
+Charts derive a twelve-shade palette from the active accent hue and page background. Category and monthly bars vary by item; savings and variance lines use separate shades of that same hue. The palette adapts to light, dark, and custom themes.
 
 ## Themes
 

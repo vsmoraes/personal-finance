@@ -332,6 +332,7 @@ export function Reports({
             <Row gutter={[24, 24]}>
               <Col xs={24} xl={16}>
                 <Card
+                  id="report-cashflow-chart"
                   className="insight-card"
                   title={t("incomeVsExpenses")}
                   extra={<Tag bordered={false}>{year}</Tag>}
@@ -381,7 +382,11 @@ export function Reports({
             </Row>
           )}
           {kind !== "categories" && (
-            <Card className="insight-card" title={t("savingsVsVariance")}>
+            <Card
+              id="report-savings-chart"
+              className="insight-card"
+              title={t("savingsVsVariance")}
+            >
               <ReportChart rows={chart} kind="savings" format={tooltip} />
             </Card>
           )}

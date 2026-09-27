@@ -27,6 +27,7 @@ import {
   getMessage,
   request,
 } from "../apps/web/src/shared/api.js";
+import { chartAccentColors } from "../apps/web/src/shared/design-system.js";
 import * as p from "../packages/contracts/src/finance/v1/finance_pb.js";
 const server = setupServer(
   http.get("/api/v1/settings", () =>
@@ -128,6 +129,16 @@ it("derives the overview trend from monthly net savings", () => {
   expect(first.line).toContain("M");
   expect(first.area).toContain("Z");
   expect(first.line).not.toBe(second.line);
+});
+it("derives distinct chart shades from the active accent and background", () => {
+  const light = chartAccentColors("#1677ff", "#f3f5f7");
+  const dark = chartAccentColors("#1677ff", "#080a0d");
+  const custom = chartAccentColors("#c334aa", "#f3f5f7");
+  expect(new Set(light).size).toBe(12);
+  expect(new Set(dark).size).toBe(12);
+  expect(light).not.toEqual(dark);
+  expect(light).not.toEqual(custom);
+  expect(light.every((color) => color.startsWith("hsl(215,"))).toBe(true);
 });
 it("maps API problems, network errors, empty deletion responses and category labels", async () => {
   server.use(

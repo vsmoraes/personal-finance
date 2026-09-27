@@ -3,6 +3,7 @@ import {
   Bar,
   BarChart,
   CartesianGrid,
+  Cell,
   Legend,
   Line,
   LineChart,
@@ -12,7 +13,7 @@ import {
   YAxis,
 } from "recharts";
 
-import { theme } from "../shared/design-system.tsx";
+import { chartAccentColors, theme } from "../shared/design-system.tsx";
 
 export type ChartRow = {
   name: string;
@@ -32,6 +33,9 @@ export function ReportChart({
 }) {
   const { t } = useTranslation();
   const { token } = theme.useToken();
+  const colors = chartAccentColors(token.colorPrimary, token.colorBgLayout);
+  const colorAt = (index: number) =>
+    colors[index % colors.length] ?? token.colorPrimary;
   const axes = (
     <>
       <CartesianGrid
@@ -77,7 +81,7 @@ export function ReportChart({
             type="monotone"
             dataKey="netSavings"
             name={t("netSavings")}
-            stroke={token.colorPrimary}
+            stroke={colorAt(0)}
             strokeWidth={2}
             dot={false}
           />
@@ -86,7 +90,7 @@ export function ReportChart({
             type="monotone"
             dataKey="variance"
             name={t("variance")}
-            stroke={token.colorSuccess}
+            stroke={colorAt(5)}
             strokeWidth={2}
             strokeDasharray="5 4"
             dot={false}
@@ -105,17 +109,28 @@ export function ReportChart({
               isAnimationActive={false}
               dataKey="income"
               name={t("income")}
-              fill={token.colorPrimary}
+              fill={colorAt(0)}
               radius={[4, 4, 0, 0]}
-            />
+            >
+              {rows.map((row, index) => (
+                <Cell key={`${row.name}-${index}`} fill={colorAt(index)} />
+              ))}
+            </Bar>
           )}
           <Bar
             isAnimationActive={false}
             dataKey="expenses"
             name={t("expenses")}
-            fill={token.colorInfoBorder}
+            fill={colorAt(kind === "categories" ? 0 : 5)}
             radius={[4, 4, 0, 0]}
-          />
+          >
+            {rows.map((row, index) => (
+              <Cell
+                key={`${row.name}-${index}`}
+                fill={colorAt(index + (kind === "categories" ? 0 : 5))}
+              />
+            ))}
+          </Bar>
         </BarChart>
       )}
     </ResponsiveContainer>
