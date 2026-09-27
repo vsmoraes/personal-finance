@@ -1,5 +1,6 @@
-import { Alert } from "antd";
 import { useTranslation } from "react-i18next";
+
+import { Alert } from "../design-system.tsx";
 
 export function ErrorNotice({ error }: { error: unknown }) {
   const { t } = useTranslation();

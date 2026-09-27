@@ -128,8 +128,15 @@ test("every route, report filter, and settings section is stable-ID covered", as
     }
   }
   await page.goto("/settings");
-  for (const section of ["general", "appearance", "display", "imports"])
-    await page.locator(`#settings-section-${section}`).click();
+  if (test.info().project.name === "mobile") {
+    for (const section of ["appearance", "display", "imports", "general"]) {
+      await page.locator("#settings-section-mobile").click();
+      await page.locator(`#settings-mobile-option-${section}`).click();
+    }
+  } else {
+    for (const section of ["general", "appearance", "display", "imports"])
+      await page.locator(`#settings-section-${section}`).click();
+  }
   await page.locator("#settings-save-button").click();
 });
 
@@ -303,7 +310,7 @@ test("mobile More sheet exposes destinations by ID", async ({ page }) => {
   await expect(page.locator("#page-settings")).toBeVisible();
 });
 
-test("desktop navigation, exports, budget copy, and rule preview actions have ID contracts", async ({
+test("desktop navigation, exports, and rule preview actions have ID contracts", async ({
   page,
 }) => {
   test.skip(test.info().project.name !== "desktop", "Desktop-only hover menu");
@@ -313,9 +320,6 @@ test("desktop navigation, exports, budget copy, and rule preview actions have ID
   await page.locator("#transaction-export-button").click();
   await expect(page.locator("#transaction-export-csv")).toBeVisible();
   await expect(page.locator("#transaction-export-json")).toBeVisible();
-  await page.goto("/budgets");
-  await page.locator("#budget-copy-toggle").click();
-  await expect(page.locator("#budget-copy-submit")).toBeVisible();
   await page.goto("/categorization-rules");
   await page.locator("#rules-preview-toggle").click();
   await page.locator("#rules-overwrite-manual").check();

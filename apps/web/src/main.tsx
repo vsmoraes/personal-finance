@@ -1,6 +1,7 @@
 import "./i18n.ts";
 import "antd/dist/reset.css";
-import "./styles.css";
+import "./styles.scss";
+import "./design-system.scss";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { StrictMode } from "react";

@@ -1,3 +1,4 @@
+/* Page layout and feature geometry. Shared controls live in design-system.scss. */
 :root {
   font-family:
     Inter,
@@ -124,9 +125,6 @@ body {
   backdrop-filter: blur(28px);
   border: 1px solid rgba(255, 255, 255, 0.8);
   box-shadow: 0 22px 60px rgba(20, 25, 35, 0.16);
-}
-.finance-group:hover .finance-drop {
-  display: block;
 }
 .finance-drop a {
   display: flex;
@@ -649,88 +647,9 @@ body {
   border-color: rgba(255, 255, 255, 0.08) !important;
   background: rgba(255, 255, 255, 0.035);
 }
-@media (min-width: 801px) {
-  .finance-topbar {
-    overflow: visible;
-  }
-  .finance-topbar:has(.finance-group:hover) {
-    border-radius: 28px 28px 0 0;
-  }
-  .finance-topbar:has(.finance-group:hover)::after {
-    content: "";
-    position: absolute;
-    z-index: -1;
-    left: -1px;
-    right: -1px;
-    top: 52px;
-    height: 92px;
-    border-radius: 0 0 28px 28px;
-    background: rgba(255, 255, 255, 0.45);
-    backdrop-filter: blur(28px) saturate(165%);
-    border: 1px solid rgba(255, 255, 255, 0.55);
-    border-top: 0;
-    box-shadow: 0 24px 48px rgba(25, 35, 45, 0.1);
-  }
-  .finance-group {
-    position: static;
-  }
-  .finance-drop {
-    display: none !important;
-    left: 18px;
-    right: 18px;
-    top: 70px;
-    transform: none;
-    width: auto;
-    height: 70px;
-    min-width: 0;
-    padding: 12px 8px;
-    border: 1px solid rgba(255, 255, 255, 0.48);
-    border-radius: 16px;
-    background: rgba(255, 255, 255, 0.42);
-    backdrop-filter: blur(28px) saturate(165%);
-    -webkit-backdrop-filter: blur(28px) saturate(165%);
-    box-shadow: inset 0 1px rgba(255, 255, 255, 0.6);
-  }
-  .finance-group:hover .finance-drop,
-  .finance-drop:hover {
-    display: flex !important;
-    align-items: center;
-    gap: 7px;
-  }
-  .finance-drop a {
-    height: 46px;
-    min-width: 145px;
-    background: rgba(255, 255, 255, 0.2);
-  }
-  .finance-dark .finance-topbar:has(.finance-group:hover)::after {
-    background: rgba(20, 23, 28, 0.45);
-    border-color: rgba(255, 255, 255, 0.1);
-  }
-  .finance-dark .finance-drop {
-    background: rgba(20, 23, 28, 0.42);
-    border-color: rgba(255, 255, 255, 0.1);
-    box-shadow: inset 0 1px rgba(255, 255, 255, 0.06);
-  }
-  .finance-dark .finance-drop a {
-    background: rgba(255, 255, 255, 0.035);
-  }
-}
 .finance-feed-pagination {
   margin-top: 18px;
   text-align: right;
-}
-.finance-transaction-form .ant-collapse {
-  margin-bottom: 18px;
-}
-.finance-transaction-form .ant-collapse-item {
-  padding: 5px 12px !important;
-}
-.finance-transaction-form .ant-collapse-content {
-  border-top: 1px solid rgba(20, 25, 30, 0.07) !important;
-}
-.finance-transaction-form .ant-btn[type="submit"] {
-  width: 100%;
-  height: 46px;
 }
 .finance-content .ant-table-wrapper {
   overflow: hidden;
@@ -766,36 +685,6 @@ body {
 .finance-drop {
   justify-content: center;
 }
-.finance-settings-card .ant-card-body {
-  padding: 26px;
-}
-.finance-settings-card .ant-tabs {
-  display: grid;
-  grid-template-columns: 230px 1fr;
-  gap: 18px;
-}
-.finance-settings-card .ant-tabs-nav {
-  margin: 0;
-  border: 1px solid rgba(20, 25, 30, 0.07);
-  border-radius: 21px;
-  padding: 10px;
-  height: max-content;
-}
-.finance-settings-card .ant-tabs-nav-list {
-  width: 100%;
-}
-.finance-settings-card .ant-tabs-tab {
-  width: 100%;
-  margin: 2px 0 !important;
-  padding: 13px 12px;
-  border-radius: 15px;
-}
-.finance-settings-card .ant-tabs-tab-active {
-  background: rgba(70, 160, 120, 0.13);
-}
-.finance-settings-card .ant-tabs-ink-bar {
-  display: none;
-}
 .finance-content .ant-form-item-label > label {
   font-size: 12px;
   color: #737b86;
@@ -822,33 +711,6 @@ body {
   .finance-topbar-spacer {
     display: none;
   }
-  .finance-settings-card .ant-card-body {
-    padding: 18px 16px;
-  }
-  .finance-settings-card .ant-tabs {
-    display: block;
-  }
-  .finance-settings-card .ant-tabs-nav {
-    border: 0;
-    padding: 0;
-    margin-bottom: 14px;
-  }
-  .finance-settings-card .ant-tabs-nav-list {
-    overflow: auto;
-  }
-  .finance-settings-card .ant-tabs-tab {
-    width: auto;
-    margin-right: 6px !important;
-    white-space: nowrap;
-  }
-}
-.finance-settings-card {
-  box-shadow: none !important;
-  background: transparent !important;
-  border: 0 !important;
-}
-.finance-settings-card .ant-card-body {
-  padding: 0 !important;
 }
 .finance-settings-layout {
   display: grid;

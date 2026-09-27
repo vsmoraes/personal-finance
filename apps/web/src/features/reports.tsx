@@ -6,23 +6,6 @@ import {
   WalletOutlined,
 } from "@ant-design/icons";
 import { useQuery } from "@tanstack/react-query";
-import {
-  Alert,
-  Avatar,
-  Button,
-  Card,
-  Col,
-  Flex,
-  Progress,
-  Row,
-  Select,
-  Space,
-  Statistic,
-  Table,
-  Tag,
-  theme,
-  Typography,
-} from "antd";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -38,6 +21,23 @@ import {
   useResources,
   useSettings,
 } from "../shared/api.ts";
+import { CategoryIcon } from "../shared/category-icons.tsx";
+import {
+  Alert,
+  Avatar,
+  Button,
+  Card,
+  Col,
+  Flex,
+  Progress,
+  Row,
+  Select,
+  Space,
+  Statistic,
+  Tag,
+  theme,
+  Typography,
+} from "../shared/design-system.tsx";
 import { ErrorNotice, Loading, PageTitle } from "../shared/ui.tsx";
 import { OverviewTrendChart } from "./overview-trend-chart.tsx";
 import { ReportChart } from "./report-chart.tsx";
@@ -103,61 +103,6 @@ export function Reports({
     typeof value === "number" && Number.isFinite(value)
       ? money(BigInt(Math.round(value)))
       : t("noBudget");
-  const columns = [
-    ...(kind === "forecast"
-      ? [
-          {
-            title: t("type"),
-            key: "status",
-            render: (_: unknown, row: ReportRow) =>
-              row.key === "total" ? (
-                t("forecast")
-              ) : (
-                <Tag>{t(row.actual ? "actual" : "forecast")}</Tag>
-              ),
-          },
-        ]
-      : []),
-    {
-      title: t(kind === "categories" ? "category" : "month"),
-      key: "label",
-      render: (_: unknown, r: ReportRow) =>
-        r.key === "total" ? t("totalYear") : label(r),
-    },
-    ...(kind === "categories"
-      ? []
-      : [
-          {
-            title: t("income"),
-            key: "income",
-            render: (_: unknown, r: ReportRow) => money(r.income),
-          },
-        ]),
-    {
-      title: t("expenses"),
-      key: "expenses",
-      render: (_: unknown, r: ReportRow) => money(r.expenses),
-    },
-    ...(kind === "categories"
-      ? []
-      : [
-          {
-            title: t("netSavings"),
-            key: "netSavings",
-            render: (_: unknown, r: ReportRow) => money(r.netSavings),
-          },
-        ]),
-    {
-      title: t("budget"),
-      key: "budget",
-      render: (_: unknown, r: ReportRow) => money(r.budget),
-    },
-    {
-      title: t("variance"),
-      key: "variance",
-      render: (_: unknown, r: ReportRow) => money(r.variance),
-    },
-  ];
   const totals = report.data?.totals;
   const includedSpending =
     totals?.budget !== undefined && totals.variance !== undefined
@@ -171,80 +116,94 @@ export function Reports({
   if (kind === "dashboard")
     return (
       <>
-        <section className="finance-hero">
-          <div>
-            <div className="finance-eyebrow">
-              {new Intl.DateTimeFormat(i18n.language, {
-                weekday: "long",
-                day: "numeric",
-                month: "long",
-              }).format(new Date())}
+        <div className="finance-overview">
+          <section className="finance-hero">
+            <div>
+              <div className="finance-eyebrow">
+                {new Intl.DateTimeFormat(i18n.language, {
+                  weekday: "long",
+                  day: "numeric",
+                  month: "long",
+                }).format(new Date())}
+              </div>
+              <h1>{t("dashboard")}</h1>
             </div>
-            <h1>{t("dashboard")}</h1>
-          </div>
-          <p>{t("dashboardDescription")}</p>
-        </section>
-        {report.isPending ? (
-          <Loading />
-        ) : report.error ? (
-          <ErrorNotice error={report.error} />
-        ) : (
-          <section className="dashboard-grid">
-            <Card className="finance-panel finance-balance">
-              <span className="finance-muted">{t("netSavings")}</span>
-              <div className="finance-balance-value">
-                {money(totals?.netSavings)}
-              </div>
-              <span className="finance-positive finance-growth">
-                <ArrowUpOutlined />{" "}
-                {totals?.savingsRate
-                  ? new Intl.NumberFormat(i18n.language, {
-                      style: "percent",
-                      maximumFractionDigits: 1,
-                    }).format(Number(totals.savingsRate) / 10000)
-                  : "—"}{" "}
-                {t("savingsRate").toLowerCase()}
-              </span>
-              <div className="finance-chart" aria-label={t("netSavings")}>
-                <OverviewTrendChart rows={report.data.rows} />
-              </div>
-            </Card>
-            <Card className="finance-panel finance-stat finance-budget">
-              <span className="finance-muted">{t("budget")}</span>
-              <strong>{money(totals?.budget)}</strong>
-              <span className="finance-muted">{t("expenses")}</span>
-              <span className="finance-pill">
-                {Math.round(budgetPercent)}% {t("budget").toLowerCase()}
-              </span>
-            </Card>
-            <Card className="finance-panel finance-stat finance-invest">
-              <span className="finance-muted">{t("income")}</span>
-              <strong>{money(totals?.income)}</strong>
-              <span className="finance-muted">{year}</span>
-              <span className="finance-pill">{t("savingsRate")}</span>
-            </Card>
-            <Card
-              className="finance-panel finance-recent"
-              title={t("recentTransactions")}
-              extra={
-                <Button
-                  id="dashboard-view-all-transactions"
-                  type="link"
-                  href="/transactions"
-                >
-                  {t("viewAll")} <ArrowRightOutlined />
-                </Button>
-              }
-            >
-              <TransactionFeed
-                rows={report.data.recentTransactions.slice(0, 2)}
-                loading={false}
-                showControls={false}
-                onView={setViewing}
-              />
-            </Card>
+            <p>{t("dashboardDescription")}</p>
           </section>
-        )}
+          {report.isPending ? (
+            <Loading />
+          ) : report.error ? (
+            <ErrorNotice error={report.error} />
+          ) : (
+            <section className="dashboard-grid">
+              <Card className="finance-panel finance-balance">
+                <div className="finance-balance-header">
+                  <div>
+                    <span className="finance-muted">{t("netSavings")}</span>
+                    <span className="finance-balance-period">{year}</span>
+                  </div>
+                  <div className="finance-balance-summary">
+                    <div className="finance-balance-value">
+                      {money(totals?.netSavings)}
+                    </div>
+                    <span className="finance-positive finance-growth">
+                      <ArrowUpOutlined />{" "}
+                      {totals?.savingsRate
+                        ? new Intl.NumberFormat(i18n.language, {
+                            style: "percent",
+                            maximumFractionDigits: 1,
+                          }).format(Number(totals.savingsRate) / 10000)
+                        : "—"}{" "}
+                      {t("savingsRate").toLowerCase()}
+                    </span>
+                  </div>
+                </div>
+                <div className="finance-chart" aria-label={t("netSavings")}>
+                  <OverviewTrendChart rows={report.data.rows} />
+                </div>
+              </Card>
+              <Card
+                className="finance-panel finance-recent"
+                title={t("recentTransactions")}
+                extra={
+                  <Button
+                    id="dashboard-view-all-transactions"
+                    type="link"
+                    href="/transactions"
+                  >
+                    {t("viewAll")} <ArrowRightOutlined />
+                  </Button>
+                }
+              >
+                <TransactionFeed
+                  rows={report.data.recentTransactions.slice(0, 4)}
+                  loading={false}
+                  showControls={false}
+                  onView={setViewing}
+                />
+              </Card>
+              <div className="finance-overview-stats">
+                <Card className="finance-panel finance-stat finance-budget">
+                  <span className="finance-muted">{t("budget")}</span>
+                  <strong>{money(totals?.budget)}</strong>
+                  <span className="finance-muted">
+                    {Math.round(budgetPercent)}% {t("budget").toLowerCase()}
+                  </span>
+                </Card>
+                <Card className="finance-panel finance-stat finance-invest">
+                  <span className="finance-muted">{t("income")}</span>
+                  <strong>{money(totals?.income)}</strong>
+                  <span className="finance-muted">{year}</span>
+                </Card>
+                <Card className="finance-panel finance-stat finance-spending">
+                  <span className="finance-muted">{t("expenses")}</span>
+                  <strong>{money(totals?.expenses)}</strong>
+                  <span className="finance-muted">{year}</span>
+                </Card>
+              </div>
+            </section>
+          )}
+        </div>
         <TransactionDetailsDrawer
           transaction={viewing}
           onClose={() => setViewing(undefined)}
@@ -369,25 +328,17 @@ export function Reports({
               description={t("forecastExplanation")}
             />
           )}
-          <Row gutter={[24, 24]}>
-            <Col xs={24} xl={kind === "categories" ? 24 : 16}>
-              <Card
-                className="insight-card"
-                title={t(
-                  kind === "categories"
-                    ? "categorySpending"
-                    : "incomeVsExpenses",
-                )}
-                extra={<Tag bordered={false}>{year}</Tag>}
-              >
-                <ReportChart
-                  rows={chart}
-                  kind={kind === "categories" ? "categories" : "cashflow"}
-                  format={tooltip}
-                />
-              </Card>
-            </Col>
-            {kind !== "categories" && (
+          {kind !== "categories" && (
+            <Row gutter={[24, 24]}>
+              <Col xs={24} xl={16}>
+                <Card
+                  className="insight-card"
+                  title={t("incomeVsExpenses")}
+                  extra={<Tag bordered={false}>{year}</Tag>}
+                >
+                  <ReportChart rows={chart} kind="cashflow" format={tooltip} />
+                </Card>
+              </Col>
               <Col xs={24} xl={8}>
                 <Card
                   className="budget-health-card"
@@ -427,31 +378,142 @@ export function Reports({
                   </Space>
                 </Card>
               </Col>
-            )}
-          </Row>
+            </Row>
+          )}
           {kind !== "categories" && (
             <Card className="insight-card" title={t("savingsVsVariance")}>
               <ReportChart rows={chart} kind="savings" format={tooltip} />
             </Card>
           )}
-          <Card
-            title={t(
-              kind === "categories" ? "categoryBreakdown" : "monthlyBreakdown",
-            )}
-            styles={{ body: { padding: 0 } }}
-          >
-            <Table
-              rowKey="key"
-              pagination={false}
-              scroll={{ x: 800 }}
-              columns={columns}
-              dataSource={
-                kind === "categories"
-                  ? rows
-                  : [...rows, ...(totals ? [totals] : [])]
-              }
-            />
-          </Card>
+          {kind === "categories" ? (
+            <Card
+              className="finance-report-list-card"
+              title={t("categoryBreakdown")}
+            >
+              <div className="finance-category-list">
+                {[...rows]
+                  .sort((a, b) =>
+                    a.expenses === b.expenses
+                      ? 0
+                      : a.expenses > b.expenses
+                        ? -1
+                        : 1,
+                  )
+                  .map((row) => {
+                    const category = categories.find(
+                      (item) => item.id === row.key,
+                    );
+                    const budgetShare =
+                      row.budget && row.budget > 0n
+                        ? Math.min(
+                            100,
+                            Number((row.expenses * 100n) / row.budget),
+                          )
+                        : 0;
+                    return (
+                      <div className="finance-category-list-row" key={row.key}>
+                        <span className="finance-category-list-icon">
+                          <CategoryIcon name={category?.icon ?? ""} />
+                        </span>
+                        <div className="finance-category-list-main">
+                          <strong>{label(row)}</strong>
+                          {row.budget && row.budget > 0n ? (
+                            <Progress
+                              percent={budgetShare}
+                              showInfo={false}
+                              size="small"
+                              status={
+                                row.expenses > row.budget
+                                  ? "exception"
+                                  : "normal"
+                              }
+                            />
+                          ) : null}
+                          <small>
+                            {t("budget")}: {money(row.budget)} · {t("variance")}
+                            : {money(row.variance)}
+                          </small>
+                        </div>
+                        <strong className="finance-category-list-amount">
+                          {money(row.expenses)}
+                        </strong>
+                      </div>
+                    );
+                  })}
+              </div>
+            </Card>
+          ) : (
+            <Card
+              className="finance-report-list-card"
+              title={t("monthlyBreakdown")}
+            >
+              <div className="finance-monthly-grid">
+                {rows.map((row) => (
+                  <div className="finance-monthly-card" key={row.key}>
+                    <div className="finance-monthly-card-head">
+                      <div className="finance-monthly-card-kicker">
+                        <span>{label(row)}</span>
+                        {kind === "forecast" && (
+                          <span
+                            className={`finance-monthly-status ${row.actual ? "finance-monthly-status--actual" : "finance-monthly-status--forecast"}`}
+                          >
+                            {t(row.actual ? "actual" : "forecast")}
+                          </span>
+                        )}
+                      </div>
+                      <strong>{money(row.netSavings)}</strong>
+                      <small>{t("netSavings")}</small>
+                    </div>
+                    <dl>
+                      <div>
+                        <dt>{t("income")}</dt>
+                        <dd>{money(row.income)}</dd>
+                      </div>
+                      <div>
+                        <dt>{t("expenses")}</dt>
+                        <dd>{money(row.expenses)}</dd>
+                      </div>
+                      <div>
+                        <dt>{t("budget")}</dt>
+                        <dd>{money(row.budget)}</dd>
+                      </div>
+                      <div>
+                        <dt>{t("variance")}</dt>
+                        <dd>{money(row.variance)}</dd>
+                      </div>
+                    </dl>
+                  </div>
+                ))}
+                {totals && (
+                  <div className="finance-monthly-total">
+                    <div>
+                      <span>{t("totalYear")}</span>
+                      <strong>{money(totals.netSavings)}</strong>
+                      <small>{t("netSavings")}</small>
+                    </div>
+                    <dl>
+                      <div>
+                        <dt>{t("income")}</dt>
+                        <dd>{money(totals.income)}</dd>
+                      </div>
+                      <div>
+                        <dt>{t("expenses")}</dt>
+                        <dd>{money(totals.expenses)}</dd>
+                      </div>
+                      <div>
+                        <dt>{t("budget")}</dt>
+                        <dd>{money(totals.budget)}</dd>
+                      </div>
+                      <div>
+                        <dt>{t("variance")}</dt>
+                        <dd>{money(totals.variance)}</dd>
+                      </div>
+                    </dl>
+                  </div>
+                )}
+              </div>
+            </Card>
+          )}
         </Space>
       )}
       <TransactionDetailsDrawer

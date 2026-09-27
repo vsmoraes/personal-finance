@@ -1,5 +1,6 @@
-import { Flex } from "antd";
 import type { ReactNode } from "react";
+
+import { Flex } from "../design-system.tsx";
 
 export interface PageTitleProps {
   title: string;

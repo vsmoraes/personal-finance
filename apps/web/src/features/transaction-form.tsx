@@ -1,7 +1,6 @@
 import { create } from "@bufbuild/protobuf";
-import { App as AntApp, Button, Form } from "antd";
 import { useEffect, useMemo, useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 
 import {
@@ -25,7 +24,8 @@ import {
   useResources,
   useSettings,
 } from "../shared/api.ts";
-import { Field, FormFields } from "../shared/forms.tsx";
+import { App as AntApp, Form } from "../shared/design-system.tsx";
+import { Field, FormActions, FormFields } from "../shared/forms.tsx";
 import { ErrorNotice } from "../shared/ui.tsx";
 type Values = {
   date: string;
@@ -39,9 +39,11 @@ type Values = {
 export function TransactionForm({
   transaction,
   onSaved,
+  onCancel,
 }: {
   transaction?: Transaction;
   onSaved?: () => void;
+  onCancel?: () => void;
 }) {
   const { t } = useTranslation();
   const { message } = AntApp.useApp();
@@ -73,7 +75,7 @@ export function TransactionForm({
       includeInBudget: transaction?.includeInBudget ?? true,
     },
   });
-  const selectedType = form.watch("type");
+  const selectedType = useWatch({ control: form.control, name: "type" });
   useEffect(() => {
     const current = categories.find(
       (c) => c.id === form.getValues("categoryId"),
@@ -180,14 +182,14 @@ export function TransactionForm({
           type="checkbox"
         />
       </FormFields>
-      <Button
-        id={transaction ? "transaction-form-save" : "transaction-form-create"}
-        type="primary"
-        htmlType="submit"
-        loading={form.formState.isSubmitting}
-      >
-        {t(transaction ? "save" : "addTransaction")}
-      </Button>
+      <FormActions
+        submitId={
+          transaction ? "transaction-form-save" : "transaction-form-create"
+        }
+        submitLabel={t(transaction ? "save" : "addTransaction")}
+        submitting={form.formState.isSubmitting}
+        onCancel={onCancel}
+      />
     </Form>
   );
 }

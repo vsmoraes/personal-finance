@@ -1,7 +1,13 @@
 import { CloseOutlined } from "@ant-design/icons";
-import { Button, ConfigProvider, Modal, Space, Typography } from "antd";
 import { useTranslation } from "react-i18next";
 
+import {
+  Button,
+  ConfigProvider,
+  Modal,
+  Space,
+  Typography,
+} from "../../shared/design-system.tsx";
 import { EntityForm } from "../entity-form.tsx";
 import { TransactionForm } from "../transaction-form.tsx";
 import type { EntryDraft } from "./entry-draft.ts";
@@ -64,6 +70,7 @@ export function EntryDrawer({
                 key={`transactions:${draft.entity?.id ?? "new"}`}
                 {...(draft.entity ? { transaction: draft.entity } : {})}
                 onSaved={onClose}
+                onCancel={onClose}
               />
             ) : (
               <EntityForm
@@ -71,6 +78,7 @@ export function EntryDrawer({
                 resource={draft.resource}
                 entity={draft.entity}
                 onSaved={onClose}
+                onCancel={onClose}
               />
             )}
             {draft.entity && onDelete && (

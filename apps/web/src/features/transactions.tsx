@@ -1,6 +1,5 @@
 import { DownloadOutlined } from "@ant-design/icons";
 import { useQuery } from "@tanstack/react-query";
-import { Button, Card, Dropdown, Modal, Space, Typography } from "antd";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -11,6 +10,14 @@ import {
 } from "../../../../packages/contracts/src/finance/v1/finance_pb.ts";
 import { formatMoney } from "../../../../packages/domain/src/money.ts";
 import { getMessage, request, useRefresh } from "../shared/api.ts";
+import {
+  Button,
+  Card,
+  Dropdown,
+  Modal,
+  Space,
+  Typography,
+} from "../shared/design-system.tsx";
 import { ErrorNotice } from "../shared/ui.tsx";
 import { TransactionDetailsDrawer } from "./transaction-details-drawer.tsx";
 import { TransactionFeed } from "./transaction-feed.tsx";
@@ -138,7 +145,7 @@ export function Transactions() {
           </strong>
         </Card>
       </section>
-      <Card className="finance-panel finance-transactions-panel">
+      <Card className="finance-panel finance-transactions-panel finance-list-panel">
         {error || query.error ? (
           <ErrorNotice error={error ?? query.error} />
         ) : null}

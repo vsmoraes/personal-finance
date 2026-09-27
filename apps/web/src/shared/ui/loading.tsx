@@ -1,5 +1,6 @@
-import { Flex, Spin, Typography } from "antd";
 import { useTranslation } from "react-i18next";
+
+import { Flex, Spin, Typography } from "../design-system.tsx";
 
 export function Loading() {
   const { t } = useTranslation();

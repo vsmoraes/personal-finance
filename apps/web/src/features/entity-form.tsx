@@ -1,18 +1,6 @@
 import { fromJson, type JsonValue, toJson } from "@bufbuild/protobuf";
-import {
-  App as AntApp,
-  Button,
-  Checkbox,
-  Collapse,
-  DatePicker,
-  Flex,
-  Form,
-  Input,
-  Select,
-  Typography,
-} from "antd";
 import dayjs from "dayjs";
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 
@@ -28,7 +16,23 @@ import {
   useResources,
   useSettings,
 } from "../shared/api.ts";
-import { Field, FormField, FormFields, type Option } from "../shared/forms.tsx";
+import {
+  App as AntApp,
+  Button,
+  Checkbox,
+  DatePicker,
+  Form,
+  Input,
+  Select,
+  Typography,
+} from "../shared/design-system.tsx";
+import {
+  Field,
+  FormActions,
+  FormField,
+  FormFields,
+  type Option,
+} from "../shared/forms.tsx";
 import { ErrorNotice } from "../shared/ui.tsx";
 export type Resource =
   | "categories"
@@ -121,10 +125,12 @@ export function EntityForm({
   resource,
   entity,
   onSaved,
+  onCancel,
 }: {
   resource: Resource;
   entity: Entity | undefined;
   onSaved: () => void;
+  onCancel?: () => void;
 }) {
   const { t } = useTranslation();
   const { message } = AntApp.useApp();
@@ -328,152 +334,127 @@ export function EntityForm({
       }}
     >
       {error ? <ErrorNotice error={error} /> : null}
-      <Collapse
-        defaultActiveKey={["details", "rules", "overrides"]}
-        items={[
-          {
-            key: "details",
-            label: t("entryDetails"),
-            children: (
-              <FormFields>
-                {fields(resource, categoryOptions, t).map((f) => (
-                  <Field
-                    key={f.key}
-                    control={form.control}
-                    name={f.key}
-                    label={f.key}
-                    {...(f.type ? { type: f.type } : {})}
-                    {...(f.options ? { options: f.options } : {})}
-                    required={Boolean(f.required)}
+      <FormFields>
+        {fields(resource, categoryOptions, t).map((f) => (
+          <Field
+            key={f.key}
+            control={form.control}
+            name={f.key}
+            label={f.key}
+            {...(f.type ? { type: f.type } : {})}
+            {...(f.options ? { options: f.options } : {})}
+            required={Boolean(f.required)}
+          />
+        ))}
+        {resource === "scenarios" && (
+          <>
+            <Typography.Paragraph className="finance-form-help">
+              {t("scenarioHelp")}
+            </Typography.Paragraph>
+            {overrides.map((o, index) => (
+              <Fragment key={index}>
+                <h3 className="finance-form-repeat-heading">
+                  {t("scenarioOverrides")} {index + 1}
+                </h3>
+                <FormField label="month">
+                  <DatePicker
+                    id={`override-month-${index}`}
+                    picker="month"
+                    format="YYYY-MM"
+                    value={o.month ? dayjs(o.month) : null}
+                    onChange={(value) =>
+                      setOverrides((old) =>
+                        old.map((v, i) =>
+                          i === index
+                            ? { ...v, month: value?.format("YYYY-MM") ?? "" }
+                            : v,
+                        ),
+                      )
+                    }
                   />
-                ))}
-              </FormFields>
-            ),
-          },
-          ...(resource === "scenarios"
-            ? [
-                {
-                  key: "overrides",
-                  label: t("scenarioOverrides"),
-                  children: (
-                    <Flex vertical gap="middle">
-                      <Typography.Paragraph>
-                        {t("scenarioHelp")}
-                      </Typography.Paragraph>
-                      {overrides.map((o, index) => (
-                        <Flex vertical gap="middle" key={index}>
-                          <FormField label="month">
-                            <DatePicker
-                              id={`override-month-${index}`}
-                              picker="month"
-                              format="YYYY-MM"
-                              value={o.month ? dayjs(o.month) : null}
-                              onChange={(value) =>
-                                setOverrides((old) =>
-                                  old.map((v, i) =>
-                                    i === index
-                                      ? {
-                                          ...v,
-                                          month: value?.format("YYYY-MM") ?? "",
-                                        }
-                                      : v,
-                                  ),
-                                )
-                              }
-                            />
-                          </FormField>
-                          <FormField label="category">
-                            <Select
-                              id={`override-category-${index}`}
-                              value={o.categoryId || null}
-                              placeholder={t("selectCategory")}
-                              options={categoryOptions}
-                              onChange={(value: string) =>
-                                setOverrides((old) =>
-                                  old.map((v, i) =>
-                                    i === index
-                                      ? { ...v, categoryId: value }
-                                      : v,
-                                  ),
-                                )
-                              }
-                            />
-                          </FormField>
-                          <FormField label="amount">
-                            <Input
-                              id={`override-amount-${index}`}
-                              inputMode="decimal"
-                              value={o.amount}
-                              onChange={(e) =>
-                                setOverrides((old) =>
-                                  old.map((v, i) =>
-                                    i === index
-                                      ? { ...v, amount: e.target.value }
-                                      : v,
-                                  ),
-                                )
-                              }
-                            />
-                          </FormField>
-                          <FormField>
-                            <Checkbox
-                              checked={o.additional}
-                              onChange={(e) =>
-                                setOverrides((old) =>
-                                  old.map((v, i) =>
-                                    i === index
-                                      ? { ...v, additional: e.target.checked }
-                                      : v,
-                                  ),
-                                )
-                              }
-                            >
-                              {t("additional")}
-                            </Checkbox>
-                          </FormField>
-                          <Button
-                            danger
-                            onClick={() =>
-                              setOverrides((old) =>
-                                old.filter((_, i) => i !== index),
-                              )
-                            }
-                          >
-                            {t("remove")}
-                          </Button>
-                        </Flex>
-                      ))}
-                      <Button
-                        onClick={() =>
-                          setOverrides((old) => [
-                            ...old,
-                            {
-                              month: "",
-                              categoryId: "",
-                              amount: "",
-                              additional: false,
-                              currency: defaultCurrency,
-                            },
-                          ])
-                        }
-                      >
-                        {t("addOverride")}
-                      </Button>
-                    </Flex>
-                  ),
-                },
-              ]
-            : []),
-        ]}
+                </FormField>
+                <FormField label="category">
+                  <Select
+                    id={`override-category-${index}`}
+                    value={o.categoryId || null}
+                    placeholder={t("selectCategory")}
+                    options={categoryOptions}
+                    onChange={(value: string) =>
+                      setOverrides((old) =>
+                        old.map((v, i) =>
+                          i === index ? { ...v, categoryId: value } : v,
+                        ),
+                      )
+                    }
+                  />
+                </FormField>
+                <FormField label="amount">
+                  <Input
+                    id={`override-amount-${index}`}
+                    inputMode="decimal"
+                    value={o.amount}
+                    onChange={(e) =>
+                      setOverrides((old) =>
+                        old.map((v, i) =>
+                          i === index ? { ...v, amount: e.target.value } : v,
+                        ),
+                      )
+                    }
+                  />
+                </FormField>
+                <FormField>
+                  <Checkbox
+                    checked={o.additional}
+                    onChange={(e) =>
+                      setOverrides((old) =>
+                        old.map((v, i) =>
+                          i === index
+                            ? { ...v, additional: e.target.checked }
+                            : v,
+                        ),
+                      )
+                    }
+                  >
+                    {t("additional")}
+                  </Checkbox>
+                </FormField>
+                <Button
+                  htmlType="button"
+                  danger
+                  onClick={() =>
+                    setOverrides((old) => old.filter((_, i) => i !== index))
+                  }
+                >
+                  {t("remove")}
+                </Button>
+              </Fragment>
+            ))}
+            <Button
+              htmlType="button"
+              onClick={() =>
+                setOverrides((old) => [
+                  ...old,
+                  {
+                    month: "",
+                    categoryId: "",
+                    amount: "",
+                    additional: false,
+                    currency: defaultCurrency,
+                  },
+                ])
+              }
+            >
+              {t("addOverride")}
+            </Button>
+          </>
+        )}
+      </FormFields>
+      <FormActions
+        submitId={`${resource}-form-save`}
+        submitLabel={t("save")}
+        submitting={form.formState.isSubmitting}
+        onCancel={onCancel}
       />
-      <Button
-        id={`${resource}-form-save`}
-        type="primary"
-        htmlType="submit"
-        loading={form.formState.isSubmitting}
-      >
-        {t("save")}
-      </Button>
     </Form>
   );
 }

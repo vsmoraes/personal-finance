@@ -1,4 +1,3 @@
-import { theme } from "antd";
 import { useTranslation } from "react-i18next";
 import {
   Bar,
@@ -12,6 +11,8 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+
+import { theme } from "../shared/design-system.tsx";
 
 export type ChartRow = {
   name: string;

@@ -1,23 +1,6 @@
 import { ExperimentOutlined, SearchOutlined } from "@ant-design/icons";
 import { create, fromJson, toJson } from "@bufbuild/protobuf";
-import {
-  Alert,
-  Button,
-  Card,
-  Checkbox,
-  Collapse,
-  Flex,
-  Form,
-  Input,
-  Modal,
-  Space,
-  Table,
-  type TableProps,
-  Tag,
-  Typography,
-} from "antd";
 import { useState } from "react";
-import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 
 import * as p from "../../../../packages/contracts/src/finance/v1/finance_pb.ts";
@@ -29,7 +12,22 @@ import {
   useResources,
 } from "../shared/api.ts";
 import { CategoryIcon } from "../shared/category-icons.tsx";
-import { Field, FormField, FormFields } from "../shared/forms.tsx";
+import {
+  Alert,
+  Button,
+  Card,
+  Checkbox,
+  Collapse,
+  Flex,
+  Input,
+  Modal,
+  Space,
+  Table,
+  type TableProps,
+  Tag,
+  Typography,
+} from "../shared/design-system.tsx";
+import { FormField } from "../shared/forms.tsx";
 import { EmptyState, ErrorNotice, PageTitle } from "../shared/ui.tsx";
 import { type Entity, type Resource } from "./entity-form.tsx";
 import { EntryDrawer } from "./entry-drawer.tsx";
@@ -289,13 +287,13 @@ export function Configuration({ resource }: { resource: Resource }) {
         {error || data.error ? (
           <ErrorNotice error={error ?? data.error} />
         ) : null}
-        <Card styles={{ body: { padding: 0 } }}>
+        <Card className="finance-list-panel" styles={{ body: { padding: 0 } }}>
           <Flex
+            className="finance-table-toolbar"
             justify="space-between"
             align="center"
             gap="middle"
             wrap
-            style={{ padding: 20 }}
           >
             <Input
               id={`${resource}-search`}
@@ -305,7 +303,6 @@ export function Configuration({ resource }: { resource: Resource }) {
               value={search}
               allowClear
               onChange={(event) => setSearch(event.target.value)}
-              style={{ width: 320, maxWidth: "100%" }}
             />
             <Typography.Text type="secondary">
               {t("entryCount", { count: visible.length })}
@@ -329,17 +326,6 @@ export function Configuration({ resource }: { resource: Resource }) {
             })}
           />
         </Card>
-        {resource === "budgets" && (
-          <Collapse
-            items={[
-              {
-                key: "copy",
-                label: <span id="budget-copy-toggle">{t("copyBudgets")}</span>,
-                children: <BudgetCopy />,
-              },
-            ]}
-          />
-        )}
         {resource === "categorization-rules" && (
           <Collapse
             items={[
@@ -386,88 +372,6 @@ export function Configuration({ resource }: { resource: Resource }) {
         <Typography.Paragraph>{t("deleteConfirmation")}</Typography.Paragraph>
       </Modal>
     </>
-  );
-}
-function BudgetCopy() {
-  const { t } = useTranslation();
-  const refresh = useRefresh("budgets");
-  const [error, setError] = useState<unknown>();
-  const form = useForm({
-    defaultValues: {
-      sourceMonth: "",
-      targetMonths: "",
-      sourceYear: "",
-      targetYear: "",
-    },
-  });
-  const submit = form.handleSubmit(async (v) => {
-    try {
-      await request(
-        "budgets/copy",
-        "POST",
-        toJson(
-          p.BudgetCopyRequestSchema,
-          create(p.BudgetCopyRequestSchema, {
-            sourceMonth: v.sourceMonth,
-            targetMonths: v.targetMonths
-              .split(",")
-              .map((s) => s.trim())
-              .filter(Boolean),
-            sourceYear: Number(v.sourceYear),
-            targetYear: Number(v.targetYear),
-          }),
-        ),
-      );
-      refresh();
-      setError(undefined);
-    } catch (e) {
-      setError(e);
-    }
-  });
-  return (
-    <Card className="finance-form-surface" title={t("copyBudgets")}>
-      <Form
-        className="finance-standard-form"
-        layout="vertical"
-        onFinish={() => {
-          void submit();
-        }}
-      >
-        <FormFields>
-          {error ? <ErrorNotice error={error} /> : null}
-          <Field
-            control={form.control}
-            name="sourceMonth"
-            label="sourceMonth"
-            type="month"
-          />
-          <Field
-            control={form.control}
-            name="targetMonths"
-            label="targetMonths"
-          />
-          <Field
-            control={form.control}
-            name="sourceYear"
-            label="sourceYear"
-            type="number"
-          />
-          <Field
-            control={form.control}
-            name="targetYear"
-            label="targetYear"
-            type="number"
-          />
-          <Button
-            id="budget-copy-submit"
-            htmlType="submit"
-            loading={form.formState.isSubmitting}
-          >
-            {t("copy")}
-          </Button>
-        </FormFields>
-      </Form>
-    </Card>
   );
 }
 function RulePreview() {

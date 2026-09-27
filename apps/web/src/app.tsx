@@ -7,7 +7,6 @@ import {
   SwapOutlined,
   WalletOutlined,
 } from "@ant-design/icons";
-import { App as AntApp, ConfigProvider, theme } from "antd";
 import en from "antd/locale/en_US.js";
 import es from "antd/locale/es_ES.js";
 import pt from "antd/locale/pt_BR.js";
@@ -22,6 +21,15 @@ import { Reports } from "./features/reports.tsx";
 import { SettingsPage } from "./features/settings.tsx";
 import { Transactions } from "./features/transactions.tsx";
 import { useSettings } from "./shared/api.ts";
+import {
+  App as AntApp,
+  Button,
+  ConfigProvider,
+} from "./shared/design-system.tsx";
+import {
+  applyDesignSystemTheme,
+  designSystemTheme,
+} from "./shared/design-system.tsx";
 import { ErrorNotice, Loading, Retry } from "./shared/ui.tsx";
 export function App() {
   const { t, i18n } = useTranslation();
@@ -51,6 +59,9 @@ export function App() {
     document.documentElement.classList.toggle("finance-dark-mode", dark);
     return () => document.documentElement.classList.remove("finance-dark-mode");
   }, [dark]);
+  useEffect(() => {
+    applyDesignSystemTheme(settings, dark);
+  }, [settings, dark]);
   if (settingsQuery.isPending) return <Loading />;
   if (settingsQuery.error)
     return (
@@ -72,55 +83,7 @@ export function App() {
             ? pt.default
             : en.default
       }
-      theme={{
-        algorithm: dark ? theme.darkAlgorithm : theme.defaultAlgorithm,
-        token: {
-          borderRadius: 16,
-          borderRadiusLG: 28,
-          colorPrimary: dark ? "#67d6a5" : "#1f7a5b",
-          colorInfo: dark ? "#67d6a5" : "#1f7a5b",
-          ...(dark
-            ? {
-                colorBgLayout: "#10111f",
-                colorBgContainer: "#181a2b",
-                colorBgElevated: "#20233a",
-                colorBorderSecondary: "#2c304a",
-              }
-            : {
-                colorBgLayout: "#f6f7fc",
-                colorBgContainer: "#ffffff",
-                colorBorderSecondary: "#e9eaf2",
-              }),
-        },
-        ...(custom
-          ? {
-              token: {
-                colorPrimary: settings?.customAccent || "#1677FF",
-                colorPrimaryBg: settings?.customAccentSecondary || "#69B1FF",
-                colorPrimaryBgHover:
-                  settings?.customAccentSecondary || "#69B1FF",
-                colorSuccess: settings?.customAccent || "#1677FF",
-                colorInfo: settings?.customAccentSecondary || "#69B1FF",
-                colorLink: settings?.customAccentSecondary || "#69B1FF",
-                colorBgBase: settings?.customBackground || "#F5F5F5",
-                colorBgLayout: settings?.customBackground || "#F5F5F5",
-                colorBgContainer: settings?.customSurface || "#FFFFFF",
-                colorBgElevated: settings?.customSurface || "#FFFFFF",
-                colorTextBase: dark ? "#f7f8ff" : "#1f2233",
-                colorTextSecondary: dark ? "#bbc0d4" : "#62677d",
-              },
-              components: {
-                Menu: {
-                  itemSelectedBg:
-                    settings?.customSidebarAccentSecondary || "#E6F4FF",
-                  itemSelectedColor: settings?.customSidebarAccent || "#1677FF",
-                  itemHoverBg:
-                    settings?.customSidebarAccentSecondary || "#E6F4FF",
-                },
-              },
-            }
-          : {}),
-      }}
+      theme={designSystemTheme(settings, dark)}
     >
       <AntApp>
         <Workspace
@@ -138,6 +101,7 @@ function Workspace({ dark }: { dark: boolean; sidebarAccent?: string }) {
   const location = useLocation();
   const [moreOpen, setMoreOpen] = useState(false);
   const [draft, setDraft] = useState<EntryDraft>();
+  const [openNavGroup, setOpenNavGroup] = useState<string | null>(null);
   useEffect(() => {
     const createTransaction = () => setDraft({ resource: "transactions" });
     window.addEventListener("finance:create-transaction", createTransaction);
@@ -189,23 +153,58 @@ function Workspace({ dark }: { dark: boolean; sidebarAccent?: string }) {
     icon: typeof DashboardOutlined;
     items: [string, string, typeof DashboardOutlined][];
   }[];
+  const mobileNavigation = [
+    {
+      path: "/",
+      label: t("dashboard"),
+      icon: DashboardOutlined,
+      active: location.pathname === "/",
+    },
+    {
+      path: "/transactions",
+      label: t("transactions"),
+      icon: SwapOutlined,
+      active: location.pathname === "/transactions",
+    },
+    {
+      path: "/category-report",
+      label: t("insights"),
+      icon: BarChartOutlined,
+      active: ["/category-report", "/monthly"].includes(location.pathname),
+    },
+  ];
   const desktopNavigation = (
     <nav className="finance-nav finance-groups">
       {nav.map((group) => (
         <div
           className={`finance-group ${group.items.some(([path]) => path === location.pathname) ? "active" : ""}`}
           key={group.label}
+          onMouseEnter={() => setOpenNavGroup(group.label)}
+          onFocus={() => setOpenNavGroup(group.label)}
         >
-          <button id={`nav-group-${group.label.toLowerCase()}`} type="button">
+          <Button
+            id={`nav-group-${group.label.toLowerCase()}`}
+            type="text"
+            htmlType="button"
+            aria-expanded={openNavGroup === group.label}
+            onClick={() =>
+              setOpenNavGroup((open) =>
+                open === group.label ? null : group.label,
+              )
+            }
+          >
             <group.icon />
             {group.label}
-          </button>
-          <div className="finance-drop">
+          </Button>
+          <div
+            className={`finance-drop ${openNavGroup === group.label ? "is-open" : ""}`}
+          >
             {group.items.map(([path, label, Icon]) => (
               <Link
                 id={`nav-link-${path === "/" ? "overview" : path.slice(1)}`}
                 key={path}
                 to={path}
+                onClick={() => setOpenNavGroup(null)}
               >
                 <Icon />
                 {label}
@@ -217,8 +216,17 @@ function Workspace({ dark }: { dark: boolean; sidebarAccent?: string }) {
     </nav>
   );
   return (
-    <div className={`finance-shell ${dark ? "finance-dark" : ""}`}>
-      <header className="finance-topbar finance-glass">
+    <div
+      className={`finance-shell ${dark ? "finance-dark" : ""} ${location.pathname === "/" ? "finance-overview-shell" : ""}`}
+    >
+      <header
+        className={`finance-topbar finance-glass ${openNavGroup ? "is-expanded" : ""}`}
+        onMouseLeave={() => setOpenNavGroup(null)}
+        onBlur={(event) => {
+          if (!event.currentTarget.contains(event.relatedTarget))
+            setOpenNavGroup(null);
+        }}
+      >
         <Link to="/" className="finance-brand">
           <i />
           {t("appName")}
@@ -261,33 +269,33 @@ function Workspace({ dark }: { dark: boolean; sidebarAccent?: string }) {
       </main>
       <EntryDrawer draft={draft} onClose={() => setDraft(undefined)} />
       <nav className="finance-mobilebar finance-glass">
-        {nav.slice(0, 3).map((group) => {
-          const Icon = group.icon;
-          const target = group.items[0]?.[0] ?? "/";
+        {mobileNavigation.map(({ path, label, icon: Icon, active }) => {
           return (
             <Link
-              id={`mobile-nav-${target === "/" ? "overview" : target.slice(1)}`}
-              key={group.label}
-              to={target}
-              className={
-                group.items.some(([path]) => path === location.pathname)
-                  ? "active"
-                  : ""
-              }
+              id={`mobile-nav-${path === "/" ? "overview" : path === "/category-report" ? "insights" : path.slice(1)}`}
+              key={path}
+              to={path}
+              className={active ? "active" : ""}
             >
               <Icon />
-              <span>{group.label}</span>
+              <span>{label}</span>
             </Link>
           );
         })}
-        <button
+        <Button
           id="mobile-more-button"
-          type="button"
+          type="text"
+          htmlType="button"
+          className={
+            moreOpen || !mobileNavigation.some(({ active }) => active)
+              ? "active"
+              : ""
+          }
           onClick={() => setMoreOpen(true)}
         >
           <MenuOutlined />
           <span>{t("more")}</span>
-        </button>
+        </Button>
       </nav>
       {moreOpen && (
         <div
@@ -309,7 +317,14 @@ function Workspace({ dark }: { dark: boolean; sidebarAccent?: string }) {
           >
             <div className="finance-sheet-head">
               <strong>{t("more")}</strong>
-              <button onClick={() => setMoreOpen(false)}>×</button>
+              <Button
+                type="text"
+                htmlType="button"
+                aria-label={t("cancel")}
+                onClick={() => setMoreOpen(false)}
+              >
+                ×
+              </Button>
             </div>
             {nav.map((group) => {
               const Icon = group.icon;

@@ -33,4 +33,4 @@ The trusted profile is application-wide. Future authentication belongs in a driv
 
 ## Shared UI entry boundary
 
-`EntryDrawer` is the single presentation surface for creation and editing from Overview and resource pages. It delegates transaction state to `TransactionForm` and other resources to `EntityForm`; both use the same generated contracts and HTTP adapter. `TransactionTable` is shared by history and recent activity. The page components own query/filter state and compose these components without copying entry forms. `ReportChart` receives numeric display projections only; money calculations remain in the domain.
+`EntryDrawer` is the single presentation surface for creation and editing from resource pages. It delegates transaction state to `TransactionForm` and other resources to `EntityForm`; both use the same generated contracts and HTTP adapter. `TransactionFeed` presents history and recent activity. The page components own query/filter state and compose these components without copying entry forms. `ReportChart` receives numeric display projections only; money calculations remain in the domain.

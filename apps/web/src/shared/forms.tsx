@@ -1,12 +1,3 @@
-import {
-  ColorPicker,
-  DatePicker,
-  Form,
-  Input,
-  InputNumber,
-  Select,
-  Switch,
-} from "antd";
 import dayjs from "dayjs";
 import { type ReactNode } from "react";
 import {
@@ -19,8 +10,52 @@ import {
 import { useTranslation } from "react-i18next";
 
 import { categoryIcons } from "./category-icons.tsx";
+import {
+  Button,
+  ColorPicker,
+  DatePicker,
+  Form,
+  Input,
+  InputNumber,
+  Select,
+  Switch,
+} from "./design-system.tsx";
 
 export type Option = { value: string; label: string };
+
+export function FormActions({
+  submitLabel,
+  submitId,
+  submitting = false,
+  submitDisabled = false,
+  onCancel,
+}: {
+  submitLabel: string;
+  submitId?: string;
+  submitting?: boolean;
+  submitDisabled?: boolean;
+  onCancel?: (() => void) | undefined;
+}) {
+  const { t } = useTranslation();
+  return (
+    <div className="finance-form-actions">
+      <Button
+        id={submitId}
+        type="primary"
+        htmlType="submit"
+        loading={submitting}
+        disabled={submitDisabled}
+      >
+        {submitLabel}
+      </Button>
+      {onCancel && (
+        <Button htmlType="button" onClick={onCancel}>
+          {t("cancel")}
+        </Button>
+      )}
+    </div>
+  );
+}
 
 /** Keep React Hook Form as the state owner; Ant Design owns presentation. */
 export function FormFields({ children }: { children: ReactNode }) {

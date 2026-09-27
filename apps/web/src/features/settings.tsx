@@ -1,7 +1,12 @@
+import {
+  BgColorsOutlined,
+  CalendarOutlined,
+  ControlOutlined,
+  ImportOutlined,
+} from "@ant-design/icons";
 import { create } from "@bufbuild/protobuf";
-import { App as AntApp, Button, Card, Flex, Form, Typography } from "antd";
-import { type ReactNode, useState } from "react";
-import { useForm } from "react-hook-form";
+import { useState } from "react";
+import { useForm, useWatch } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 
 import {
@@ -9,8 +14,20 @@ import {
   SettingsSchema,
 } from "../../../../packages/contracts/src/finance/v1/finance_pb.ts";
 import { saveMessage, useRefresh, useSettings } from "../shared/api.ts";
+import {
+  App as AntApp,
+  Button,
+  Form,
+  Select,
+} from "../shared/design-system.tsx";
 import { currencies, Field } from "../shared/forms.tsx";
-import { ErrorNotice, Loading, PageTitle } from "../shared/ui.tsx";
+import {
+  ErrorNotice,
+  Loading,
+  PageTitle,
+  Preference,
+  SettingsSection,
+} from "../shared/ui.tsx";
 export function SettingsPage() {
   const { t } = useTranslation();
   const query = useSettings();
@@ -33,13 +50,24 @@ function SettingsForm({ settings }: { settings: Settings }) {
   const { message } = AntApp.useApp();
   const [error, setError] = useState<unknown>();
   const [section, setSection] = useState("general");
+  const sections = [
+    { key: "general", label: t("preferences"), icon: <ControlOutlined /> },
+    {
+      key: "appearance",
+      label: t("themeSettings"),
+      icon: <BgColorsOutlined />,
+    },
+    {
+      key: "display",
+      label: t("displayPreferences"),
+      icon: <CalendarOutlined />,
+    },
+    { key: "imports", label: t("importDefaults"), icon: <ImportOutlined /> },
+  ];
   const form = useForm({
     defaultValues: {
       ...settings,
-      theme:
-        settings.theme === "purple" || settings.theme === "system"
-          ? "light"
-          : settings.theme,
+      theme: settings.theme === "purple" ? "light" : settings.theme,
       customBackground: settings.customBackground || "#F5F5F5",
       customSurface: settings.customSurface || "#FFFFFF",
       customAccent: settings.customAccent || "#1677FF",
@@ -53,6 +81,7 @@ function SettingsForm({ settings }: { settings: Settings }) {
       reportYear: String(settings.reportYear),
     },
   });
+  const selectedTheme = useWatch({ control: form.control, name: "theme" });
   const submit = form.handleSubmit(async (v) => {
     try {
       const saved = await saveMessage(
@@ -75,232 +104,280 @@ function SettingsForm({ settings }: { settings: Settings }) {
     }
   });
   return (
-    <Card className="finance-settings-card">
-      <Form
-        id="settings-form"
-        layout="vertical"
-        onFinish={() => {
-          void submit();
-        }}
-      >
-        <Flex vertical gap="large">
-          {error ? <ErrorNotice error={error} /> : null}
-          <div className="finance-settings-layout">
-            <aside className="finance-settings-nav">
-              {[
-                ["general", t("preferences")],
-                ["appearance", t("themeSettings")],
-                ["display", t("displayPreferences")],
-                ["imports", t("importDefaults")],
-              ].map(([key, label]) => (
-                <button
-                  id={`settings-section-${key}`}
-                  type="button"
-                  key={key}
-                  className={section === key ? "active" : ""}
-                  onClick={() => setSection(key ?? "general")}
-                >
-                  {label}
-                </button>
-              ))}
-            </aside>
-            <div className="finance-settings-content">
-              {section === "general" && (
-                <SettingsSection
-                  title={t("preferences")}
-                  description={t("settingsDescription")}
-                >
-                  <Preference
-                    label={t("language")}
-                    help="Language used throughout the application."
-                  >
-                    <Field
-                      control={form.control}
-                      name="language"
-                      label="language"
-                      presentation="control"
-                      options={[
-                        { value: "en", label: "English" },
-                        { value: "es", label: "Español" },
-                        { value: "pt-BR", label: "Português (Brasil)" },
-                      ]}
-                    />
-                  </Preference>
-                  <Preference
-                    label={t("timezone")}
-                    help="Used to interpret transaction dates."
-                  >
-                    <Field
-                      control={form.control}
-                      name="timezone"
-                      label="timezone"
-                      presentation="control"
-                      options={[
-                        "UTC",
-                        ...Intl.supportedValuesOf("timeZone"),
-                      ].map((value) => ({ value, label: value }))}
-                    />
-                  </Preference>
-                </SettingsSection>
+    <Form
+      id="settings-form"
+      className="finance-settings-page"
+      layout="vertical"
+      onFinish={() => {
+        void submit();
+      }}
+    >
+      {error ? <ErrorNotice error={error} /> : null}
+      <div className="finance-settings-layout">
+        <aside className="finance-settings-nav" aria-label={t("settings")}>
+          <div id="settings-section-mobile">
+            <Select
+              className="finance-settings-mobile-select"
+              value={section}
+              onChange={setSection}
+              options={sections.map(({ key, label }) => ({
+                value: key,
+                label,
+              }))}
+              optionRender={(option) => (
+                <span id={`settings-mobile-option-${option.value}`}>
+                  {option.label}
+                </span>
               )}
-              {section === "appearance" && (
-                <SettingsSection
-                  title={t("themeSettings")}
-                  description={t("customColorsHelp")}
-                >
-                  <Preference
-                    label={t("theme")}
-                    help="Choose how the interface appears."
-                  >
+              aria-label={t("settings")}
+            />
+          </div>
+          {sections.map(({ key, label, icon }) => (
+            <Button
+              id={`settings-section-${key}`}
+              type="text"
+              htmlType="button"
+              key={key}
+              icon={icon}
+              className={section === key ? "active" : ""}
+              onClick={() => setSection(key)}
+            >
+              {label}
+            </Button>
+          ))}
+        </aside>
+        <div className="finance-settings-content">
+          {section === "general" && (
+            <SettingsSection
+              title={t("preferences")}
+              description={t("generalSettingsHelp")}
+            >
+              <Preference
+                label={t("language")}
+                help={t("languageSettingsHelp")}
+              >
+                <Field
+                  control={form.control}
+                  name="language"
+                  label="language"
+                  presentation="control"
+                  options={[
+                    { value: "en", label: "English" },
+                    { value: "es", label: "Español" },
+                    { value: "pt-BR", label: "Português (Brasil)" },
+                  ]}
+                />
+              </Preference>
+              <Preference
+                label={t("timezone")}
+                help={t("timezoneSettingsHelp")}
+              >
+                <Field
+                  control={form.control}
+                  name="timezone"
+                  label="timezone"
+                  presentation="control"
+                  options={["UTC", ...Intl.supportedValuesOf("timeZone")].map(
+                    (value) => ({ value, label: value }),
+                  )}
+                />
+              </Preference>
+            </SettingsSection>
+          )}
+          {section === "appearance" && (
+            <SettingsSection
+              title={t("themeSettings")}
+              description={t("customColorsHelp")}
+            >
+              <Preference label={t("theme")} help={t("themeSettingsHelp")}>
+                <Field
+                  control={form.control}
+                  name="theme"
+                  label="theme"
+                  presentation="control"
+                  options={["system", "light", "dark", "custom"].map(
+                    (value) => ({
+                      value,
+                      label: t(value),
+                    }),
+                  )}
+                />
+              </Preference>
+              {selectedTheme === "custom" && (
+                <>
+                  <Preference label={t("customMode")}>
                     <Field
                       control={form.control}
-                      name="theme"
-                      label="theme"
+                      name="customMode"
+                      label="customMode"
                       presentation="control"
-                      options={["light", "dark", "custom"].map((value) => ({
+                      options={["light", "dark"].map((value) => ({
                         value,
                         label: t(value),
                       }))}
                     />
                   </Preference>
-                  {form.watch("theme") === "custom" && (
-                    <>
-                      <Preference
-                        label={t("customBackground")}
-                        help="Page background color."
-                      >
-                        <Field
-                          control={form.control}
-                          name="customBackground"
-                          label="customBackground"
-                          type="color"
-                          presentation="control"
-                        />
-                      </Preference>
-                      <Preference
-                        label={t("customSurface")}
-                        help="Cards and panels color."
-                      >
-                        <Field
-                          control={form.control}
-                          name="customSurface"
-                          label="customSurface"
-                          type="color"
-                          presentation="control"
-                        />
-                      </Preference>
-                      <Preference
-                        label={t("customAccent")}
-                        help="Primary action color."
-                      >
-                        <Field
-                          control={form.control}
-                          name="customAccent"
-                          label="customAccent"
-                          type="color"
-                          presentation="control"
-                        />
-                      </Preference>
-                    </>
+                  <Preference
+                    label={t("customBackground")}
+                    help={t("customBackgroundHelp")}
+                  >
+                    <Field
+                      control={form.control}
+                      name="customBackground"
+                      label="customBackground"
+                      type="color"
+                      presentation="control"
+                    />
+                  </Preference>
+                  <Preference
+                    label={t("customSurface")}
+                    help={t("customSurfaceHelp")}
+                  >
+                    <Field
+                      control={form.control}
+                      name="customSurface"
+                      label="customSurface"
+                      type="color"
+                      presentation="control"
+                    />
+                  </Preference>
+                  <Preference
+                    label={t("customAccent")}
+                    help={t("customAccentHelp")}
+                  >
+                    <Field
+                      control={form.control}
+                      name="customAccent"
+                      label="customAccent"
+                      type="color"
+                      presentation="control"
+                    />
+                  </Preference>
+                  <Preference label={t("customAccentSecondary")}>
+                    <Field
+                      control={form.control}
+                      name="customAccentSecondary"
+                      label="customAccentSecondary"
+                      type="color"
+                      presentation="control"
+                    />
+                  </Preference>
+                  <Preference label={t("customSidebarAccent")}>
+                    <Field
+                      control={form.control}
+                      name="customSidebarAccent"
+                      label="customSidebarAccent"
+                      type="color"
+                      presentation="control"
+                    />
+                  </Preference>
+                  <Preference label={t("customSidebarAccentSecondary")}>
+                    <Field
+                      control={form.control}
+                      name="customSidebarAccentSecondary"
+                      label="customSidebarAccentSecondary"
+                      type="color"
+                      presentation="control"
+                    />
+                  </Preference>
+                </>
+              )}
+            </SettingsSection>
+          )}
+          {section === "display" && (
+            <SettingsSection
+              title={t("displayPreferences")}
+              description={t("displaySettingsHelp")}
+            >
+              <Preference
+                label={t("defaultCurrency")}
+                help={t("defaultCurrencyHelp")}
+              >
+                <Field
+                  control={form.control}
+                  name="defaultCurrency"
+                  label="defaultCurrency"
+                  presentation="control"
+                  options={currencies}
+                />
+              </Preference>
+              <Preference
+                label={t("dateFormat")}
+                help={t("dateFormatSettingsHelp")}
+              >
+                <Field
+                  control={form.control}
+                  name="dateFormat"
+                  label="dateFormat"
+                  presentation="control"
+                  options={["yyyy-MM-dd", "dd/MM/yyyy", "MM/dd/yyyy"].map(
+                    (value) => ({ value, label: value }),
                   )}
-                </SettingsSection>
-              )}
-              {section === "display" && (
-                <SettingsSection
-                  title={t("displayPreferences")}
-                  description="Choose the formats used in lists and reports."
-                >
-                  <Preference
-                    label={t("defaultCurrency")}
-                    help={t("defaultCurrencyHelp")}
-                  >
-                    <Field
-                      control={form.control}
-                      name="defaultCurrency"
-                      label="defaultCurrency"
-                      presentation="control"
-                      options={currencies}
-                    />
-                  </Preference>
-                  <Preference
-                    label={t("dateFormat")}
-                    help="How dates are shown."
-                  >
-                    <Field
-                      control={form.control}
-                      name="dateFormat"
-                      label="dateFormat"
-                      presentation="control"
-                      options={["yyyy-MM-dd", "dd/MM/yyyy", "MM/dd/yyyy"].map(
-                        (value) => ({ value, label: value }),
-                      )}
-                    />
-                  </Preference>
-                  <Preference
-                    label={t("reportYear")}
-                    help="Default year for reports."
-                  >
-                    <Field
-                      control={form.control}
-                      name="reportYear"
-                      label="reportYear"
-                      type="number"
-                      presentation="control"
-                    />
-                  </Preference>
-                </SettingsSection>
-              )}
-              {section === "imports" && (
-                <SettingsSection
-                  title={t("importDefaults")}
-                  description="Defaults used while importing financial data."
-                >
-                  <Preference
-                    label={t("importCurrency")}
-                    help="Currency used when an import does not declare one."
-                  >
-                    <Field
-                      control={form.control}
-                      name="importCurrency"
-                      label="importCurrency"
-                      presentation="control"
-                      options={currencies}
-                    />
-                  </Preference>
-                  <Preference
-                    label={t("importDateFormat")}
-                    help="Expected date format in CSV files."
-                  >
-                    <Field
-                      control={form.control}
-                      name="importDateFormat"
-                      label="importDateFormat"
-                      presentation="control"
-                      options={["yyyy-MM-dd", "dd/MM/yyyy", "MM/dd/yyyy"].map(
-                        (value) => ({ value, label: value }),
-                      )}
-                    />
-                  </Preference>
-                  <Preference
-                    label={t("importDecimalSeparator")}
-                    help="Decimal separator expected in imports."
-                  >
-                    <Field
-                      control={form.control}
-                      name="importDecimalSeparator"
-                      label="importDecimalSeparator"
-                      presentation="control"
-                      options={[
-                        { value: ".", label: t("decimalDot") },
-                        { value: ",", label: t("decimalComma") },
-                      ]}
-                    />
-                  </Preference>
-                </SettingsSection>
-              )}
-            </div>
-          </div>
-          <Flex justify="end">
+                />
+              </Preference>
+              <Preference
+                label={t("reportYear")}
+                help={t("reportYearSettingsHelp")}
+              >
+                <Field
+                  control={form.control}
+                  name="reportYear"
+                  label="reportYear"
+                  type="number"
+                  presentation="control"
+                />
+              </Preference>
+            </SettingsSection>
+          )}
+          {section === "imports" && (
+            <SettingsSection
+              title={t("importDefaults")}
+              description={t("importSettingsHelp")}
+            >
+              <Preference
+                label={t("importCurrency")}
+                help={t("importCurrencySettingsHelp")}
+              >
+                <Field
+                  control={form.control}
+                  name="importCurrency"
+                  label="importCurrency"
+                  presentation="control"
+                  options={currencies}
+                />
+              </Preference>
+              <Preference
+                label={t("importDateFormat")}
+                help={t("importDateSettingsHelp")}
+              >
+                <Field
+                  control={form.control}
+                  name="importDateFormat"
+                  label="importDateFormat"
+                  presentation="control"
+                  options={["yyyy-MM-dd", "dd/MM/yyyy", "MM/dd/yyyy"].map(
+                    (value) => ({ value, label: value }),
+                  )}
+                />
+              </Preference>
+              <Preference
+                label={t("importDecimalSeparator")}
+                help={t("importDecimalSettingsHelp")}
+              >
+                <Field
+                  control={form.control}
+                  name="importDecimalSeparator"
+                  label="importDecimalSeparator"
+                  presentation="control"
+                  options={[
+                    { value: ".", label: t("decimalDot") },
+                    { value: ",", label: t("decimalComma") },
+                  ]}
+                />
+              </Preference>
+            </SettingsSection>
+          )}
+          <div className="finance-settings-actions">
             <Button
               id="settings-save-button"
               type="primary"
@@ -309,47 +386,9 @@ function SettingsForm({ settings }: { settings: Settings }) {
             >
               {t("save")}
             </Button>
-          </Flex>
-        </Flex>
-      </Form>
-    </Card>
-  );
-}
-function SettingsSection({
-  title,
-  description,
-  children,
-}: {
-  title: string;
-  description: string;
-  children: ReactNode;
-}) {
-  return (
-    <section>
-      <h2>{title}</h2>
-      <Typography.Paragraph type="secondary">
-        {description}
-      </Typography.Paragraph>
-      <div className="finance-preference-card">{children}</div>
-    </section>
-  );
-}
-function Preference({
-  label,
-  help,
-  children,
-}: {
-  label: string;
-  help: string;
-  children: ReactNode;
-}) {
-  return (
-    <div className="finance-preference-row">
-      <div>
-        <strong>{label}</strong>
-        <small>{help}</small>
+          </div>
+        </div>
       </div>
-      <div className="finance-preference-control">{children}</div>
-    </div>
+    </Form>
   );
 }

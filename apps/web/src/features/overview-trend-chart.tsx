@@ -65,8 +65,16 @@ export function OverviewTrendChart({ rows }: { rows: readonly ReportRow[] }) {
     >
       <defs>
         <linearGradient id="finance-overview-area" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#bdd6ca" stopOpacity=".7" />
-          <stop offset="1" stopColor="#bdd6ca" stopOpacity="0" />
+          <stop
+            offset="0"
+            style={{ stopColor: "var(--ds-accent)" }}
+            stopOpacity=".22"
+          />
+          <stop
+            offset="1"
+            style={{ stopColor: "var(--ds-accent)" }}
+            stopOpacity="0"
+          />
         </linearGradient>
       </defs>
       <path d={area} fill="url(#finance-overview-area)" />

@@ -1,5 +1,4 @@
 import { SearchOutlined } from "@ant-design/icons";
-import { Empty, Input, Pagination, Select, Spin } from "antd";
 import { useTranslation } from "react-i18next";
 
 import {
@@ -10,6 +9,14 @@ import { formatMoney } from "../../../../packages/domain/src/money.ts";
 import { categoryName, useResources, useSettings } from "../shared/api.ts";
 import { CategoryIcon } from "../shared/category-icons.tsx";
 import { formatDate } from "../shared/dates.ts";
+import {
+  Button,
+  Empty,
+  Input,
+  Pagination,
+  Select,
+  Spin,
+} from "../shared/design-system.tsx";
 
 export function TransactionFeed({
   rows,
@@ -41,7 +48,7 @@ export function TransactionFeed({
   return (
     <>
       {showControls && (
-        <div className="finance-tools">
+        <div className="finance-tools finance-table-toolbar">
           <Input
             id="transaction-filter-search"
             value={activeFilters["search"] ?? ""}
@@ -50,7 +57,7 @@ export function TransactionFeed({
             placeholder={t("searchTransactions")}
             allowClear
           />
-          <div id="transaction-filter-type">
+          <div className="finance-filter-control" id="transaction-filter-type">
             <Select
               value={activeFilters["type"] ?? ""}
               onChange={(type) => update({ type })}
@@ -61,7 +68,10 @@ export function TransactionFeed({
               ]}
             />
           </div>
-          <div id="transaction-filter-category">
+          <div
+            className="finance-filter-control"
+            id="transaction-filter-category"
+          >
             <Select
               value={activeFilters["categoryId"] ?? ""}
               onChange={(categoryId) => update({ categoryId })}
@@ -76,7 +86,7 @@ export function TransactionFeed({
               ]}
             />
           </div>
-          <div id="transaction-filter-sort">
+          <div className="finance-filter-control" id="transaction-filter-sort">
             <Select
               value={`${activeFilters["sort"] ?? "date"}:${activeFilters["descending"] ?? "true"}`}
               onChange={(value) => {
@@ -108,10 +118,11 @@ export function TransactionFeed({
             );
             const income = row.type === TransactionType.INCOME;
             return (
-              <button
+              <Button
                 id={`transaction-row-${row.id}`}
                 className="finance-transaction"
-                type="button"
+                type="text"
+                htmlType="button"
                 key={row.id}
                 onClick={() => onView(row)}
               >
@@ -140,7 +151,7 @@ export function TransactionFeed({
                     i18n.language,
                   )}
                 </span>
-              </button>
+              </Button>
             );
           })}
         </div>

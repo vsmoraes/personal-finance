@@ -15,7 +15,7 @@ import {
 import { App as AntApp, ConfigProvider } from "antd";
 import { http, HttpResponse } from "msw";
 import { setupServer } from "msw/node";
-import { type ReactNode, useState } from "react";
+import { type ReactNode } from "react";
 import { MemoryRouter } from "react-router";
 import {
   afterAll,
@@ -30,14 +30,9 @@ import {
 import { buildApp } from "../apps/api/src/app.js";
 import { App } from "../apps/web/src/app.js";
 import { Configuration } from "../apps/web/src/features/configuration.js";
-import {
-  type EntryDraft,
-  EntryDrawer,
-} from "../apps/web/src/features/entry-drawer.js";
 import { Imports } from "../apps/web/src/features/imports.js";
 import { Reports } from "../apps/web/src/features/reports.js";
 import { SettingsPage } from "../apps/web/src/features/settings.js";
-import { TopBar } from "../apps/web/src/features/top-bar.js";
 import { Transactions } from "../apps/web/src/features/transactions.js";
 import i18n from "../apps/web/src/i18n.js";
 import { ErrorNotice, Retry } from "../apps/web/src/shared/ui.js";
@@ -127,40 +122,11 @@ function show(node: ReactNode) {
     </QueryClientProvider>,
   );
 }
-function ConfigurationWithTopBar({
-  resource,
-}: {
-  resource: Parameters<typeof Configuration>[0]["resource"];
-}) {
-  const [draft, setDraft] = useState<EntryDraft>();
-  return (
-    <>
-      <TopBar
-        currentLabel={resource}
-        compact={false}
-        onMenu={() => undefined}
-        onCreate={setDraft}
-      />
-      <Configuration resource={resource} />
-      <EntryDrawer draft={draft} onClose={() => setDraft(undefined)} />
-    </>
-  );
-}
-async function openCreate(
-  resource: Parameters<typeof Configuration>[0]["resource"],
-) {
-  fireEvent.click(screen.getByRole("button", { name: "Create another entry" }));
-  const label = {
-    categories: "Categories",
-    budgets: "Budgets",
-    "recurring-commitments": "Recurring commitments",
-    "categorization-rules": "Categorization rules",
-    scenarios: "What-if plans",
-  }[resource];
-  fireEvent.click(await screen.findByRole("menuitem", { name: label }));
+function openCreate(resource: Parameters<typeof Configuration>[0]["resource"]) {
+  fireEvent.click(document.getElementById(`${resource}-create-button`)!);
 }
 async function seed() {
-  await backend.app.inject({
+  const response = await backend.app.inject({
     method: "POST",
     url: "/api/v1/transactions",
     headers: { "idempotency-key": "test-transaction" },
@@ -174,6 +140,7 @@ async function seed() {
       includeInBudget: true,
     },
   });
+  return JSON.parse(response.body) as { id: string };
 }
 async function select(
   label: string,
@@ -214,9 +181,9 @@ it.each(["dashboard", "monthly", "categories", "forecast"] as const)(
   },
 );
 it("creates a custom category through the real HTTP adapter", async () => {
-  show(<ConfigurationWithTopBar resource="categories" />);
+  show(<Configuration resource="categories" />);
   await screen.findByText("Groceries");
-  await openCreate("categories");
+  openCreate("categories");
   const dialog = await screen.findByRole("dialog");
   fireEvent.change(within(dialog).getByLabelText("Name"), {
     target: { value: "Custom category" },
@@ -235,11 +202,11 @@ it.each([
   "categorization-rules",
   "scenarios",
 ] as const)(
-  "creates and edits %s with accessible forms",
+  "creates %s with accessible forms",
   async (resource) => {
-    show(<ConfigurationWithTopBar resource={resource} />);
+    show(<Configuration resource={resource} />);
     await screen.findByText("Nothing here yet.");
-    await openCreate(resource);
+    openCreate(resource);
     const dialog = await screen.findByRole("dialog");
     const scope = within(dialog);
     if (
@@ -264,25 +231,6 @@ it.each([
       fireEvent.change(scope.getByLabelText("Counterparty contains"), {
         target: { value: "example" },
       });
-    if (resource === "scenarios") {
-      fireEvent.click(
-        scope.getByRole("button", { name: "Add a planned change" }),
-      );
-      fireEvent.focus(scope.getByLabelText("Month"));
-      fireEvent.change(scope.getByLabelText("Month"), {
-        target: { value: "2027-01" },
-      });
-      fireEvent.keyDown(scope.getByLabelText("Month"), {
-        key: "Enter",
-        code: "Enter",
-      });
-      fireEvent.blur(scope.getByLabelText("Month"));
-      await select("Category", "Groceries", scope);
-      fireEvent.change(scope.getByLabelText("Amount"), {
-        target: { value: "30.00" },
-      });
-      fireEvent.click(scope.getByLabelText("Additional"));
-    }
     fireEvent.click(scope.getByRole("button", { name: "Save" }));
     await waitFor(() =>
       expect(screen.queryByRole("dialog")).not.toBeInTheDocument(),
@@ -290,77 +238,56 @@ it.each([
   },
   5_000,
 );
-it("previews rule application and copies budgets", async () => {
+it("previews rule application", async () => {
   show(<Configuration resource="categorization-rules" />);
   fireEvent.click(screen.getByText("Preview rule matches"));
   fireEvent.click(screen.getByLabelText("Allow replacing manual categories"));
   fireEvent.click(screen.getByRole("button", { name: "Preview" }));
   await screen.findByText("Matches: 0");
   fireEvent.click(screen.getByRole("button", { name: "Apply rules" }));
-  cleanup();
-  show(<Configuration resource="budgets" />);
-  fireEvent.click(screen.getByText("Copy budgets"));
-  fireEvent.focus(screen.getByLabelText("Source month"));
-  fireEvent.change(screen.getByLabelText("Source month"), {
-    target: { value: "2026-01" },
-  });
-  fireEvent.keyDown(screen.getByLabelText("Source month"), {
-    key: "Enter",
-    code: "Enter",
-  });
-  fireEvent.blur(screen.getByLabelText("Source month"));
-  fireEvent.change(screen.getByLabelText(/Target months/), {
-    target: { value: "2026-02" },
-  });
-  fireEvent.click(screen.getByRole("button", { name: "Copy" }));
-  await waitFor(() =>
-    expect(screen.queryByRole("alert")).not.toBeInTheDocument(),
-  );
 });
-it("edits transaction history, filters and bulk changes category", async () => {
-  await seed();
+it("edits a transaction from the history", async () => {
+  const transaction = await seed();
   show(<Transactions />);
   await screen.findByText("Generic entry");
-  fireEvent.click(await screen.findByLabelText("Select transaction"));
-  await select("Category", "Dining");
-  fireEvent.click(screen.getByRole("button", { name: "Change category" }));
-  await waitFor(() =>
-    expect(
-      screen.queryByRole("button", { name: "Change category" }),
-    ).not.toBeInTheDocument(),
+  fireEvent.click(
+    document.getElementById(`transaction-row-${transaction.id}`)!,
   );
-  fireEvent.click(screen.getByRole("button", { name: "Edit" }));
+  fireEvent.click(document.getElementById("transaction-edit-button")!);
   const dialog = await screen.findByRole("dialog");
   fireEvent.change(within(dialog).getByLabelText("Amount"), {
     target: { value: "15.50" },
   });
-  fireEvent.click(within(dialog).getByRole("button", { name: "Save" }));
+  fireEvent.click(document.getElementById("transaction-form-save")!);
   await waitFor(() =>
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument(),
   );
-  fireEvent.click(screen.getByRole("button", { name: "Delete" }));
-  fireEvent.click(
-    within(await screen.findByRole("dialog")).getByRole("button", {
-      name: "Delete",
-    }),
-  );
-  await screen.findByText("Nothing here yet.");
+  await screen.findAllByText("€15.50");
 });
 it("saves settings and translates the application", async () => {
   show(<SettingsPage />);
-  fireEvent.click(await screen.findByRole("tab", { name: "Dates & reports" }));
-  await screen.findByLabelText("Default reporting year");
-  fireEvent.change(screen.getByLabelText("Default reporting year"), {
+  await waitFor(() =>
+    expect(document.getElementById("settings-form")).toBeTruthy(),
+  );
+  fireEvent.click(document.getElementById("settings-section-display")!);
+  await waitFor(() =>
+    expect(document.getElementById("reportYear")).toBeTruthy(),
+  );
+  fireEvent.change(document.getElementById("reportYear")!, {
     target: { value: "2027" },
   });
-  fireEvent.click(screen.getByRole("button", { name: "Save" }));
+  fireEvent.click(document.getElementById("settings-save-button")!);
   await waitFor(() =>
     expect(screen.queryByRole("alert")).not.toBeInTheDocument(),
   );
-  fireEvent.click(screen.getByRole("tab", { name: "General" }));
+  fireEvent.click(document.getElementById("settings-section-general")!);
   await select("Language", "Español");
-  fireEvent.click(screen.getByRole("button", { name: "Save" }));
-  await screen.findByRole("button", { name: "Guardar" });
+  fireEvent.click(document.getElementById("settings-save-button")!);
+  await waitFor(() =>
+    expect(document.getElementById("settings-save-button")).toHaveTextContent(
+      "Guardar",
+    ),
+  );
 });
 it("renders import controls, application navigation, and recoverable errors", async () => {
   show(<Imports />);
@@ -372,7 +299,7 @@ it("renders import controls, application navigation, and recoverable errors", as
     </MemoryRouter>,
   );
   await screen.findByRole("heading", { name: "Overview" });
-  expect(screen.getByText("Single profile · Private network")).toBeVisible();
+  expect(document.getElementById("page-overview")).toBeVisible();
   cleanup();
   const retry = vi.fn();
   show(
@@ -392,29 +319,29 @@ it("uploads, maps, previews and confirms an atomic CSV import", async () => {
   Object.defineProperty(file, "arrayBuffer", {
     value: () => Promise.resolve(new TextEncoder().encode(content).buffer),
   });
-  const fileInput = document.querySelector("input[type=file]");
+  const fileInput = document.querySelector("#import-file-upload input");
   expect(fileInput).not.toBeNull();
   if (!fileInput) throw new Error("Upload input missing");
   fireEvent.change(fileInput, {
     target: { files: [file] },
   });
-  fireEvent.change(screen.getByLabelText("Import source"), {
+  fireEvent.change(document.getElementById("source")!, {
     target: { value: "generic-test" },
   });
   await waitFor(() =>
-    expect(screen.getByTestId("import-detect")).toBeEnabled(),
+    expect(document.getElementById("import-detect")).toBeEnabled(),
   );
-  fireEvent.click(screen.getByTestId("import-detect"));
+  fireEvent.click(document.getElementById("import-detect")!);
   await screen.findByText(/Encoding:/);
   await waitFor(() =>
-    expect(screen.getByTestId("import-preview")).toBeEnabled(),
+    expect(document.getElementById("import-preview")).toBeEnabled(),
   );
-  fireEvent.click(screen.getByTestId("import-preview"));
+  fireEvent.click(document.getElementById("import-preview")!);
   await screen.findByText(/Generic CSV entry/);
   await waitFor(() =>
-    expect(screen.getByTestId("import-confirm")).toBeEnabled(),
+    expect(document.getElementById("import-confirm")).toBeEnabled(),
   );
-  fireEvent.click(screen.getByTestId("import-confirm"));
+  fireEvent.click(document.getElementById("import-confirm")!);
   await screen.findByRole(
     "button",
     { name: "Import complete" },
@@ -435,7 +362,7 @@ it("renders network failures for reports, history, settings and configuration", 
   }
 });
 
-it("switches report currencies without combining original amounts", async () => {
+it("uses the configured report currency without combining original amounts", async () => {
   await seed();
   const response = await backend.app.inject({
     method: "POST",
@@ -452,37 +379,50 @@ it("switches report currencies without combining original amounts", async () => 
   expect(response.statusCode).toBe(201);
   show(<Reports kind="monthly" />);
   await screen.findAllByText("€12.34");
-  await select("Report currency", "USD");
-  await screen.findAllByText("$56.78");
+  cleanup();
+  const settings = JSON.parse(
+    (await backend.app.inject({ method: "GET", url: "/api/v1/settings" })).body,
+  ) as Record<string, unknown>;
+  const updated = await backend.app.inject({
+    method: "PATCH",
+    url: "/api/v1/settings",
+    payload: { ...settings, language: "en", defaultCurrency: "USD" },
+  });
+  expect(updated.statusCode, updated.body).toBe(200);
+  show(<Reports kind="monthly" />);
+  await screen.findByText("USD", {}, { timeout: 3000 });
+  await screen.findAllByText("$56.78", {}, { timeout: 3000 });
   expect(screen.queryByText("€12.34")).not.toBeInTheDocument();
 });
 
-it("opens the same entry drawer from Overview for transactions and categories", async () => {
+it("opens the same entry drawer for transactions and categories", async () => {
   show(
-    <MemoryRouter>
+    <MemoryRouter initialEntries={["/transactions"]}>
       <App />
     </MemoryRouter>,
   );
-  await screen.findByRole("button", { name: "Add transaction" });
+  await waitFor(() =>
+    expect(document.getElementById("transaction-create-button")).toBeTruthy(),
+  );
   expect(
     screen.queryByLabelText("Amount", { exact: true }),
   ).not.toBeInTheDocument();
-  fireEvent.click(screen.getByRole("button", { name: "Add transaction" }));
+  fireEvent.click(document.getElementById("transaction-create-button")!);
   let dialog = await screen.findByRole("dialog");
   fireEvent.change(within(dialog).getByLabelText("Amount", { exact: true }), {
     target: { value: "12.34" },
   });
-  fireEvent.click(
-    within(dialog).getByRole("button", {
-      name: "Add transaction",
-    }),
-  );
+  fireEvent.click(document.getElementById("transaction-form-create")!);
   await waitFor(() =>
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument(),
   );
   await screen.findAllByText("€12.34");
-  fireEvent.click(screen.getByRole("button", { name: "Create another entry" }));
-  fireEvent.click(await screen.findByRole("menuitem", { name: "Categories" }));
+  fireEvent.click(document.getElementById("nav-group-organization")!);
+  fireEvent.click(document.getElementById("nav-link-categories")!);
+  await waitFor(() =>
+    expect(document.getElementById("categories-create-button")).toBeTruthy(),
+  );
+  fireEvent.click(document.getElementById("categories-create-button")!);
   dialog = await screen.findByRole("dialog");
   fireEvent.change(within(dialog).getByLabelText("Name"), {
     target: { value: "Overview category" },

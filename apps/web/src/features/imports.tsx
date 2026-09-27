@@ -1,5 +1,15 @@
 import { InboxOutlined } from "@ant-design/icons";
 import { create, fromJson, toJson } from "@bufbuild/protobuf";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { useTranslation } from "react-i18next";
+
+import {
+  ImportRequestSchema,
+  type ImportResponse,
+  ImportResponseSchema,
+} from "../../../../packages/contracts/src/finance/v1/finance_pb.ts";
+import { request, useRefresh, useSettings } from "../shared/api.ts";
 import {
   Button,
   Card,
@@ -13,19 +23,9 @@ import {
   Tag,
   Typography,
   Upload,
-} from "antd";
-import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { useTranslation } from "react-i18next";
-
-import {
-  ImportRequestSchema,
-  type ImportResponse,
-  ImportResponseSchema,
-} from "../../../../packages/contracts/src/finance/v1/finance_pb.ts";
-import { request, useRefresh, useSettings } from "../shared/api.ts";
-import { Field, FormField, FormFields } from "../shared/forms.tsx";
-import { ErrorNotice, PageTitle } from "../shared/ui.tsx";
+} from "../shared/design-system.tsx";
+import { Field } from "../shared/forms.tsx";
+import { ErrorNotice, PageTitle, Preference } from "../shared/ui.tsx";
 export function Imports() {
   const { t } = useTranslation();
   const settings = useSettings().data;
@@ -45,7 +45,6 @@ export function Imports() {
       delimiter: "",
     },
   });
-  form.watch();
   async function readFile(selected: File | undefined) {
     if (!selected) return;
     setBusy(true);
@@ -137,8 +136,10 @@ export function Imports() {
     <>
       <PageTitle title={t("imports")} subtitle={t("importsDescription")} />
       <Steps
+        className="finance-import-steps"
         size="small"
-        responsive
+        responsive={false}
+        labelPlacement="vertical"
         current={
           preview?.status === "confirmed"
             ? 3
@@ -152,8 +153,8 @@ export function Imports() {
           title: t(key),
         }))}
       />
-      <Card className="finance-form-surface" style={{ marginTop: 24 }}>
-        <Form.Item extra={t("uploadHelp")}>
+      <Card className="finance-page-form-card" style={{ marginTop: 24 }}>
+        <Form.Item className="finance-import-upload" extra={t("uploadHelp")}>
           <div id="import-file-upload">
             <Upload.Dragger
               accept=".csv,text/csv"
@@ -183,69 +184,84 @@ export function Imports() {
           </div>
         </Form.Item>
         <Form
-          className="finance-standard-form"
+          className="finance-page-form"
           layout="vertical"
           onFinish={() => {
             void inspect();
           }}
         >
-          <FormFields>
-            <Field
-              control={form.control}
-              name="source"
-              label="importSource"
-              required
-            />
-            <Field
-              control={form.control}
-              name="dateFormat"
-              label="dateFormat"
-              options={["yyyy-MM-dd", "dd/MM/yyyy", "MM/dd/yyyy"].map(
-                (value) => ({ value, label: value }),
-              )}
-            />
-            <Field
-              control={form.control}
-              name="decimalSeparator"
-              label="decimalSeparator"
-              options={[
-                { value: ".", label: t("decimalDot") },
-                { value: ",", label: t("decimalComma") },
-              ]}
-            />
-            <Field
-              control={form.control}
-              name="delimiter"
-              label="delimiter"
-              options={[
-                { value: "", label: t("automatic") },
-                { value: ",", label: t("comma") },
-                { value: ";", label: t("semicolon") },
-                { value: "\t", label: t("tab") },
-              ]}
-            />
+          <div className="finance-preference-card">
+            <Preference label={`${t("importSource")} *`}>
+              <Field
+                control={form.control}
+                name="source"
+                label="importSource"
+                presentation="control"
+                required
+              />
+            </Preference>
+            <Preference label={t("dateFormat")}>
+              <Field
+                control={form.control}
+                name="dateFormat"
+                label="dateFormat"
+                presentation="control"
+                options={["yyyy-MM-dd", "dd/MM/yyyy", "MM/dd/yyyy"].map(
+                  (value) => ({ value, label: value }),
+                )}
+              />
+            </Preference>
+            <Preference label={t("decimalSeparator")}>
+              <Field
+                control={form.control}
+                name="decimalSeparator"
+                label="decimalSeparator"
+                presentation="control"
+                options={[
+                  { value: ".", label: t("decimalDot") },
+                  { value: ",", label: t("decimalComma") },
+                ]}
+              />
+            </Preference>
+            <Preference label={t("delimiter")}>
+              <Field
+                control={form.control}
+                name="delimiter"
+                label="delimiter"
+                presentation="control"
+                options={[
+                  { value: "", label: t("automatic") },
+                  { value: ",", label: t("comma") },
+                  { value: ";", label: t("semicolon") },
+                  { value: "\t", label: t("tab") },
+                ]}
+              />
+            </Preference>
+          </div>
+          <div className="finance-settings-actions">
             <Button
               id="import-detect"
+              type="primary"
               htmlType="submit"
               disabled={!file}
               loading={busy}
             >
               {t("detectColumns")}
             </Button>
-          </FormFields>
+          </div>
         </Form>
       </Card>
       {error ? <ErrorNotice error={error} /> : null}
       {preview && (
         <Card
-          className="finance-form-surface"
+          className="finance-page-form-card"
           style={{ marginTop: 24 }}
           title={t("mapColumns")}
         >
           <Typography.Paragraph>
             {t("encoding")}: {preview.encoding}
           </Typography.Paragraph>
-          <FormFields>
+          <div className="finance-preference-card">
             {[
               "date",
               "amount",
@@ -255,9 +271,10 @@ export function Imports() {
               "note",
               "externalId",
             ].map((key) => (
-              <FormField key={key} label={key}>
+              <Preference key={key} label={t(key)}>
                 <Select
                   id={`map-${key}`}
+                  aria-label={t(key)}
                   value={mapping[key] ?? ""}
                   onChange={(value) =>
                     setMapping((old) => ({ ...old, [key]: value }))
@@ -270,21 +287,23 @@ export function Imports() {
                     })),
                   ]}
                 />
-              </FormField>
+              </Preference>
             ))}
-          </FormFields>
+          </div>
           <Typography.Paragraph>{t("importSignedHelp")}</Typography.Paragraph>
-          <Button
-            id="import-preview"
-            type="primary"
-            loading={busy}
-            disabled={busy || !mapping["date"] || !mapping["amount"]}
-            onClick={() => {
-              void inspect();
-            }}
-          >
-            {t("preview")}
-          </Button>
+          <div className="finance-settings-actions">
+            <Button
+              id="import-preview"
+              type="primary"
+              loading={busy}
+              disabled={busy || !mapping["date"] || !mapping["amount"]}
+              onClick={() => {
+                void inspect();
+              }}
+            >
+              {t("preview")}
+            </Button>
+          </div>
         </Card>
       )}
       {preview && preview.rows.length > 0 && (

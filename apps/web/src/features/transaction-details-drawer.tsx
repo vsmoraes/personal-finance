@@ -1,5 +1,4 @@
 import { CloseOutlined, DeleteOutlined, EditOutlined } from "@ant-design/icons";
-import { Button, Modal } from "antd";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -11,6 +10,7 @@ import { formatMoney } from "../../../../packages/domain/src/money.ts";
 import { categoryName, useResources, useSettings } from "../shared/api.ts";
 import { CategoryIcon } from "../shared/category-icons.tsx";
 import { formatDate } from "../shared/dates.ts";
+import { Button, Modal } from "../shared/design-system.tsx";
 import { TransactionForm } from "./transaction-form.tsx";
 
 export function TransactionDetailsDrawer({
@@ -35,7 +35,7 @@ export function TransactionDetailsDrawer({
       open={Boolean(transaction)}
       onCancel={close}
       centered
-      width={520}
+      width={620}
       destroyOnHidden
       closable={false}
       footer={null}
@@ -59,13 +59,11 @@ export function TransactionDetailsDrawer({
       {transaction &&
         (editing ? (
           <div className="finance-drawer-form">
-            <TransactionForm transaction={transaction} onSaved={close} />
-            <Button
-              className="finance-danger-button"
-              onClick={() => setEditing(false)}
-            >
-              {t("cancel")}
-            </Button>
+            <TransactionForm
+              transaction={transaction}
+              onSaved={close}
+              onCancel={() => setEditing(false)}
+            />
           </div>
         ) : (
           <div className="finance-transaction-detail">
