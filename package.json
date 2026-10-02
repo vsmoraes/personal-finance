@@ -16,7 +16,7 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "test": "vitest run tests/auth.test.ts tests/turso-auth.test.ts tests/contracts.test.ts tests/currency-migration.test.ts tests/database-config.test.ts tests/demo-seed.test.ts tests/domain.test.ts tests/web.test.tsx",
+    "test": "vitest run tests/auth.test.ts tests/turso-auth.test.ts tests/contracts.test.ts tests/currency-migration.test.ts tests/database-config.test.ts tests/demo-seed.test.ts tests/domain.test.ts tests/startup.test.ts tests/web.test.tsx",
     "test:ui-flows": "vitest run tests/ui-flows.test.tsx",
     "test:integration": "vitest run tests/integration.test.ts",
     "test:e2e": "playwright test",
